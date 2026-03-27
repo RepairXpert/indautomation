@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>RepairXpert Industrial</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <h1>RepairXpert</h1>
+  <span class="badge">INDUSTRIAL</span>
+  <nav>
+    <a href="/" class="active">Diagnose</a>
+    <a href="/history">History</a>
+  </nav>
+</header>
+
+<div class="container">
+  <form action="/diagnose" method="POST" enctype="multipart/form-data" id="diagForm">
+    <div class="card">
+      <h2>Equipment &amp; Fault</h2>
+
+      <label for="eqType">Equipment Type</label>
+      <select name="equipment_type" id="eqType">
+        <option value="">-- Any / Unknown --</option>
+        {% for eq in equipment %}
+        <option value="{{ eq.type }}">{{ eq.name }}</option>
+        {% endfor %}
+        <option value="other">Other</option>
+      </select>
+
+      <label for="faultCode">Fault Code</label>
+      <input type="text" name="fault_code" id="faultCode"
+             placeholder="e.g. 10036, E001, 50001, F-120"
+             autocomplete="off" autocapitalize="characters">
+
+      <label for="symptoms">Symptoms (what you see / hear / smell)</label>
+      <textarea name="symptoms" id="symptoms"
+                placeholder="e.g. lift stops before reaching bottom, prox LED flickering, VFD showing OC fault, burning smell from motor..."></textarea>
+    </div>
+
+    <div class="card">
+      <h2>Photo (optional)</h2>
+      <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+        <div class="icon">&#128247;</div>
+        <p>Tap to take photo or upload</p>
+        <input type="file" id="photoInput" name="photo" accept="image/*" capture="environment"
+               onchange="previewPhoto(this)">
+      </div>
+      <img id="photoPreview" class="photo-preview" alt="preview">
+    </div>
+
+    <button type="submit" class="btn" id="submitBtn">DIAGNOSE</button>
+  </form>
+
+  <div class="spinner" id="spinner"></div>
+
+  <div class="card quick-help">
+    <h2>Quick Help — Before You Call Maintenance</h2>
+    <ul class="quick-help-list">
+      <li>
+        <span class="quick-help-icon">&#9888;</span>
+        <span><strong>Check all E-stops</strong> — Walk the entire machine and twist/pull every E-stop button before calling maintenance. Most "machine won't run" calls are a bumped E-stop.</span>
+      </li>
+      <li>
+        <span class="quick-help-icon">&#9211;</span>
+        <span><strong>Power cycle the PLC if comms are down</strong> — Turn the PLC off, wait 10 seconds, turn it back on. This clears most communication faults with remote I/O and drives.</span>
+      </li>
+      <li>
+        <span class="quick-help-icon">&#128161;</span>
+        <span><strong>Verify sensor LEDs before replacing</strong> — A sensor with its LED on but not triggering the PLC usually means a wiring or input card issue, not a bad sensor.</span>
+      </li>
+      <li>
+        <span class="quick-help-icon">&#128295;</span>
+        <span><strong>Check air pressure first</strong> — Low plant air causes random pneumatic faults across the whole machine. Check the FRL gauge before troubleshooting individual cylinders.</span>
+      </li>
+      <li>
+        <span class="quick-help-icon">&#128220;</span>
+        <span><strong>Note the exact fault code</strong> — Write down the fault code from the HMI or VFD display before resetting. The code disappears after reset and maintenance needs it.</span>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script>
+function previewPhoto(input) {
+  const preview = document.getElementById('photoPreview');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+document.getElementById('diagForm').addEventListener('submit', function() {
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('spinner').style.display = 'block';
+});
+</script>
+</body>
+</html>

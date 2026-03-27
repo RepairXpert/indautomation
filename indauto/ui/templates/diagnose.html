@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Diagnosis — RepairXpert</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <h1>RepairXpert</h1>
+  <span class="badge">INDUSTRIAL</span>
+  <nav>
+    <a href="/">Diagnose</a>
+    <a href="/history">History</a>
+  </nav>
+</header>
+
+<div class="container">
+  <!-- Fault identification -->
+  <div class="card">
+    <div class="fault-header">
+      <span class="fault-name">{{ result.fault_name }}</span>
+      <span class="fault-code-badge">{{ result.fault_code }}</span>
+    </div>
+
+    {% if result.description %}
+    <p class="fault-desc">{{ result.description }}</p>
+    {% endif %}
+
+    <div class="meta-row">
+      {% set pct = (result.confidence * 100)|round|int %}
+      <span class="confidence {{ 'high' if pct >= 70 else ('med' if pct >= 45 else 'low') }}">
+        {{ pct }}% confidence
+      </span>
+      {% if result.severity %}
+      <span class="severity {{ result.severity }}">{{ result.severity }}</span>
+      {% endif %}
+      {% if result.equipment_type %}
+      <span class="fault-code-badge">{{ result.equipment_type }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Probable causes -->
+  <div class="card">
+    <h2>Probable Causes (ranked)</h2>
+    <ul class="cause-list">
+      {% for cause in result.diagnosis %}
+      <li>{{ cause }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <!-- Fix steps -->
+  <div class="card">
+    <h2>Fix Steps</h2>
+    <ol class="step-list">
+      {% for step in result.fix_steps %}
+      <li>
+        <span class="step-num">{{ loop.index }}</span>
+        <span>{{ step }}</span>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+
+  <!-- Field trick -->
+  {% if result.field_trick %}
+  <div class="card">
+    <div class="callout callout-trick">
+      <h4>Field Trick</h4>
+      <p>{{ result.field_trick }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Photo analysis -->
+  {% if result.photo_insight and result.photo_insight.identified_issue %}
+  <div class="card">
+    <div class="callout callout-photo">
+      <h4>Photo Analysis</h4>
+      <p>{{ result.photo_insight.identified_issue }}</p>
+      {% if result.photo_insight.alignment_assessment %}
+      <p style="margin-top:0.5rem"><strong>Alignment:</strong> {{ result.photo_insight.alignment_assessment }}</p>
+      {% endif %}
+      {% if result.photo_insight.wiring_observations %}
+      <p><strong>Wiring:</strong> {{ result.photo_insight.wiring_observations }}</p>
+      {% endif %}
+      {% if result.photo_insight.recommendations %}
+      <h4 style="margin-top:0.75rem">Recommendations</h4>
+      <ul style="padding-left:1rem">
+        {% for rec in result.photo_insight.recommendations %}
+        <li>{{ rec }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Source indicator -->
+  <div class="card" style="text-align:center; padding:0.75rem">
+    <span style="font-size:0.75rem; color:var(--muted)">
+      Source: {{ result.source | default('unknown') }}
+    </span>
+  </div>
+
+  <!-- Actions -->
+  <a href="/" class="btn btn-secondary">New Diagnosis</a>
+</div>
+</body>
+</html>

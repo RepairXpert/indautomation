@@ -1,0 +1,1013 @@
+{
+  "faults": [
+    {
+      "code": "10036",
+      "name": "Piler Auto Lost",
+      "equipment_type": "piler",
+      "description": "Piler has lost its automatic positioning reference. The system cannot confirm current location within the racking structure. Often caused by encoder or homing sensor issues.",
+      "probable_causes": [
+        "Encoder failure or encoder cable damaged — check connections at motor and PLC module",
+        "Homing/reference sensor blocked or misaligned — LED not solid when at home position",
+        "PLC position register corrupted after power loss or brown-out",
+        "Drive fault caused mid-travel stop — piler stopped between positions",
+        "Mechanical obstruction preventing full travel to home position",
+        "Final-down proximity sensor alignment too marginal — target plate barely entering sensing zone"
+      ],
+      "fix_steps": [
+        "Check encoder cable connections at motor and PLC module — reseat both ends",
+        "Inspect homing/reference sensor — clean lens, verify alignment, LED must be solid ON at home",
+        "Manually jog piler to home position and re-reference via HMI",
+        "Check PLC position register values (D-register or MW area) — compare to expected home value",
+        "Verify drive is healthy — check for overcurrent or overvoltage faults on VFD display",
+        "If encoder replaced, recalibrate travel distances in PLC program",
+        "Lower lift completely — hold DOWN button extra 3-5 seconds past normal stop",
+        "Turn inhibit key OFF then back ON to clear condition",
+        "Hit Alarm Silence / Reset on HMI"
+      ],
+      "field_trick": "Manually press/hold the bottom limit sensor target while watching fault. If fault clears = sensor alignment issue. If not = electrical/PLC input issue.",
+      "equipment_types": ["piler", "asrs"],
+      "severity": "high",
+      "tags": ["lift", "inhibit", "proximity", "safety", "position", "encoder"]
+    },
+    {
+      "code": "10037",
+      "name": "Piler Fork Overtravel",
+      "equipment_type": "piler",
+      "description": "Fork extension has exceeded its maximum allowed travel distance, triggering a safety stop.",
+      "probable_causes": [
+        "Fork extend limit switch failed or wiring broken",
+        "Hydraulic valve sticking — fork continues extending after command removed",
+        "PLC output stuck ON due to relay welding",
+        "Limit switch actuator bent or misaligned",
+        "Encoder on fork drive giving incorrect feedback"
+      ],
+      "fix_steps": [
+        "Verify fork extend limit switch operation manually — actuate by hand, watch PLC input LED",
+        "Check hydraulic directional valve — use manual override to test",
+        "Inspect PLC output module — check for welded relay contacts with multimeter",
+        "Realign or replace limit switch actuator bracket",
+        "Test fork drive encoder separately to confirm counts match actual travel"
+      ],
+      "equipment_types": ["piler", "asrs"],
+      "severity": "high",
+      "tags": ["fork", "overtravel", "limit switch", "hydraulic"]
+    },
+    {
+      "code": "10038",
+      "name": "Piler Traverse Position Error",
+      "equipment_type": "piler",
+      "description": "Piler horizontal traverse position does not match expected location. Cannot confirm alignment with target bay.",
+      "probable_causes": [
+        "Traverse encoder wheel slipping on rail — worn rubber tire on encoder wheel",
+        "Bar code or reflector positioning system misread — dirty reader lens",
+        "Rail obstruction causing traverse motor to stall",
+        "Traverse drive belt or chain skip — teeth worn or tension lost",
+        "PLC traverse position counter accumulated error over multiple cycles"
+      ],
+      "fix_steps": [
+        "Check traverse encoder wheel contact with rail — replace if rubber tire is worn smooth",
+        "Clean bar code reader or reflector lens — use isopropyl alcohol and lint-free cloth",
+        "Walk the rail — check for debris, fallen product, or hardware on travel path",
+        "Inspect traverse drive belt/chain tension and tooth engagement",
+        "Re-home piler traverse by driving to reference mark and resetting position counter",
+        "If using bar code positioning, verify all bay labels are clean and not peeling"
+      ],
+      "equipment_types": ["piler", "asrs"],
+      "severity": "high",
+      "tags": ["traverse", "position", "encoder", "barcode"]
+    },
+    {
+      "code": "20010",
+      "name": "Conveyor Jam Detected",
+      "equipment_type": "conveyor",
+      "description": "Photo-eye or motor current sensing indicates product jam on conveyor section. Conveyor stopped to prevent damage.",
+      "probable_causes": [
+        "Product misaligned or fallen on conveyor — physical blockage",
+        "Accumulation zone full — downstream equipment stopped or faulted",
+        "Belt or chain slipping — worn sprocket or low tension",
+        "Photo-eye blocked by debris, dust, or condensation on lens",
+        "VFD tripped on overcurrent protecting motor from overload"
+      ],
+      "fix_steps": [
+        "Clear jammed product manually — check for damage to product and conveyor",
+        "Verify downstream equipment is running and accepting product",
+        "Inspect belt/chain tension and sprocket wear — adjust or replace as needed",
+        "Clean photo-eyes and reflectors with soft cloth, verify alignment with test mode",
+        "Check VFD display for fault code — reset if overcurrent was transient",
+        "Monitor motor current after clearing — sustained high amps indicates mechanical binding"
+      ],
+      "equipment_types": ["conveyor"],
+      "severity": "medium",
+      "tags": ["jam", "photoeye", "conveyor", "belt", "chain"]
+    },
+    {
+      "code": "20011",
+      "name": "Conveyor Belt Tracking Fault",
+      "equipment_type": "conveyor",
+      "description": "Belt has migrated off-center, triggering tracking sensor or causing edge damage.",
+      "probable_causes": [
+        "Uneven loading causing belt drift to one side",
+        "Tail pulley misalignment — one side tighter than other",
+        "Belt splice failing or belt stretched unevenly",
+        "Tracking roller jammed or seized bearing",
+        "Frame not level — foundation settling or structural shift"
+      ],
+      "fix_steps": [
+        "Stop conveyor immediately — inspect belt edge for fraying or damage",
+        "Adjust tail pulley snub bolts to re-track belt — quarter turn at a time",
+        "Check belt splice integrity — replace if separating or delaminating",
+        "Free or replace seized tracking rollers — spin each by hand to check",
+        "Verify frame level with precision level — shim if needed",
+        "Run conveyor at slow speed and observe tracking — make incremental adjustments"
+      ],
+      "equipment_types": ["conveyor"],
+      "severity": "medium",
+      "tags": ["belt", "tracking", "alignment", "pulley"]
+    },
+    {
+      "code": "20012",
+      "name": "Conveyor Motor Overtemperature",
+      "equipment_type": "conveyor",
+      "description": "Motor thermal protection tripped. Motor is too hot to operate safely.",
+      "probable_causes": [
+        "Overloaded conveyor — too much product weight",
+        "Motor cooling fan failed or air intake blocked by debris",
+        "Ambient temperature too high — poor ventilation in area",
+        "Motor bearing failing — increased friction generating heat",
+        "VFD running motor below nameplate speed without external cooling"
+      ],
+      "fix_steps": [
+        "Let motor cool before restarting — minimum 15 minutes",
+        "Check motor fan — spin by hand, verify it turns with motor",
+        "Clear any debris blocking motor air intake and cooling fins",
+        "Feel motor bearings (carefully) — excessive heat or noise indicates failure",
+        "Check conveyor loading — reduce product if overloaded",
+        "If motor runs at reduced speed via VFD, add external cooling fan",
+        "Check motor current draw vs nameplate — sustained over FLA indicates problem"
+      ],
+      "equipment_types": ["conveyor"],
+      "severity": "medium",
+      "tags": ["motor", "overtemp", "thermal", "cooling"]
+    },
+    {
+      "code": "30001",
+      "name": "Proximity Sensor Fault — No Target Detected",
+      "equipment_type": "general",
+      "description": "Proximity sensor expected to detect a target is not triggering. Equipment has stopped waiting for confirmation signal.",
+      "probable_causes": [
+        "Sensor face contaminated — dust, grease, metal shavings blocking detection",
+        "Target moved out of sensing range — mechanical drift or bracket loosened",
+        "Sensor cable damaged or connector loose — intermittent or no signal",
+        "Sensor failed internally — no output regardless of target presence",
+        "Wrong sensor type installed — inductive sensor for non-metal target or vice versa"
+      ],
+      "fix_steps": [
+        "Clean sensor face with non-abrasive cloth — remove dust, grease, metal particles",
+        "Verify sensing gap — adjust bracket to bring target within rated sensing distance",
+        "Check cable from sensor to input module — wiggle test while monitoring input LED",
+        "Substitute with known-good sensor of same type to confirm failure",
+        "Verify sensor type matches target material — inductive for metal, capacitive for non-metal",
+        "Check PLC input status directly — sensor LED ON does not always mean clean PLC input"
+      ],
+      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "severity": "medium",
+      "tags": ["proximity", "sensor", "inductive", "capacitive", "detection"]
+    },
+    {
+      "code": "30002",
+      "name": "Proximity Sensor Fault — Stuck ON",
+      "equipment_type": "general",
+      "description": "Proximity sensor output is continuously active regardless of target presence. Causes false position confirmations.",
+      "probable_causes": [
+        "Sensor shorted internally — output transistor failed closed",
+        "Wiring short between signal wire and +V supply",
+        "Metal debris accumulated on inductive sensor face",
+        "PLC input module channel failed high — reads ON regardless of sensor",
+        "Electrical noise from nearby VFD cables inducing false signal"
+      ],
+      "fix_steps": [
+        "Disconnect sensor from wiring — if PLC input remains ON, it is a wiring or module issue",
+        "Clean sensor face, remove any metal debris or buildup",
+        "Check cable routing — separate sensor cables from VFD and motor power cables by 6 inches minimum",
+        "Swap sensor signal to adjacent PLC input channel to rule out module failure",
+        "Replace sensor if internal short confirmed — match part number exactly"
+      ],
+      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "severity": "medium",
+      "tags": ["proximity", "sensor", "stuck", "short", "noise"]
+    },
+    {
+      "code": "30003",
+      "name": "Photoelectric Sensor Fault",
+      "equipment_type": "general",
+      "description": "Photoelectric sensor (through-beam, retro-reflective, or diffuse) not functioning correctly. Product detection unreliable.",
+      "probable_causes": [
+        "Lens dirty — dust, moisture, or product residue on emitter or receiver",
+        "Reflector damaged or misaligned (retro-reflective type)",
+        "Emitter or receiver beam angle shifted — mounting vibration",
+        "Ambient light interference — sunlight or high-bay LED strobing",
+        "Sensitivity set incorrectly — too high causes false triggers, too low misses product"
+      ],
+      "fix_steps": [
+        "Clean both emitter and receiver lenses with soft lint-free cloth",
+        "For retro-reflective type: clean reflector, verify it is square to sensor beam",
+        "Check mounting brackets — tighten all hardware, verify beam alignment",
+        "If ambient light issue, add sensor hood or switch to modulated frequency type",
+        "Adjust sensitivity using teach button or potentiometer — follow sensor manual",
+        "Verify wiring: NPN vs PNP output must match PLC input type"
+      ],
+      "equipment_types": ["conveyor", "packaging", "palletizer"],
+      "severity": "medium",
+      "tags": ["photoelectric", "photoeye", "sensor", "beam", "reflector"]
+    },
+    {
+      "code": "40001",
+      "name": "Safety Circuit Fault — E-Stop Active",
+      "equipment_type": "general",
+      "description": "Emergency stop circuit is open. All motion disabled until circuit is restored and acknowledged at HMI.",
+      "probable_causes": [
+        "E-stop button physically pressed — intentional or accidental contact",
+        "E-stop wiring break in series circuit — corroded terminal or broken conductor",
+        "Safety relay module fault — monitoring circuit detecting wiring issue",
+        "Light curtain triggered and latched — object in beam path",
+        "Gate interlock switch open — access door not fully closed and latched"
+      ],
+      "fix_steps": [
+        "Walk the entire machine — check every E-stop button, twist/pull to reset each one",
+        "Check safety relay module LED indicators for fault channel identification",
+        "Verify all gate interlock switches — close all access gates fully until latch clicks",
+        "Check light curtain alignment — clear any obstructions from beam path",
+        "If all devices are clear, check wiring continuity through entire E-stop loop with multimeter",
+        "Reset safety relay module and acknowledge fault at HMI panel"
+      ],
+      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "severity": "critical",
+      "tags": ["safety", "estop", "emergency", "relay"]
+    },
+    {
+      "code": "40002",
+      "name": "Safety Circuit Fault — Guard Door Open",
+      "equipment_type": "general",
+      "description": "Machine guard door interlock is open. Motion inhibited in the affected zone until door is closed and circuit resets.",
+      "probable_causes": [
+        "Guard door physically open — maintenance access or not fully latched",
+        "Interlock switch actuator misaligned after door adjustment or replacement",
+        "Interlock switch failed — no output when door is fully closed",
+        "Wiring to interlock switch damaged — cut by door hinge movement",
+        "Safety controller not detecting interlock input — module issue"
+      ],
+      "fix_steps": [
+        "Close guard door fully — verify latch engagement, push until it clicks",
+        "Check interlock switch actuator alignment — tongue must fully insert into switch body",
+        "Test interlock switch with multimeter for continuity when door is closed",
+        "Inspect wiring from switch to safety controller — look for wear near hinges",
+        "Reset safety controller and acknowledge fault at HMI"
+      ],
+      "equipment_types": ["packaging", "palletizer", "conveyor"],
+      "severity": "critical",
+      "tags": ["safety", "guard", "interlock", "door"]
+    },
+    {
+      "code": "40003",
+      "name": "Safety Circuit Fault — Light Curtain",
+      "equipment_type": "general",
+      "description": "Safety light curtain beam is interrupted or has alignment fault. Zone motion stopped.",
+      "probable_causes": [
+        "Object or person in light curtain beam path",
+        "Light curtain lenses dirty — reduced beam strength causes fault",
+        "Emitter and receiver misaligned — vibration shifted mounting",
+        "Ambient light interference — direct sunlight hitting receiver",
+        "Light curtain internal fault — LED segment failed"
+      ],
+      "fix_steps": [
+        "Clear beam path — remove any objects, verify no one is in the zone",
+        "Clean light curtain lenses on both emitter and receiver with soft cloth",
+        "Check alignment — most light curtains have alignment LEDs, all should be green",
+        "If sunlight issue, add shielding or relocate to avoid direct sun exposure",
+        "Check light curtain diagnostic display for specific segment fault",
+        "Reset safety system and acknowledge at HMI after beam path is confirmed clear"
+      ],
+      "equipment_types": ["packaging", "palletizer", "conveyor"],
+      "severity": "critical",
+      "tags": ["safety", "light curtain", "beam", "guard"]
+    },
+    {
+      "code": "50001",
+      "name": "VFD Fault — Overcurrent",
+      "equipment_type": "conveyor",
+      "description": "Variable frequency drive tripped on overcurrent protection. Motor stopped immediately.",
+      "probable_causes": [
+        "Mechanical overload — jammed product, seized bearing, or obstruction",
+        "Motor winding shorted — phase-to-phase or phase-to-ground insulation failure",
+        "VFD output IGBT degraded — outputting distorted waveform",
+        "Acceleration time too short for load inertia — current spike on start",
+        "Loose motor cable connection causing arcing and current spikes"
+      ],
+      "fix_steps": [
+        "Check motor and driven equipment for mechanical binding — try to rotate by hand",
+        "Megger motor windings — insulation resistance should be greater than 1 Megohm to ground",
+        "Inspect motor cable connections at VFD output terminals and motor terminal box — tighten all",
+        "Review VFD fault log for pattern — single event vs recurring at same point in cycle",
+        "Increase acceleration ramp time if fault occurs during motor start",
+        "If motor and wiring test good, VFD output section may need factory service"
+      ],
+      "equipment_types": ["conveyor", "piler", "packaging", "palletizer"],
+      "severity": "high",
+      "tags": ["vfd", "drive", "overcurrent", "motor", "overload"]
+    },
+    {
+      "code": "50002",
+      "name": "VFD Fault — Overvoltage",
+      "equipment_type": "conveyor",
+      "description": "VFD DC bus voltage exceeded safe threshold, typically during deceleration when motor regenerates energy back to drive.",
+      "probable_causes": [
+        "Deceleration time too short — regenerative voltage spike exceeds DC bus rating",
+        "Dynamic braking resistor open circuit or undersized for application",
+        "Incoming power voltage too high — check utility supply",
+        "Load has high inertia and is overdriving the motor during stop",
+        "Braking transistor in VFD failed — cannot dissipate regen energy"
+      ],
+      "fix_steps": [
+        "Increase deceleration ramp time in VFD parameters — try doubling current setting",
+        "Check dynamic braking resistor — measure resistance with multimeter, verify wiring",
+        "Measure incoming AC voltage at VFD input terminals — should be within drive rating",
+        "Enable coast-to-stop mode for high-inertia loads if application allows it",
+        "Check VFD braking transistor output — consult drive manual for test procedure"
+      ],
+      "equipment_types": ["conveyor", "piler", "packaging", "palletizer"],
+      "severity": "high",
+      "tags": ["vfd", "drive", "overvoltage", "braking", "deceleration"]
+    },
+    {
+      "code": "50003",
+      "name": "VFD Fault — Ground Fault",
+      "equipment_type": "conveyor",
+      "description": "VFD detected current leakage to ground on motor output circuit. Drive tripped to protect equipment.",
+      "probable_causes": [
+        "Motor cable insulation damage — pinched, abraded, or cut by sharp edge",
+        "Moisture in motor terminal box — condensation or water ingress",
+        "Motor winding insulation breakdown — age or overheating damage",
+        "Cable gland not sealed — water entering conduit and reaching connections",
+        "VFD ground fault detection threshold too sensitive for long cable runs"
+      ],
+      "fix_steps": [
+        "Disconnect motor leads at VFD — megger each phase to ground, all should read over 1 Megohm",
+        "Inspect motor cable entire run for physical damage — pay attention to conduit entry points",
+        "Open motor terminal box — check for moisture, corrosion, or water pooling",
+        "If cable and motor test good, adjust VFD ground fault sensitivity threshold per manual",
+        "Seal all cable glands and conduit entry points with appropriate sealant"
+      ],
+      "equipment_types": ["conveyor", "piler", "packaging", "palletizer"],
+      "severity": "high",
+      "tags": ["vfd", "drive", "ground fault", "insulation", "motor"]
+    },
+    {
+      "code": "50004",
+      "name": "VFD Fault — Communication Loss",
+      "equipment_type": "conveyor",
+      "description": "VFD lost communication with PLC over fieldbus network. Drive stopped or went to fault safe state.",
+      "probable_causes": [
+        "Network cable disconnected or damaged between PLC and VFD",
+        "VFD network module crashed — needs power cycle",
+        "PLC communication module overloaded — too many nodes or scan rate too fast",
+        "Network switch or hub failure in the path between PLC and VFD",
+        "VFD station/node address changed or duplicated on network"
+      ],
+      "fix_steps": [
+        "Check network cable at VFD communication port — reseat connector",
+        "Verify network switch or hub between PLC and VFD — check power and link LEDs",
+        "Power cycle the VFD to reset communication module",
+        "Verify VFD node/station address matches PLC configuration — check for duplicate addresses",
+        "If using Profinet/EtherNet-IP, ping VFD IP address from laptop to confirm network path",
+        "Check PLC communication module status for error counters or diagnostic codes"
+      ],
+      "equipment_types": ["conveyor", "piler", "packaging", "palletizer"],
+      "severity": "high",
+      "tags": ["vfd", "drive", "communication", "network", "fieldbus"]
+    },
+    {
+      "code": "60001",
+      "name": "PLC Communication Fault — Network Timeout",
+      "equipment_type": "general",
+      "description": "PLC lost communication with a remote I/O rack, HMI, or networked device. Affected stations show comm fault.",
+      "probable_causes": [
+        "Ethernet cable disconnected or damaged at either end",
+        "Network switch port failed or switch lost power",
+        "Remote I/O module crashed — needs power cycle to recover",
+        "IP address conflict on the industrial network — duplicate assignment",
+        "PLC network module firmware issue after recent update"
+      ],
+      "fix_steps": [
+        "Check physical Ethernet connections at both ends — reseat RJ45 connectors",
+        "Verify network switch status — check power LED and port link/activity LEDs",
+        "Ping remote device from a laptop on the same network segment",
+        "Power cycle the remote I/O rack or faulted device",
+        "Check for IP address conflicts — review DHCP leases or static IP assignment table",
+        "If firmware was recently updated, verify compatibility between PLC and network module versions"
+      ],
+      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "severity": "high",
+      "tags": ["plc", "communication", "network", "ethernet", "timeout"]
+    },
+    {
+      "code": "60002",
+      "name": "PLC Communication Fault — Serial Link Down",
+      "equipment_type": "general",
+      "description": "Serial communication link (RS-232/RS-485) between PLC and device has failed. Data exchange stopped.",
+      "probable_causes": [
+        "Serial cable disconnected or pins bent in DB9/DB25 connector",
+        "Baud rate or parity mismatch after parameter change on one end",
+        "RS-485 termination resistor missing or wrong value on bus end",
+        "Serial port on PLC or device has hardware failure",
+        "Electrical noise on serial line from nearby VFD or motor power cables"
+      ],
+      "fix_steps": [
+        "Reseat serial cable at both ends — inspect for bent or broken pins",
+        "Verify communication parameters match at both ends: baud rate, parity, stop bits, station address",
+        "Check RS-485 termination — 120 ohm resistor required at each physical end of the bus",
+        "Route serial cable away from power cables and VFD wiring — 6 inch minimum separation",
+        "Substitute serial cable with known-good cable to rule out cable failure",
+        "Test with serial monitor software on laptop to confirm data is being sent/received"
+      ],
+      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "severity": "high",
+      "tags": ["plc", "communication", "serial", "rs485", "rs232"]
+    },
+    {
+      "code": "60003",
+      "name": "PLC Battery Low",
+      "equipment_type": "general",
+      "description": "PLC backup battery voltage is low. Risk of losing program and data if power is removed.",
+      "probable_causes": [
+        "Battery has reached end of life — typically 3-5 year replacement cycle",
+        "Battery not making good contact in holder — corrosion on terminals",
+        "Frequent or extended power outages draining battery faster than normal",
+        "Wrong battery type installed during last replacement"
+      ],
+      "fix_steps": [
+        "Replace battery with PLC powered ON — this preserves program during swap",
+        "Use correct battery type per PLC manual — do NOT substitute different chemistry",
+        "Clean battery holder contacts before inserting new battery",
+        "Verify program is backed up to memory card or laptop before battery swap as safety measure",
+        "Record battery replacement date on PLC enclosure door for tracking"
+      ],
+      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "severity": "low",
+      "tags": ["plc", "battery", "backup", "maintenance"]
+    },
+    {
+      "code": "70001",
+      "name": "Palletizer Pattern Fault",
+      "equipment_type": "palletizer",
+      "description": "Palletizer cannot complete the current layer pattern. Product count or position mismatch detected.",
+      "probable_causes": [
+        "Product size changed without updating pattern recipe in HMI",
+        "Infeed conveyor delivering product too fast — products double-stacking",
+        "Gripper or vacuum head not picking all products in row",
+        "Layer sheet dispenser jammed or empty",
+        "Product counting photo-eye miscounting — dirty or misaligned"
+      ],
+      "fix_steps": [
+        "Verify product dimensions match the active pattern recipe on HMI",
+        "Adjust infeed conveyor speed or accumulation zone timing to match palletizer cycle",
+        "Check gripper vacuum level — inspect vacuum cups for cracks, tears, or debris",
+        "Reload layer sheet magazine — clear any sheet jams in dispenser mechanism",
+        "Clean and verify product counting photo-eyes — test with single product pass"
+      ],
+      "equipment_types": ["palletizer"],
+      "severity": "medium",
+      "tags": ["palletizer", "pattern", "layer", "recipe"]
+    },
+    {
+      "code": "70002",
+      "name": "Packaging Machine Seal Fault",
+      "equipment_type": "packaging",
+      "description": "Heat seal bar temperature or pressure out of specification. Packages may have incomplete seals.",
+      "probable_causes": [
+        "Seal bar heater element burned out — open circuit",
+        "Thermocouple failed — reading incorrect temperature to controller",
+        "Seal bar pressure cylinder low on air supply",
+        "Seal bar surface contaminated with melted film residue",
+        "Temperature controller needs auto-tune after heater element replacement"
+      ],
+      "fix_steps": [
+        "Check seal bar temperature with IR thermometer — compare to controller display reading",
+        "Inspect heater element — measure resistance with multimeter, compare to nameplate",
+        "Verify air supply pressure to seal cylinder — minimum 80 PSI required",
+        "Clean seal bar surfaces — remove film buildup carefully with brass brush or scraper",
+        "If heater was recently replaced, run auto-tune on temperature controller",
+        "Replace thermocouple if temperature reading is erratic or significantly different from IR reading"
+      ],
+      "equipment_types": ["packaging"],
+      "severity": "medium",
+      "tags": ["packaging", "seal", "heater", "temperature"]
+    },
+    {
+      "code": "70003",
+      "name": "Stretch Wrapper Fault — Film Break",
+      "equipment_type": "packaging",
+      "description": "Stretch wrapper film has broken during wrap cycle. Pallet is partially wrapped.",
+      "probable_causes": [
+        "Film tension set too high — exceeding film stretch capacity",
+        "Film catching on pallet corner or product edge — sharp protrusion",
+        "Film roll installed incorrectly — wrong direction of unwind",
+        "Film pre-stretch rollers worn or damaged — causing uneven stretch",
+        "Ambient temperature too cold — film becomes brittle and tears easily"
+      ],
+      "fix_steps": [
+        "Re-thread film through pre-stretch assembly and attach to pallet",
+        "Reduce film tension/force setting on wrapper controller — try 10% reduction",
+        "Inspect pallet load for sharp corners or protruding edges that could cut film",
+        "Verify film roll is installed with correct unwind direction per machine manual",
+        "Check pre-stretch rollers for wear, flat spots, or buildup — clean or replace",
+        "In cold environments, store film rolls in warm area before use"
+      ],
+      "equipment_types": ["packaging"],
+      "severity": "low",
+      "tags": ["wrapper", "film", "stretch", "tension"]
+    },
+    {
+      "code": "80001",
+      "name": "AS/RS Crane Position Fault",
+      "equipment_type": "asrs",
+      "description": "AS/RS crane cannot confirm its position in the aisle. Storage and retrieval operations halted.",
+      "probable_causes": [
+        "Laser distance sensor dirty or misaligned — reading incorrect distance",
+        "Aisle end reference marker missing or damaged",
+        "Crane travel wheel slipping on rail — worn wheel or oily rail surface",
+        "Position encoder cable damaged by crane travel movement",
+        "PLC position tracking accumulated error over many cycles without re-homing"
+      ],
+      "fix_steps": [
+        "Clean laser distance sensor lens — use appropriate lens cleaning tissue",
+        "Verify aisle end reference marker is present and reflective surface is intact",
+        "Check crane travel wheels for wear — replace if wheel diameter is below minimum spec",
+        "Inspect encoder cable along entire travel path — look for pinch points or wear from repeated flexing",
+        "Initiate crane re-homing sequence from maintenance HMI screen",
+        "Clean rail surface if oily — use degreaser on travel path"
+      ],
+      "equipment_types": ["asrs"],
+      "severity": "high",
+      "tags": ["asrs", "crane", "position", "laser", "encoder"]
+    },
+    {
+      "code": "E030",
+      "name": "Servo Position Error",
+      "equipment_type": "general",
+      "description": "Servo drive reports position following error exceeds tolerance. Axis stopped to prevent damage.",
+      "probable_causes": [
+        "Mechanical binding or obstruction in axis travel path",
+        "Encoder feedback cable loose, damaged, or disconnected at motor",
+        "Servo gain parameters incorrect — too low causes sluggish response, too high causes oscillation",
+        "Motor brake not releasing — brake solenoid or power issue",
+        "Mechanical coupling between motor and load slipping — keyway or setscrew"
+      ],
+      "fix_steps": [
+        "Check for mechanical obstruction — disable drive, try to move axis by hand",
+        "Inspect encoder cable at motor connector and drive connector — reseat both ends",
+        "Listen for motor brake release click when drive enables — no click means brake issue",
+        "Verify coupling between motor shaft and load — check setscrew torque and keyway condition",
+        "Check servo drive fault display for specific sub-code — note it before resetting",
+        "Reset and home the axis before attempting normal operation"
+      ],
+      "equipment_types": ["packaging", "palletizer", "asrs"],
+      "severity": "high",
+      "tags": ["servo", "position", "encoder", "motor", "axis"]
+    },
+    {
+      "code": "E040",
+      "name": "Pneumatic Pressure Low",
+      "equipment_type": "general",
+      "description": "Air pressure below minimum operating threshold. Pneumatic actuators may not function correctly or at all.",
+      "probable_causes": [
+        "Compressor not running or not keeping up with system demand",
+        "Major air leak in supply line, fitting, cylinder, or valve",
+        "Pressure regulator failed or adjusted too low",
+        "Filter/regulator/lubricator assembly clogged — restricting airflow",
+        "Drain valve on receiver tank stuck open or leaking"
+      ],
+      "fix_steps": [
+        "Check main air pressure gauge at FRL unit — note current reading",
+        "Verify compressor is running — check motor contactor and pressure switch",
+        "Listen for air leaks — use soapy water spray on suspect fittings, hoses, and cylinders",
+        "Check pressure regulator setting — adjust to spec, typically 80-100 PSI for most equipment",
+        "Inspect and replace air filter element if dirty or clogged",
+        "Check condensate drain — verify auto-drain is functioning or manually drain receiver tank"
+      ],
+      "equipment_types": ["packaging", "palletizer", "conveyor"],
+      "severity": "medium",
+      "tags": ["pneumatic", "pressure", "air", "compressor", "regulator"]
+    },
+    {
+      "code": "50005",
+      "name": "Motor Starter Overload Trip",
+      "equipment_type": "general",
+      "description": "Motor starter thermal or electronic overload relay has tripped, cutting power to the motor to prevent winding damage from sustained overcurrent.",
+      "probable_causes": [
+        "Motor mechanically overloaded — jammed product, seized bearing, or obstruction on driven equipment",
+        "Overload relay heater size incorrect for motor FLA — too small causes nuisance trips",
+        "Single-phasing condition — one supply phase lost causing remaining phases to draw excess current",
+        "Ambient temperature around starter enclosure too high — relay trips at lower current in hot panel",
+        "Motor winding partially shorted — drawing above nameplate current under normal load"
+      ],
+      "fix_steps": [
+        "Let overload cool 5 minutes, then press reset button on the overload relay",
+        "Measure motor current on all three phases with clamp meter — compare to nameplate FLA",
+        "Check for single-phasing: measure voltage across all three phases at starter — should be balanced within 2%",
+        "Verify overload heater or electronic overload setting matches motor nameplate FLA",
+        "Check driven equipment for mechanical binding — try to rotate by hand with motor disconnected",
+        "If ambient temperature is high, consider upsizing overload or improving panel ventilation",
+        "Megger motor windings if overcurrent persists with no mechanical cause"
+      ],
+      "field_trick": "If overload trips repeatedly within minutes of reset, do NOT keep resetting — there is a real overcurrent issue. Measure current before resetting again.",
+      "equipment_types": ["conveyor", "packaging", "palletizer", "piler"],
+      "severity": "high",
+      "tags": ["motor", "overload", "starter", "thermal", "overcurrent", "trip"]
+    },
+    {
+      "code": "E031",
+      "name": "Encoder Feedback Loss",
+      "equipment_type": "general",
+      "description": "Servo or motor drive has lost encoder feedback signal. Axis position is unknown and motion has stopped.",
+      "probable_causes": [
+        "Encoder cable disconnected at motor or drive end — connector not fully seated",
+        "Encoder cable damaged — pinched, cut, or flex fatigue from repeated motion",
+        "Encoder power supply failed — 5V or 24V supply to encoder not present",
+        "Encoder itself failed — internal electronics or disc damaged",
+        "Electrical noise from nearby VFD cables coupling into encoder signal wires"
+      ],
+      "fix_steps": [
+        "Check encoder cable connections at both motor and drive — reseat connectors firmly",
+        "Measure encoder supply voltage at the motor connector — should be 5V or 24V depending on type",
+        "Inspect encoder cable along its entire run for damage, pinch points, or tight bend radius",
+        "If cable has been repeatedly flexed, replace with high-flex rated encoder cable",
+        "Swap encoder with known-good unit if cable and power check out",
+        "Verify encoder cable is routed at least 6 inches away from VFD output power cables"
+      ],
+      "field_trick": "With the drive disabled, slowly rotate the motor shaft by hand while monitoring the encoder count on the drive display. If the count does not change smoothly, the encoder or cable is faulty.",
+      "equipment_types": ["packaging", "palletizer", "asrs", "piler", "conveyor"],
+      "severity": "high",
+      "tags": ["encoder", "feedback", "servo", "motor", "cable", "position"]
+    },
+    {
+      "code": "E041",
+      "name": "Hydraulic Pressure Low",
+      "equipment_type": "general",
+      "description": "Hydraulic system pressure is below the minimum operating threshold. Actuators may move slowly, stall, or not move at all.",
+      "probable_causes": [
+        "Hydraulic pump worn — internal bypass leaking, not building pressure",
+        "Hydraulic fluid level low — check reservoir sight glass",
+        "Relief valve set too low or stuck open — bypassing fluid back to tank",
+        "Major external leak at hose, fitting, or cylinder seal",
+        "Hydraulic filter clogged — restricting flow to pump inlet causing cavitation",
+        "Pump drive coupling broken or motor not running"
+      ],
+      "fix_steps": [
+        "Check hydraulic fluid level at reservoir sight glass — fill if low with correct fluid type",
+        "Inspect all hoses, fittings, and cylinders for visible leaks — look under machine for puddles",
+        "Check hydraulic pump motor — verify it is running and coupling is intact",
+        "Read system pressure at the gauge — compare to nameplate or setup sheet spec",
+        "Check and replace hydraulic filter if pressure drop indicator is showing clogged",
+        "If pressure still low with no leaks, relief valve may need adjustment or pump may need replacement",
+        "Check hydraulic fluid temperature — overheated fluid loses viscosity and reduces pressure"
+      ],
+      "equipment_types": ["piler", "packaging", "palletizer"],
+      "severity": "high",
+      "tags": ["hydraulic", "pressure", "pump", "fluid", "leak", "cylinder"]
+    },
+    {
+      "code": "E042",
+      "name": "Air Pressure Fault",
+      "equipment_type": "general",
+      "description": "Plant air or local pneumatic supply pressure has dropped below the machine's minimum operating requirement. Pneumatic actuators may not function.",
+      "probable_causes": [
+        "Plant air compressor down or not keeping up with demand",
+        "Air line to machine disconnected, kinked, or valve shut off",
+        "Large air leak on machine — blown hose, cracked fitting, or failed cylinder seal",
+        "Pressure regulator at machine FRL unit failed or set too low",
+        "Pressure switch on machine incorrectly calibrated or failed"
+      ],
+      "fix_steps": [
+        "Check main plant air pressure gauge — if low, the issue is upstream of the machine",
+        "Verify the supply valve to the machine is fully open",
+        "Check FRL (filter-regulator-lubricator) unit — read pressure gauge, adjust regulator if needed",
+        "Listen for air leaks — spray soapy water on suspect fittings, hoses, and cylinder end caps",
+        "Verify pressure switch setpoint matches machine requirements — typically 75-90 PSI minimum",
+        "Check air filter element in FRL — replace if dirty or clogged",
+        "Drain water from FRL bowl and any low-point drains in the air piping"
+      ],
+      "field_trick": "Close the main supply valve, watch the machine pressure gauge. If it drops quickly, there is a leak on the machine. If it holds, the supply is intermittent.",
+      "equipment_types": ["packaging", "palletizer", "conveyor", "piler"],
+      "severity": "medium",
+      "tags": ["air", "pressure", "pneumatic", "compressor", "regulator", "frl"]
+    },
+    {
+      "code": "30004",
+      "name": "Temperature Sensor Fault — Thermocouple Break",
+      "equipment_type": "general",
+      "description": "Temperature controller or PLC reports thermocouple open circuit (upscale burnout). Temperature reading is invalid — may show maximum range or error code.",
+      "probable_causes": [
+        "Thermocouple wire broken — fatigue from heat cycling or mechanical damage",
+        "Thermocouple terminal connection loose at controller or junction box",
+        "Thermocouple sheath damaged — element exposed to process and corroded through",
+        "Wrong thermocouple type connected — Type J in Type K input gives wrong reading then error",
+        "Extension wire splice failed — corrosion or loose crimp at junction"
+      ],
+      "fix_steps": [
+        "Check thermocouple connections at the controller terminal strip — tighten screws",
+        "Measure resistance across thermocouple leads at controller — open circuit confirms break",
+        "Inspect thermocouple probe at process insertion point — look for sheath damage or corrosion",
+        "Verify thermocouple type matches controller configuration — J, K, T, etc.",
+        "If thermocouple is broken, replace with correct type and length",
+        "Check extension wire connections at any intermediate junction boxes — re-crimp or replace",
+        "After replacement, verify reading against a known reference or second temperature instrument"
+      ],
+      "field_trick": "Short the thermocouple input terminals together at the controller. The reading should go to ambient (room) temperature. If it does, the controller input is working — the problem is the thermocouple or wiring.",
+      "equipment_types": ["packaging", "conveyor"],
+      "severity": "medium",
+      "tags": ["temperature", "thermocouple", "sensor", "heater", "break", "open circuit"]
+    },
+    {
+      "code": "60004",
+      "name": "Communication Timeout — EtherNet/IP",
+      "equipment_type": "general",
+      "description": "EtherNet/IP communication between PLC and remote device has timed out. CIP connection lost or I/O data exchange stopped.",
+      "probable_causes": [
+        "Ethernet cable disconnected, damaged, or wrong cable type (crossover vs straight-through)",
+        "Network switch failure or port failure on switch",
+        "Remote device crashed or locked up — needs power cycle",
+        "IP address conflict — two devices with same IP on the network",
+        "RPI (Requested Packet Interval) set too aggressive for network conditions",
+        "PLC scanner module overloaded with too many connections"
+      ],
+      "fix_steps": [
+        "Check Ethernet cable connections at both PLC and remote device — reseat connectors",
+        "Verify network switch port LEDs — link and activity should both be lit",
+        "Ping the remote device IP address from a laptop on the same subnet",
+        "Power cycle the faulted remote device — wait 30 seconds for full restart",
+        "Check for duplicate IP addresses — review IP assignment spreadsheet or scan the network",
+        "If using managed switch, check for VLAN or port security configuration blocking traffic",
+        "Increase RPI timeout if connection drops intermittently under network load"
+      ],
+      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "severity": "high",
+      "tags": ["communication", "ethernet", "ethernetip", "cip", "network", "timeout", "plc"]
+    },
+    {
+      "code": "60005",
+      "name": "Communication Timeout — DeviceNet",
+      "equipment_type": "general",
+      "description": "DeviceNet node has stopped communicating. Scanner reports node offline and associated I/O data is invalid.",
+      "probable_causes": [
+        "DeviceNet cable trunk or drop cable disconnected or damaged",
+        "Node power supply failed — DeviceNet requires 24VDC on the bus",
+        "Termination resistor missing from end of DeviceNet trunk — must have 121 ohm at each end",
+        "Node MAC address changed or conflicts with another node",
+        "DeviceNet scanner module needs parameter re-download or power cycle"
+      ],
+      "fix_steps": [
+        "Check DeviceNet cable connections at the faulted node — push connectors fully in",
+        "Measure 24VDC at the faulted node DeviceNet port — should be between 11V and 25V",
+        "Verify 121 ohm termination resistors are installed at both physical ends of the trunk",
+        "Check node MAC address DIP switches — compare to scanner configuration",
+        "Power cycle the faulted node and watch for it to come back online in scanner diagnostics",
+        "If node does not return, try replacing with spare and setting same MAC address"
+      ],
+      "equipment_types": ["conveyor", "packaging", "palletizer"],
+      "severity": "high",
+      "tags": ["communication", "devicenet", "network", "timeout", "scanner", "node"]
+    },
+    {
+      "code": "60006",
+      "name": "Communication Timeout — Profinet",
+      "equipment_type": "general",
+      "description": "Profinet IO device has stopped responding. PLC IO controller reports device offline and outputs go to safe state.",
+      "probable_causes": [
+        "Profinet cable disconnected or RJ45 connector damaged",
+        "IO device has lost power or experienced internal fault",
+        "Device name not assigned or was accidentally cleared",
+        "Network infrastructure issue — switch port down or cable too long (100m max)",
+        "Firmware version mismatch between GSD file and actual device firmware"
+      ],
+      "fix_steps": [
+        "Check Profinet cable at the faulted device — reseat RJ45 connector, check for damage",
+        "Verify device has power — check power LED on the Profinet IO device",
+        "From engineering station, check if device name is correctly assigned — re-assign if blank",
+        "Check managed switch diagnostics for the port connected to the faulted device",
+        "Verify cable length is under 100 meters — use cable tester to confirm",
+        "If device was recently replaced, ensure GSD file matches and device name is set correctly"
+      ],
+      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "severity": "high",
+      "tags": ["communication", "profinet", "network", "timeout", "plc", "io"]
+    },
+    {
+      "code": "E032",
+      "name": "Servo Drive Following Error",
+      "equipment_type": "general",
+      "description": "Servo axis position error has exceeded the allowable following error window. The commanded position and actual position differ by more than the configured tolerance.",
+      "probable_causes": [
+        "Mechanical obstruction or binding preventing axis from reaching commanded position",
+        "Servo motor brake not releasing — motor cannot turn freely",
+        "Servo gain parameters need tuning — too low causes lag, too high causes oscillation",
+        "Encoder feedback error — cable noise, loose connection, or encoder fault",
+        "Load inertia changed — new tooling or product weight exceeds original servo sizing",
+        "Coupling between motor and load slipped — lost mechanical connection"
+      ],
+      "fix_steps": [
+        "Check for mechanical obstruction — disable drive, try to move axis by hand",
+        "Listen for motor brake release when drive enables — confirm brake releases cleanly",
+        "Check motor-to-load coupling — verify setscrew torque, keyway condition, or belt tension",
+        "Inspect encoder cable connections at motor and drive — reseat both ends",
+        "Review servo drive fault log for pattern — same position every time suggests mechanical issue",
+        "If load changed, servo gains may need re-tuning — contact controls engineer",
+        "Reset fault, re-home axis, and attempt motion at reduced speed to isolate issue"
+      ],
+      "field_trick": "Run the axis at 10% speed. If it completes without faulting, the issue is dynamic — gains, inertia, or friction. If it still faults, the issue is static — obstruction, brake, or coupling.",
+      "equipment_types": ["packaging", "palletizer", "asrs"],
+      "severity": "high",
+      "tags": ["servo", "following error", "position", "motor", "drive", "axis", "encoder"]
+    },
+    {
+      "code": "R001",
+      "name": "Robot Teach Pendant E-Stop",
+      "equipment_type": "general",
+      "description": "Robot teach pendant emergency stop is activated. All robot motion stopped, servo power disabled.",
+      "probable_causes": [
+        "Teach pendant E-stop button physically pressed — intentional or accidental",
+        "Teach pendant cable damaged — broken wire in E-stop circuit",
+        "Teach pendant connector not fully seated at robot controller",
+        "Teach pendant deadman switch released during teach mode",
+        "Robot controller detecting teach pendant communication fault"
+      ],
+      "fix_steps": [
+        "Check teach pendant E-stop button — twist clockwise to release it",
+        "Verify teach pendant cable is firmly connected to robot controller — reseat connector",
+        "Inspect teach pendant cable for damage — look for kinks, cuts, or crushed sections",
+        "Reset robot fault from teach pendant or controller panel after E-stop is released",
+        "If using deadman switch in teach mode, verify proper 3-position grip",
+        "If E-stop resets but immediately re-faults, teach pendant cable or internal switch may need replacement"
+      ],
+      "equipment_types": ["palletizer", "packaging"],
+      "severity": "critical",
+      "tags": ["robot", "teach pendant", "estop", "emergency", "safety", "servo"]
+    },
+    {
+      "code": "90001",
+      "name": "Barcode Scanner No-Read",
+      "equipment_type": "general",
+      "description": "Barcode scanner failed to read or decode the barcode on the product. Product may be diverted or line stopped depending on configuration.",
+      "probable_causes": [
+        "Barcode label damaged, wrinkled, smeared, or missing",
+        "Scanner lens dirty — dust, moisture, or product residue on optics",
+        "Product not positioned correctly — barcode not in scanner read window",
+        "Barcode print quality degraded — low contrast between bars and spaces",
+        "Scanner focus or gain settings incorrect for label distance or size",
+        "Ambient light interference — direct sunlight or high-bay LED flickering"
+      ],
+      "fix_steps": [
+        "Check the product that caused the no-read — inspect barcode label quality",
+        "Clean scanner lens with appropriate lens cleaning tissue or compressed air",
+        "Verify product orientation — barcode must face the scanner within its read angle",
+        "Test scanner with a known-good barcode label at the correct distance",
+        "Adjust scanner focus and gain using scanner configuration software if available",
+        "If intermittent, check for conveyor speed variation causing product to pass through read zone too fast",
+        "Verify barcode symbology configured in scanner matches actual barcode type on product"
+      ],
+      "equipment_types": ["conveyor", "packaging", "asrs"],
+      "severity": "medium",
+      "tags": ["barcode", "scanner", "no-read", "label", "optics"]
+    },
+    {
+      "code": "90002",
+      "name": "Weight Scale Out of Tolerance",
+      "equipment_type": "general",
+      "description": "In-line checkweigher or weight scale reading is outside the acceptable tolerance band. Product may be over or under the target weight.",
+      "probable_causes": [
+        "Scale not zeroed — tare weight has drifted from buildup on conveyor or platter",
+        "Load cell damaged or overloaded — dropped heavy object on scale",
+        "Vibration from nearby equipment coupling into scale — causes noisy readings",
+        "Scale conveyor belt tension changed — dragging on frame adds false weight",
+        "Product recipe or target weight changed without updating scale parameters",
+        "Ambient temperature shift — large temperature changes affect load cell accuracy"
+      ],
+      "fix_steps": [
+        "Run zero calibration with scale empty — clear any debris from weigh platter or belt",
+        "Run span calibration with certified test weight — verify reading matches test weight",
+        "Check for vibration sources near the scale — isolate with vibration dampening mounts if needed",
+        "Inspect scale conveyor belt — verify it moves freely without dragging on the frame",
+        "Verify target weight and tolerance band settings match current product specification",
+        "Check load cell cable connections — corrosion or moisture in junction box causes drift",
+        "If readings are erratic, swap load cell with known-good unit to confirm failure"
+      ],
+      "equipment_types": ["conveyor", "packaging"],
+      "severity": "medium",
+      "tags": ["weight", "scale", "checkweigher", "tolerance", "load cell", "calibration"]
+    },
+    {
+      "code": "70004",
+      "name": "Wrapper Film Break",
+      "equipment_type": "packaging",
+      "description": "Film on stretch wrapper, flow wrapper, or shrink wrapper has broken during operation. Wrapping cycle interrupted.",
+      "probable_causes": [
+        "Film tension set too high for the film gauge being used",
+        "Sharp corner on product or pallet load catching and tearing the film",
+        "Film pre-stretch ratio too aggressive — exceeding film's stretch capacity",
+        "Film roll quality issue — defective roll with thin spots or contamination",
+        "Pre-stretch rollers worn, nicked, or contaminated causing uneven stretch",
+        "Cold ambient temperature making film brittle and prone to tearing"
+      ],
+      "fix_steps": [
+        "Re-thread film through the pre-stretch assembly and reattach to product/pallet",
+        "Reduce film force/tension setting by 10-15% and test",
+        "Inspect product or pallet load for sharp edges that could cut film — add corner protectors",
+        "Check pre-stretch rollers for nicks, flat spots, or film residue buildup — clean or replace",
+        "Verify correct film gauge is loaded — thinner film breaks more easily",
+        "In cold environments, pre-condition film rolls by storing in heated area before use",
+        "If using stretch wrapper, reduce pre-stretch ratio and increase number of wraps to compensate"
+      ],
+      "equipment_types": ["packaging"],
+      "severity": "low",
+      "tags": ["wrapper", "film", "break", "stretch", "tension", "packaging"]
+    },
+    {
+      "code": "70005",
+      "name": "Case Erector Jam",
+      "equipment_type": "packaging",
+      "description": "Case erector has jammed — case blank stuck in the forming section, flap folding area, or bottom seal station. Machine stopped.",
+      "probable_causes": [
+        "Case blank magazine loaded incorrectly — blanks upside down or backward",
+        "Case blank size does not match machine recipe — wrong blank loaded",
+        "Vacuum cups on case pickup not gripping — worn cups, low vacuum, or clogged filter",
+        "Flap folding plow bent or misaligned — not folding flaps cleanly",
+        "Hot melt glue not adhering — temperature too low or glue nozzle clogged",
+        "Pneumatic cylinder not fully extending — air pressure low or cylinder seal leaking"
+      ],
+      "fix_steps": [
+        "Clear the jammed case blank — remove all debris from forming area",
+        "Verify case blanks are loaded correctly in magazine — follow directional arrows on machine",
+        "Check vacuum cups on case pickup arm — replace cracked or worn cups",
+        "Verify vacuum level — check vacuum gauge, inspect filter for clogging",
+        "Inspect flap folding plows for damage or misalignment — adjust per setup sheet",
+        "Check hot melt glue temperature and nozzle condition — purge nozzle if clogged",
+        "Verify case blank size matches the recipe selected on HMI — changeover if needed"
+      ],
+      "equipment_types": ["packaging"],
+      "severity": "medium",
+      "tags": ["case erector", "jam", "packaging", "vacuum", "glue", "blank"]
+    },
+    {
+      "code": "90003",
+      "name": "Label Printer Fault",
+      "equipment_type": "packaging",
+      "description": "Label printer/applicator has faulted. Labels may not be printing, applying incorrectly, or printer reports an error condition.",
+      "probable_causes": [
+        "Label stock or ribbon out — media needs replacement",
+        "Printhead dirty or damaged — causing poor print quality or sensor errors",
+        "Label sensor not detecting label gap or black mark — sensor needs cleaning or adjustment",
+        "Applicator air cylinder not extending — air pressure issue or cylinder fault",
+        "Communication lost between printer and PLC or host system",
+        "Label stock winding incorrectly around printhead — causing jam"
+      ],
+      "fix_steps": [
+        "Check label stock and ribbon supply — reload if empty, verify correct media type",
+        "Clean printhead with approved printhead cleaning pen or IPA wipe — never use metal objects",
+        "Clean label gap sensor or black mark sensor with compressed air and IPA",
+        "Recalibrate label sensor — run the printer's media calibration routine",
+        "Check applicator air supply — verify pressure and cylinder operation",
+        "If communication error, check data cable between printer and PLC/host — reseat connections",
+        "Power cycle the printer after clearing any jams and reloading media"
+      ],
+      "equipment_types": ["packaging", "conveyor"],
+      "severity": "medium",
+      "tags": ["label", "printer", "applicator", "printhead", "media", "packaging"]
+    },
+    {
+      "code": "90004",
+      "name": "Vision System Inspection Fail",
+      "equipment_type": "general",
+      "description": "Machine vision system has flagged a product as failing inspection. Product may have print defect, wrong label, missing component, or dimensional error.",
+      "probable_causes": [
+        "Actual product defect — print error, missing label, wrong color, dimensional issue",
+        "Camera lens dirty — contaminant on lens causing false rejects",
+        "Lighting changed — ambient light shift, bulb aging, or light fixture moved",
+        "Vision recipe does not match current product — wrong inspection program selected",
+        "Camera focus shifted — vibration or temperature change altered focal distance",
+        "Product positioning inconsistent — conveyor speed variation or guide rail gap"
+      ],
+      "fix_steps": [
+        "Check the rejected product — verify if the defect is real or a false reject",
+        "Clean camera lens with appropriate lens tissue and inspect lighting fixtures",
+        "Verify the correct vision recipe/program is selected for the current product run",
+        "Check lighting intensity and uniformity — replace aging bulbs or LEDs if dimmed",
+        "If false rejects are increasing, recalibrate or re-teach the vision inspection",
+        "Verify product positioning through the camera field of view — adjust guide rails if needed",
+        "Check camera focus — use live image display to verify sharpness on product features",
+        "Review reject history for patterns — same defect location may indicate upstream process issue"
+      ],
+      "equipment_types": ["packaging", "conveyor"],
+      "severity": "medium",
+      "tags": ["vision", "camera", "inspection", "reject", "quality", "optics"]
+    }
+  ]
+}

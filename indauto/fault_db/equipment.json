@@ -1,0 +1,79 @@
+{
+  "equipment": [
+    {
+      "type": "piler",
+      "name": "Piler / Stacker-Destacker",
+      "description": "Automated pallet stacking/destacking system with vertical lift and fork mechanisms for warehouse and end-of-line applications.",
+      "common_components": ["lift mechanism", "fork assembly", "carriage", "traverse drive", "proximity sensors", "encoders", "inhibit key switch", "safety interlocks", "VFD drives"],
+      "common_faults": ["10036", "10037", "10038", "40001"],
+      "sensor_types": ["inductive proximity", "limit switch", "rotary encoder", "safety interlock"],
+      "maintenance_intervals": {
+        "daily": ["Visual inspection of forks and carriage", "Check for unusual sounds during operation"],
+        "weekly": ["Clean proximity sensors", "Check hydraulic fluid level if equipped", "Inspect fork wear pads"],
+        "monthly": ["Grease lift chain and guide rails", "Check encoder wheel condition", "Inspect all safety interlocks"],
+        "annual": ["Full encoder calibration", "Replace lift chains if stretch exceeds spec", "Megger all motors"]
+      },
+      "brands": ["Alvey", "Columbia", "TopTier", "FANUC", "Ouellette"]
+    },
+    {
+      "type": "conveyor",
+      "name": "Conveyor System",
+      "description": "Belt, roller, or chain conveyor for product transport. Includes accumulation zones, merges, diverts, and transfers.",
+      "common_components": ["drive motor", "VFD", "belt/chain/rollers", "bearings", "photo-eyes", "guide rails", "transfers", "pop-up stops"],
+      "common_faults": ["20010", "20011", "20012", "50001", "50002"],
+      "sensor_types": ["photoelectric", "inductive proximity", "encoder", "current sensing"],
+      "maintenance_intervals": {
+        "daily": ["Check belt tracking", "Listen for unusual bearing noise", "Clear product debris"],
+        "weekly": ["Clean photo-eyes and reflectors", "Check belt/chain tension", "Inspect guide rail alignment"],
+        "monthly": ["Lubricate bearings per schedule", "Check VFD fan and heatsink", "Inspect motor cable connections"],
+        "annual": ["Replace belts showing wear", "Megger all motors", "Full VFD parameter backup"]
+      },
+      "brands": ["Hytrol", "Dorner", "Interroll", "Dematic", "TGW", "Honeywell Intelligrated"]
+    },
+    {
+      "type": "asrs",
+      "name": "AS/RS — Automated Storage and Retrieval System",
+      "description": "High-density automated storage using cranes or shuttles operating in racking aisles. Handles pallets, totes, or cartons.",
+      "common_components": ["crane/shuttle", "rack structure", "aisle sensors", "load presence sensors", "positioning system", "fork or extractor", "safety systems"],
+      "common_faults": ["80001", "10036", "E030", "40001", "60001"],
+      "sensor_types": ["laser distance", "rotary encoder", "photoelectric", "inductive proximity", "bar code reader"],
+      "maintenance_intervals": {
+        "daily": ["Check crane cycle times for degradation", "Verify load presence sensors", "Listen for unusual wheel or rail noise"],
+        "weekly": ["Clean laser positioning sensors", "Check crane travel wheels", "Inspect load handling mechanism"],
+        "monthly": ["Lubricate crane rails and wheels", "Check all encoder cables for flex fatigue", "Verify bar code labels readable"],
+        "annual": ["Full position calibration of all aisles", "Rail alignment survey", "Replace crane travel wheels if worn"]
+      },
+      "brands": ["Dematic", "Swisslog", "Daifuku", "SSI Schaefer", "Mecalux", "Kardex"]
+    },
+    {
+      "type": "packaging",
+      "name": "Packaging Line Equipment",
+      "description": "End-of-line packaging including case erectors, case packers, sealers, labelers, and stretch wrappers.",
+      "common_components": ["servo axes", "pneumatic cylinders", "vacuum cups", "heat seal bars", "film carriage", "glue systems", "photo-eyes", "HMI panel"],
+      "common_faults": ["70002", "70003", "E030", "E040", "40002"],
+      "sensor_types": ["photoelectric", "capacitive proximity", "vacuum switch", "encoder", "thermocouple", "pressure transducer"],
+      "maintenance_intervals": {
+        "daily": ["Check seal quality on first run", "Verify glue temperature and application", "Inspect film tension"],
+        "weekly": ["Clean all photo-eyes", "Check vacuum cup condition", "Inspect pneumatic cylinder operation"],
+        "monthly": ["Replace worn vacuum cups", "Check servo belt tension", "Clean and inspect glue nozzles"],
+        "annual": ["Full servo calibration", "Replace seal bar heater elements preventively", "Overhaul pneumatic cylinders"]
+      },
+      "brands": ["Wexxar", "Pearson", "Markem-Imaje", "Videojet", "Lantech", "Loveshaw", "3M-Matic"]
+    },
+    {
+      "type": "palletizer",
+      "name": "Palletizer",
+      "description": "Automated palletizing system — conventional high-level, low-level, or robotic. Builds pallet loads from individual products or cases.",
+      "common_components": ["layer forming conveyor", "sweep mechanism or robot arm", "elevator/hoist", "pallet dispenser", "slip/tier sheet dispenser", "discharge conveyor"],
+      "common_faults": ["70001", "E030", "E040", "50001", "40001"],
+      "sensor_types": ["photoelectric", "inductive proximity", "encoder", "limit switch", "load cell"],
+      "maintenance_intervals": {
+        "daily": ["Check pattern quality on first pallet", "Verify sheet dispenser operation", "Inspect gripper/vacuum heads"],
+        "weekly": ["Clean all sensors", "Check sweep mechanism alignment", "Lubricate elevator chains"],
+        "monthly": ["Inspect robot arm cables for flex fatigue", "Check elevator chain stretch", "Verify pallet dispenser operation"],
+        "annual": ["Full robot calibration if robotic", "Replace elevator chains preventively", "Overhaul sweep mechanism bearings"]
+      },
+      "brands": ["Columbia", "TopTier", "FANUC", "ABB", "KUKA", "Yaskawa", "Brenton"]
+    }
+  ]
+}

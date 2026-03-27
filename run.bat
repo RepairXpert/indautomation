@@ -1,0 +1,3 @@
+@echo off
+cd /d C:\RepairXpertIndAutomation
+uvicorn indauto.app:app --host 0.0.0.0 --port 8300 --reload

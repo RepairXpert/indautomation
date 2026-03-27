@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>History — RepairXpert</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <h1>RepairXpert</h1>
+  <span class="badge">INDUSTRIAL</span>
+  <nav>
+    <a href="/">Diagnose</a>
+    <a href="/history" class="active">History</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h2>Diagnosis History</h2>
+  </div>
+
+  {% if entries %}
+  {% for entry in entries %}
+  <div class="history-entry" onclick="this.classList.toggle('open')">
+    <div class="history-meta">
+      <div>
+        <span class="fault-code-badge">{{ entry.fault_code or 'N/A' }}</span>
+        <strong style="margin-left:0.4rem">{{ entry.fault_name or 'Unknown' }}</strong>
+      </div>
+      <span class="ts">{{ entry.created_at[:16] | replace('T', ' ') }}</span>
+    </div>
+    <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-top:0.3rem">
+      {% if entry.equipment_type %}
+      <span style="font-size:0.75rem; color:var(--muted)">{{ entry.equipment_type }}</span>
+      {% endif %}
+      {% if entry.severity %}
+      <span class="severity {{ entry.severity }}" style="font-size:0.65rem">{{ entry.severity }}</span>
+      {% endif %}
+      {% if entry.confidence %}
+      {% set pct = (entry.confidence * 100)|round|int %}
+      <span class="confidence {{ 'high' if pct >= 70 else ('med' if pct >= 45 else 'low') }}" style="font-size:0.7rem">
+        {{ pct }}%
+      </span>
+      {% endif %}
+    </div>
+
+    <div class="history-detail">
+      {% if entry.symptoms %}
+      <p style="font-size:0.82rem; color:var(--muted); margin-bottom:0.75rem">
+        <strong>Symptoms:</strong> {{ entry.symptoms }}
+      </p>
+      {% endif %}
+
+      {% if entry.diagnosis_list %}
+      <h2 style="font-size:0.75rem; margin-bottom:0.5rem">Probable Causes</h2>
+      <ul class="cause-list">
+        {% for cause in entry.diagnosis_list[:3] %}
+        <li>{{ cause }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      {% if entry.fix_steps_list %}
+      <h2 style="font-size:0.75rem; margin-top:0.75rem; margin-bottom:0.5rem">Fix Steps</h2>
+      <ol class="step-list">
+        {% for step in entry.fix_steps_list[:4] %}
+        <li>
+          <span class="step-num">{{ loop.index }}</span>
+          <span>{{ step }}</span>
+        </li>
+        {% endfor %}
+        {% if entry.fix_steps_list|length > 4 %}
+        <li style="border:none; color:var(--muted); font-size:0.8rem; padding-left:2rem">
+          + {{ entry.fix_steps_list|length - 4 }} more steps...
+        </li>
+        {% endif %}
+      </ol>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state">
+    <p>No diagnoses yet.</p>
+    <a href="/" class="btn" style="max-width:200px; margin:1.5rem auto 0">Run First Diagnosis</a>
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>

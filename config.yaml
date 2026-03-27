@@ -1,0 +1,14 @@
+app:
+  name: RepairXpert Industrial Automation
+  port: 8300
+  host: 0.0.0.0
+
+lm_studio:
+  base_url: http://127.0.0.1:1234/v1
+  vision_model: glm-4v-flash
+  text_model: qwen3.5-9b
+  timeout: 60
+
+diagnosis:
+  max_causes: 5
+  confidence_threshold: 0.6
