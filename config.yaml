@@ -5,6 +5,7 @@ app:
 
 lm_studio:
   base_url: http://127.0.0.1:1234/v1
+  vision_base_url: http://127.0.0.1:8766/v1
   vision_model: glm-4v-flash
   text_model: qwen3.5-9b
   timeout: 60

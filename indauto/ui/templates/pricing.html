@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Pricing — RepairXpert</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <h1>RepairXpert</h1>
+  <span class="badge">INDUSTRIAL</span>
+  <nav>
+    <a href="/">Diagnose</a>
+    <a href="/history">History</a>
+    <a href="/pricing" class="active">Pricing</a>
+  </nav>
+</header>
+
+<div class="container pricing-container">
+  <div class="card" style="text-align:center; border-color:var(--accent); margin-bottom:1.5rem">
+    <h2 style="color:var(--accent); margin-bottom:0.5rem">Choose Your Plan</h2>
+    <p style="font-size:0.88rem; color:var(--muted); line-height:1.5">
+      Industrial-grade fault diagnosis for field technicians.
+      Start free, upgrade when you need more.
+    </p>
+  </div>
+
+  <!-- Basic (Free) -->
+  <div class="card pricing-card">
+    <div class="pricing-tier-header">
+      <span class="pricing-tier-name">Basic</span>
+      <span class="pricing-tier-badge pricing-free">FREE</span>
+    </div>
+    <div class="pricing-price">
+      <span class="pricing-amount">$0</span>
+      <span class="pricing-period">/month</span>
+    </div>
+    <p class="pricing-desc">Get started with essential fault diagnosis</p>
+    <ul class="pricing-features">
+      <li class="included">3 diagnoses per day</li>
+      <li class="included">Text-only analysis</li>
+      <li class="included">25 fault code database</li>
+      <li class="included">Basic fix steps</li>
+      <li class="excluded">Photo analysis</li>
+      <li class="excluded">Priority support</li>
+      <li class="excluded">API access</li>
+    </ul>
+    <a href="/" class="btn btn-secondary">Current Plan</a>
+  </div>
+
+  <!-- Pro -->
+  <div class="card pricing-card pricing-featured">
+    <div class="pricing-popular">MOST POPULAR</div>
+    <div class="pricing-tier-header">
+      <span class="pricing-tier-name">Pro</span>
+      <span class="pricing-tier-badge pricing-pro">PRO</span>
+    </div>
+    <div class="pricing-price">
+      <span class="pricing-amount">$19.99</span>
+      <span class="pricing-period">/month</span>
+    </div>
+    <p class="pricing-desc">Full diagnostic power for working technicians</p>
+    <ul class="pricing-features">
+      <li class="included">Unlimited diagnoses</li>
+      <li class="included">Photo analysis (AI vision)</li>
+      <li class="included">25 fault code database</li>
+      <li class="included">Detailed fix steps + field tricks</li>
+      <li class="included">Parts recommendations with pricing</li>
+      <li class="included">Priority support</li>
+      <li class="excluded">API access</li>
+    </ul>
+    <button class="btn" onclick="checkout('pro')">Subscribe — $19.99/mo</button>
+  </div>
+
+  <!-- Enterprise -->
+  <div class="card pricing-card">
+    <div class="pricing-tier-header">
+      <span class="pricing-tier-name">Enterprise</span>
+      <span class="pricing-tier-badge pricing-enterprise">ENTERPRISE</span>
+    </div>
+    <div class="pricing-price">
+      <span class="pricing-amount">$49.99</span>
+      <span class="pricing-period">/month</span>
+    </div>
+    <p class="pricing-desc">For maintenance teams and integrators</p>
+    <ul class="pricing-features">
+      <li class="included">Everything in Pro</li>
+      <li class="included">REST API access</li>
+      <li class="included">Bulk diagnostics (batch upload)</li>
+      <li class="included">Custom equipment profiles</li>
+      <li class="included">Diagnosis history export</li>
+      <li class="included">Dedicated support channel</li>
+      <li class="included">Multi-user team access</li>
+    </ul>
+    <button class="btn" onclick="checkout('enterprise')">Subscribe — $49.99/mo</button>
+  </div>
+
+  <!-- FAQ -->
+  <div class="card" style="margin-top:0.5rem">
+    <h2>Frequently Asked Questions</h2>
+
+    <div class="faq-item">
+      <strong>Can I cancel anytime?</strong>
+      <p>Yes. Cancel with one click, no contracts. Your access continues through the end of your billing period.</p>
+    </div>
+
+    <div class="faq-item">
+      <strong>What payment methods do you accept?</strong>
+      <p>All major credit/debit cards via Stripe. Apple Pay and Google Pay where available.</p>
+    </div>
+
+    <div class="faq-item">
+      <strong>Do I need LM Studio running?</strong>
+      <p>Basic and Pro plans use our cloud AI. Enterprise includes the option to run locally with LM Studio for air-gapped environments.</p>
+    </div>
+
+    <div class="faq-item">
+      <strong>Can I upgrade mid-cycle?</strong>
+      <p>Yes. When you upgrade, you only pay the prorated difference for the remainder of your billing period.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+async function checkout(plan) {
+  const btn = event.target;
+  btn.disabled = true;
+  btn.textContent = 'Redirecting...';
+
+  try {
+    const resp = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({plan: plan}),
+    });
+    const data = await resp.json();
+
+    if (data.checkout_url) {
+      window.location.href = data.checkout_url;
+    } else if (data.error) {
+      alert(data.error);
+      btn.disabled = false;
+      btn.textContent = plan === 'pro' ? 'Subscribe \u2014 $19.99/mo' : 'Subscribe \u2014 $49.99/mo';
+    }
+  } catch (err) {
+    alert('Connection error. Please try again.');
+    btn.disabled = false;
+    btn.textContent = plan === 'pro' ? 'Subscribe \u2014 $19.99/mo' : 'Subscribe \u2014 $49.99/mo';
+  }
+}
+</script>
+</body>
+</html>

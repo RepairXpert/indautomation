@@ -13,6 +13,7 @@
   <nav>
     <a href="/">Diagnose</a>
     <a href="/history">History</a>
+    <a href="/pricing">Pricing</a>
   </nav>
 </header>
 
@@ -96,6 +97,38 @@
       </ul>
       {% endif %}
     </div>
+  </div>
+  {% endif %}
+
+  <!-- Suggested replacement parts -->
+  {% if result.suggested_parts %}
+  <div class="card">
+    <h2>Suggested Replacement Parts</h2>
+    <p style="font-size:0.8rem; color:var(--muted); margin-bottom:1rem">
+      Parts matched to fault category: <strong>{{ result.parts_category | replace('_', ' ') | title }}</strong>
+    </p>
+    {% for part in result.suggested_parts %}
+    <div class="parts-item">
+      <div class="parts-info">
+        <span class="parts-name">{{ part.name }}</span>
+        <span class="parts-partno">P/N: {{ part.part_no }}</span>
+        {% if part.description %}
+        <span class="parts-desc">{{ part.description }}</span>
+        {% endif %}
+      </div>
+      <div class="parts-suppliers">
+        {% for supplier in part.suppliers %}
+        <a href="{{ supplier.url }}" target="_blank" rel="noopener noreferrer" class="btn-buy">
+          {{ supplier.name }}
+          <span class="btn-buy-price">${{ "%.2f"|format(supplier.est_price) }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    <p style="font-size:0.7rem; color:var(--muted); margin-top:0.75rem; font-style:italic">
+      Prices are estimates. Verify part numbers match your equipment before ordering.
+    </p>
   </div>
   {% endif %}
 

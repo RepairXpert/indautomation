@@ -1,12 +1,15 @@
 """Fault code diagnosis engine — maps fault codes + symptoms to ranked root causes and fix steps.
 
 Supports exact match, fuzzy match on code/name/tags/description, and falls back
-to LM Studio Qwen for unknown faults.
+to LM Studio Qwen for unknown faults.  Includes replacement parts suggestions
+with supplier buy links for every matched fault.
 """
 import json
 import re
 from difflib import SequenceMatcher
 from pathlib import Path
+
+from indauto.parts.catalog import get_parts_for_category
 
 FAULT_DB_PATH = Path(__file__).resolve().parent.parent / "fault_db" / "codes.json"
 
@@ -210,6 +213,14 @@ def _build_result(entry: dict, equipment_type: str, confidence: float, source: s
     }
     if entry.get("field_trick"):
         result["field_trick"] = entry["field_trick"]
+
+    # Attach replacement parts suggestions based on fault category
+    parts_category = entry.get("parts_category", "")
+    if parts_category:
+        parts = get_parts_for_category(parts_category)
+        if parts:
+            result["parts_category"] = parts_category
+            result["suggested_parts"] = parts
     return result
 
 

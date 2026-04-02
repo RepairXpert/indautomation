@@ -1,5 +1,6 @@
 """RepairXpert Industrial Automation — FastAPI diagnostic tool for field techs."""
 import json
+import os
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -16,9 +17,30 @@ from indauto.diagnosis.photo import analyze_photo
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8"))
 
+# ── Stripe config (keys loaded from environment) ──────────────────────────────
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
+
+# Price IDs for each plan — set these in your environment after creating
+# products in the Stripe Dashboard.
+STRIPE_PRICE_IDS = {
+    "pro": os.environ.get("STRIPE_PRICE_ID_PRO", ""),
+    "enterprise": os.environ.get("STRIPE_PRICE_ID_ENTERPRISE", ""),
+}
+
+_stripe_available = False
+if STRIPE_SECRET_KEY:
+    try:
+        import stripe
+        stripe.api_key = STRIPE_SECRET_KEY
+        _stripe_available = True
+    except ImportError:
+        pass
+
 app = FastAPI(title="RepairXpert IndAutomation", version="1.0.0")
 app.mount("/static", StaticFiles(directory=ROOT / "indauto" / "ui" / "static"), name="static")
-templates = Jinja2Templates(directory=ROOT / "indauto" / "ui" / "templates")
+templates = Jinja2Templates(directory=str(ROOT / "indauto" / "ui" / "templates"))
+templates.env.auto_reload = True
 
 DB_PATH = ROOT / "data" / "diagnosis_log.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -65,6 +87,59 @@ async def index(request: Request):
         "request": request,
         "equipment": equipment,
     })
+
+
+@app.get("/pricing", response_class=HTMLResponse)
+async def pricing_page(request: Request):
+    return templates.TemplateResponse("pricing.html", {"request": request})
+
+
+@app.post("/api/checkout")
+async def create_checkout_session(request: Request):
+    """Create a Stripe Checkout Session and return the redirect URL."""
+    if not _stripe_available:
+        return JSONResponse(
+            {"error": "Payments are not configured. Set STRIPE_SECRET_KEY in your environment."},
+            status_code=503,
+        )
+
+    body = await request.json()
+    plan = body.get("plan", "")
+
+    if plan not in STRIPE_PRICE_IDS:
+        return JSONResponse({"error": f"Unknown plan: {plan}"}, status_code=400)
+
+    price_id = STRIPE_PRICE_IDS[plan]
+    if not price_id:
+        return JSONResponse(
+            {"error": f"Stripe Price ID not configured for '{plan}'. Set STRIPE_PRICE_ID_{plan.upper()} in env."},
+            status_code=503,
+        )
+
+    # Build absolute URLs for success/cancel redirects
+    base_url = str(request.base_url).rstrip("/")
+
+    try:
+        session = stripe.checkout.Session.create(
+            mode="subscription",
+            payment_method_types=["card"],
+            line_items=[{"price": price_id, "quantity": 1}],
+            success_url=f"{base_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{base_url}/checkout/cancel",
+        )
+        return JSONResponse({"checkout_url": session.url})
+    except stripe.error.StripeError as e:
+        return JSONResponse({"error": str(e)}, status_code=502)
+
+
+@app.get("/checkout/success", response_class=HTMLResponse)
+async def checkout_success(request: Request):
+    return templates.TemplateResponse("checkout_success.html", {"request": request})
+
+
+@app.get("/checkout/cancel", response_class=HTMLResponse)
+async def checkout_cancel(request: Request):
+    return templates.TemplateResponse("checkout_cancel.html", {"request": request})
 
 
 @app.post("/diagnose", response_class=HTMLResponse)

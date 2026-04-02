@@ -10,8 +10,9 @@ def analyze_photo(photo_bytes: bytes, equipment_type: str, fault_code: str, conf
     Returns dict with: identified_issue, sensor_type, alignment_assessment,
     wiring_observations, target_condition, recommendations.
     """
-    base_url = config.get("lm_studio", {}).get("base_url", "http://127.0.0.1:1234/v1")
-    model = config.get("lm_studio", {}).get("vision_model", "glm-4v-flash")
+    lm = config.get("lm_studio", {})
+    base_url = lm.get("vision_base_url") or lm.get("base_url", "http://127.0.0.1:8766/v1")
+    model = lm.get("vision_model", "glm-4v-flash")
     timeout = config.get("lm_studio", {}).get("timeout", 60)
 
     b64 = base64.b64encode(photo_bytes).decode()

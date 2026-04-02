@@ -25,9 +25,20 @@
         "Hit Alarm Silence / Reset on HMI"
       ],
       "field_trick": "Manually press/hold the bottom limit sensor target while watching fault. If fault clears = sensor alignment issue. If not = electrical/PLC input issue.",
-      "equipment_types": ["piler", "asrs"],
+      "equipment_types": [
+        "piler",
+        "asrs"
+      ],
       "severity": "high",
-      "tags": ["lift", "inhibit", "proximity", "safety", "position", "encoder"]
+      "tags": [
+        "lift",
+        "inhibit",
+        "proximity",
+        "safety",
+        "position",
+        "encoder"
+      ],
+      "parts_category": "proximity_sensor"
     },
     {
       "code": "10037",
@@ -48,9 +59,18 @@
         "Realign or replace limit switch actuator bracket",
         "Test fork drive encoder separately to confirm counts match actual travel"
       ],
-      "equipment_types": ["piler", "asrs"],
+      "equipment_types": [
+        "piler",
+        "asrs"
+      ],
       "severity": "high",
-      "tags": ["fork", "overtravel", "limit switch", "hydraulic"]
+      "tags": [
+        "fork",
+        "overtravel",
+        "limit switch",
+        "hydraulic"
+      ],
+      "parts_category": "limit_switch"
     },
     {
       "code": "10038",
@@ -72,9 +92,18 @@
         "Re-home piler traverse by driving to reference mark and resetting position counter",
         "If using bar code positioning, verify all bay labels are clean and not peeling"
       ],
-      "equipment_types": ["piler", "asrs"],
+      "equipment_types": [
+        "piler",
+        "asrs"
+      ],
       "severity": "high",
-      "tags": ["traverse", "position", "encoder", "barcode"]
+      "tags": [
+        "traverse",
+        "position",
+        "encoder",
+        "barcode"
+      ],
+      "parts_category": "encoder"
     },
     {
       "code": "20010",
@@ -96,9 +125,18 @@
         "Check VFD display for fault code — reset if overcurrent was transient",
         "Monitor motor current after clearing — sustained high amps indicates mechanical binding"
       ],
-      "equipment_types": ["conveyor"],
+      "equipment_types": [
+        "conveyor"
+      ],
       "severity": "medium",
-      "tags": ["jam", "photoeye", "conveyor", "belt", "chain"]
+      "tags": [
+        "jam",
+        "photoeye",
+        "conveyor",
+        "belt",
+        "chain"
+      ],
+      "parts_category": "photoelectric_sensor"
     },
     {
       "code": "20011",
@@ -120,9 +158,17 @@
         "Verify frame level with precision level — shim if needed",
         "Run conveyor at slow speed and observe tracking — make incremental adjustments"
       ],
-      "equipment_types": ["conveyor"],
+      "equipment_types": [
+        "conveyor"
+      ],
       "severity": "medium",
-      "tags": ["belt", "tracking", "alignment", "pulley"]
+      "tags": [
+        "belt",
+        "tracking",
+        "alignment",
+        "pulley"
+      ],
+      "parts_category": "conveyor_belt"
     },
     {
       "code": "20012",
@@ -145,9 +191,17 @@
         "If motor runs at reduced speed via VFD, add external cooling fan",
         "Check motor current draw vs nameplate — sustained over FLA indicates problem"
       ],
-      "equipment_types": ["conveyor"],
+      "equipment_types": [
+        "conveyor"
+      ],
       "severity": "medium",
-      "tags": ["motor", "overtemp", "thermal", "cooling"]
+      "tags": [
+        "motor",
+        "overtemp",
+        "thermal",
+        "cooling"
+      ],
+      "parts_category": "conveyor_motor"
     },
     {
       "code": "30001",
@@ -169,9 +223,22 @@
         "Verify sensor type matches target material — inductive for metal, capacitive for non-metal",
         "Check PLC input status directly — sensor LED ON does not always mean clean PLC input"
       ],
-      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "asrs",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "medium",
-      "tags": ["proximity", "sensor", "inductive", "capacitive", "detection"]
+      "tags": [
+        "proximity",
+        "sensor",
+        "inductive",
+        "capacitive",
+        "detection"
+      ],
+      "parts_category": "proximity_sensor"
     },
     {
       "code": "30002",
@@ -192,9 +259,22 @@
         "Swap sensor signal to adjacent PLC input channel to rule out module failure",
         "Replace sensor if internal short confirmed — match part number exactly"
       ],
-      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "asrs",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "medium",
-      "tags": ["proximity", "sensor", "stuck", "short", "noise"]
+      "tags": [
+        "proximity",
+        "sensor",
+        "stuck",
+        "short",
+        "noise"
+      ],
+      "parts_category": "proximity_sensor"
     },
     {
       "code": "30003",
@@ -216,9 +296,20 @@
         "Adjust sensitivity using teach button or potentiometer — follow sensor manual",
         "Verify wiring: NPN vs PNP output must match PLC input type"
       ],
-      "equipment_types": ["conveyor", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "medium",
-      "tags": ["photoelectric", "photoeye", "sensor", "beam", "reflector"]
+      "tags": [
+        "photoelectric",
+        "photoeye",
+        "sensor",
+        "beam",
+        "reflector"
+      ],
+      "parts_category": "photoelectric_sensor"
     },
     {
       "code": "40001",
@@ -240,9 +331,21 @@
         "If all devices are clear, check wiring continuity through entire E-stop loop with multimeter",
         "Reset safety relay module and acknowledge fault at HMI panel"
       ],
-      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "asrs",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "critical",
-      "tags": ["safety", "estop", "emergency", "relay"]
+      "tags": [
+        "safety",
+        "estop",
+        "emergency",
+        "relay"
+      ],
+      "parts_category": "safety_relay"
     },
     {
       "code": "40002",
@@ -263,9 +366,19 @@
         "Inspect wiring from switch to safety controller — look for wear near hinges",
         "Reset safety controller and acknowledge fault at HMI"
       ],
-      "equipment_types": ["packaging", "palletizer", "conveyor"],
+      "equipment_types": [
+        "packaging",
+        "palletizer",
+        "conveyor"
+      ],
       "severity": "critical",
-      "tags": ["safety", "guard", "interlock", "door"]
+      "tags": [
+        "safety",
+        "guard",
+        "interlock",
+        "door"
+      ],
+      "parts_category": "safety_relay"
     },
     {
       "code": "40003",
@@ -287,9 +400,19 @@
         "Check light curtain diagnostic display for specific segment fault",
         "Reset safety system and acknowledge at HMI after beam path is confirmed clear"
       ],
-      "equipment_types": ["packaging", "palletizer", "conveyor"],
+      "equipment_types": [
+        "packaging",
+        "palletizer",
+        "conveyor"
+      ],
       "severity": "critical",
-      "tags": ["safety", "light curtain", "beam", "guard"]
+      "tags": [
+        "safety",
+        "light curtain",
+        "beam",
+        "guard"
+      ],
+      "parts_category": "light_curtain"
     },
     {
       "code": "50001",
@@ -311,9 +434,21 @@
         "Increase acceleration ramp time if fault occurs during motor start",
         "If motor and wiring test good, VFD output section may need factory service"
       ],
-      "equipment_types": ["conveyor", "piler", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "high",
-      "tags": ["vfd", "drive", "overcurrent", "motor", "overload"]
+      "tags": [
+        "vfd",
+        "drive",
+        "overcurrent",
+        "motor",
+        "overload"
+      ],
+      "parts_category": "vfd_drive"
     },
     {
       "code": "50002",
@@ -334,9 +469,21 @@
         "Enable coast-to-stop mode for high-inertia loads if application allows it",
         "Check VFD braking transistor output — consult drive manual for test procedure"
       ],
-      "equipment_types": ["conveyor", "piler", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "high",
-      "tags": ["vfd", "drive", "overvoltage", "braking", "deceleration"]
+      "tags": [
+        "vfd",
+        "drive",
+        "overvoltage",
+        "braking",
+        "deceleration"
+      ],
+      "parts_category": "vfd_drive"
     },
     {
       "code": "50003",
@@ -357,9 +504,21 @@
         "If cable and motor test good, adjust VFD ground fault sensitivity threshold per manual",
         "Seal all cable glands and conduit entry points with appropriate sealant"
       ],
-      "equipment_types": ["conveyor", "piler", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "high",
-      "tags": ["vfd", "drive", "ground fault", "insulation", "motor"]
+      "tags": [
+        "vfd",
+        "drive",
+        "ground fault",
+        "insulation",
+        "motor"
+      ],
+      "parts_category": "vfd_drive"
     },
     {
       "code": "50004",
@@ -381,9 +540,21 @@
         "If using Profinet/EtherNet-IP, ping VFD IP address from laptop to confirm network path",
         "Check PLC communication module status for error counters or diagnostic codes"
       ],
-      "equipment_types": ["conveyor", "piler", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "high",
-      "tags": ["vfd", "drive", "communication", "network", "fieldbus"]
+      "tags": [
+        "vfd",
+        "drive",
+        "communication",
+        "network",
+        "fieldbus"
+      ],
+      "parts_category": "network_module"
     },
     {
       "code": "60001",
@@ -405,9 +576,22 @@
         "Check for IP address conflicts — review DHCP leases or static IP assignment table",
         "If firmware was recently updated, verify compatibility between PLC and network module versions"
       ],
-      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "asrs",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "high",
-      "tags": ["plc", "communication", "network", "ethernet", "timeout"]
+      "tags": [
+        "plc",
+        "communication",
+        "network",
+        "ethernet",
+        "timeout"
+      ],
+      "parts_category": "network_module"
     },
     {
       "code": "60002",
@@ -429,9 +613,22 @@
         "Substitute serial cable with known-good cable to rule out cable failure",
         "Test with serial monitor software on laptop to confirm data is being sent/received"
       ],
-      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "asrs",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "high",
-      "tags": ["plc", "communication", "serial", "rs485", "rs232"]
+      "tags": [
+        "plc",
+        "communication",
+        "serial",
+        "rs485",
+        "rs232"
+      ],
+      "parts_category": "network_module"
     },
     {
       "code": "60003",
@@ -451,9 +648,21 @@
         "Verify program is backed up to memory card or laptop before battery swap as safety measure",
         "Record battery replacement date on PLC enclosure door for tracking"
       ],
-      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "asrs",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "low",
-      "tags": ["plc", "battery", "backup", "maintenance"]
+      "tags": [
+        "plc",
+        "battery",
+        "backup",
+        "maintenance"
+      ],
+      "parts_category": "plc_battery"
     },
     {
       "code": "70001",
@@ -474,9 +683,17 @@
         "Reload layer sheet magazine — clear any sheet jams in dispenser mechanism",
         "Clean and verify product counting photo-eyes — test with single product pass"
       ],
-      "equipment_types": ["palletizer"],
+      "equipment_types": [
+        "palletizer"
+      ],
       "severity": "medium",
-      "tags": ["palletizer", "pattern", "layer", "recipe"]
+      "tags": [
+        "palletizer",
+        "pattern",
+        "layer",
+        "recipe"
+      ],
+      "parts_category": "photoelectric_sensor"
     },
     {
       "code": "70002",
@@ -498,9 +715,17 @@
         "If heater was recently replaced, run auto-tune on temperature controller",
         "Replace thermocouple if temperature reading is erratic or significantly different from IR reading"
       ],
-      "equipment_types": ["packaging"],
+      "equipment_types": [
+        "packaging"
+      ],
       "severity": "medium",
-      "tags": ["packaging", "seal", "heater", "temperature"]
+      "tags": [
+        "packaging",
+        "seal",
+        "heater",
+        "temperature"
+      ],
+      "parts_category": "thermocouple"
     },
     {
       "code": "70003",
@@ -522,9 +747,17 @@
         "Check pre-stretch rollers for wear, flat spots, or buildup — clean or replace",
         "In cold environments, store film rolls in warm area before use"
       ],
-      "equipment_types": ["packaging"],
+      "equipment_types": [
+        "packaging"
+      ],
       "severity": "low",
-      "tags": ["wrapper", "film", "stretch", "tension"]
+      "tags": [
+        "wrapper",
+        "film",
+        "stretch",
+        "tension"
+      ],
+      "parts_category": "stretch_wrap_film"
     },
     {
       "code": "80001",
@@ -546,9 +779,18 @@
         "Initiate crane re-homing sequence from maintenance HMI screen",
         "Clean rail surface if oily — use degreaser on travel path"
       ],
-      "equipment_types": ["asrs"],
+      "equipment_types": [
+        "asrs"
+      ],
       "severity": "high",
-      "tags": ["asrs", "crane", "position", "laser", "encoder"]
+      "tags": [
+        "asrs",
+        "crane",
+        "position",
+        "laser",
+        "encoder"
+      ],
+      "parts_category": "encoder"
     },
     {
       "code": "E030",
@@ -570,9 +812,20 @@
         "Check servo drive fault display for specific sub-code — note it before resetting",
         "Reset and home the axis before attempting normal operation"
       ],
-      "equipment_types": ["packaging", "palletizer", "asrs"],
+      "equipment_types": [
+        "packaging",
+        "palletizer",
+        "asrs"
+      ],
       "severity": "high",
-      "tags": ["servo", "position", "encoder", "motor", "axis"]
+      "tags": [
+        "servo",
+        "position",
+        "encoder",
+        "motor",
+        "axis"
+      ],
+      "parts_category": "servo_drive"
     },
     {
       "code": "E040",
@@ -594,9 +847,20 @@
         "Inspect and replace air filter element if dirty or clogged",
         "Check condensate drain — verify auto-drain is functioning or manually drain receiver tank"
       ],
-      "equipment_types": ["packaging", "palletizer", "conveyor"],
+      "equipment_types": [
+        "packaging",
+        "palletizer",
+        "conveyor"
+      ],
       "severity": "medium",
-      "tags": ["pneumatic", "pressure", "air", "compressor", "regulator"]
+      "tags": [
+        "pneumatic",
+        "pressure",
+        "air",
+        "compressor",
+        "regulator"
+      ],
+      "parts_category": "pneumatic_valve"
     },
     {
       "code": "50005",
@@ -620,9 +884,22 @@
         "Megger motor windings if overcurrent persists with no mechanical cause"
       ],
       "field_trick": "If overload trips repeatedly within minutes of reset, do NOT keep resetting — there is a real overcurrent issue. Measure current before resetting again.",
-      "equipment_types": ["conveyor", "packaging", "palletizer", "piler"],
+      "equipment_types": [
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
       "severity": "high",
-      "tags": ["motor", "overload", "starter", "thermal", "overcurrent", "trip"]
+      "tags": [
+        "motor",
+        "overload",
+        "starter",
+        "thermal",
+        "overcurrent",
+        "trip"
+      ],
+      "parts_category": "motor_overload_relay"
     },
     {
       "code": "E031",
@@ -645,9 +922,23 @@
         "Verify encoder cable is routed at least 6 inches away from VFD output power cables"
       ],
       "field_trick": "With the drive disabled, slowly rotate the motor shaft by hand while monitoring the encoder count on the drive display. If the count does not change smoothly, the encoder or cable is faulty.",
-      "equipment_types": ["packaging", "palletizer", "asrs", "piler", "conveyor"],
+      "equipment_types": [
+        "packaging",
+        "palletizer",
+        "asrs",
+        "piler",
+        "conveyor"
+      ],
       "severity": "high",
-      "tags": ["encoder", "feedback", "servo", "motor", "cable", "position"]
+      "tags": [
+        "encoder",
+        "feedback",
+        "servo",
+        "motor",
+        "cable",
+        "position"
+      ],
+      "parts_category": "encoder"
     },
     {
       "code": "E041",
@@ -671,9 +962,21 @@
         "If pressure still low with no leaks, relief valve may need adjustment or pump may need replacement",
         "Check hydraulic fluid temperature — overheated fluid loses viscosity and reduces pressure"
       ],
-      "equipment_types": ["piler", "packaging", "palletizer"],
+      "equipment_types": [
+        "piler",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "high",
-      "tags": ["hydraulic", "pressure", "pump", "fluid", "leak", "cylinder"]
+      "tags": [
+        "hydraulic",
+        "pressure",
+        "pump",
+        "fluid",
+        "leak",
+        "cylinder"
+      ],
+      "parts_category": "hydraulic_pump"
     },
     {
       "code": "E042",
@@ -697,9 +1000,22 @@
         "Drain water from FRL bowl and any low-point drains in the air piping"
       ],
       "field_trick": "Close the main supply valve, watch the machine pressure gauge. If it drops quickly, there is a leak on the machine. If it holds, the supply is intermittent.",
-      "equipment_types": ["packaging", "palletizer", "conveyor", "piler"],
+      "equipment_types": [
+        "packaging",
+        "palletizer",
+        "conveyor",
+        "piler"
+      ],
       "severity": "medium",
-      "tags": ["air", "pressure", "pneumatic", "compressor", "regulator", "frl"]
+      "tags": [
+        "air",
+        "pressure",
+        "pneumatic",
+        "compressor",
+        "regulator",
+        "frl"
+      ],
+      "parts_category": "pneumatic_valve"
     },
     {
       "code": "30004",
@@ -723,9 +1039,20 @@
         "After replacement, verify reading against a known reference or second temperature instrument"
       ],
       "field_trick": "Short the thermocouple input terminals together at the controller. The reading should go to ambient (room) temperature. If it does, the controller input is working — the problem is the thermocouple or wiring.",
-      "equipment_types": ["packaging", "conveyor"],
+      "equipment_types": [
+        "packaging",
+        "conveyor"
+      ],
       "severity": "medium",
-      "tags": ["temperature", "thermocouple", "sensor", "heater", "break", "open circuit"]
+      "tags": [
+        "temperature",
+        "thermocouple",
+        "sensor",
+        "heater",
+        "break",
+        "open circuit"
+      ],
+      "parts_category": "thermocouple"
     },
     {
       "code": "60004",
@@ -749,9 +1076,24 @@
         "If using managed switch, check for VLAN or port security configuration blocking traffic",
         "Increase RPI timeout if connection drops intermittently under network load"
       ],
-      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "asrs",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "high",
-      "tags": ["communication", "ethernet", "ethernetip", "cip", "network", "timeout", "plc"]
+      "tags": [
+        "communication",
+        "ethernet",
+        "ethernetip",
+        "cip",
+        "network",
+        "timeout",
+        "plc"
+      ],
+      "parts_category": "network_module"
     },
     {
       "code": "60005",
@@ -773,9 +1115,21 @@
         "Power cycle the faulted node and watch for it to come back online in scanner diagnostics",
         "If node does not return, try replacing with spare and setting same MAC address"
       ],
-      "equipment_types": ["conveyor", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "high",
-      "tags": ["communication", "devicenet", "network", "timeout", "scanner", "node"]
+      "tags": [
+        "communication",
+        "devicenet",
+        "network",
+        "timeout",
+        "scanner",
+        "node"
+      ],
+      "parts_category": "network_module"
     },
     {
       "code": "60006",
@@ -797,9 +1151,23 @@
         "Verify cable length is under 100 meters — use cable tester to confirm",
         "If device was recently replaced, ensure GSD file matches and device name is set correctly"
       ],
-      "equipment_types": ["conveyor", "piler", "asrs", "packaging", "palletizer"],
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "asrs",
+        "packaging",
+        "palletizer"
+      ],
       "severity": "high",
-      "tags": ["communication", "profinet", "network", "timeout", "plc", "io"]
+      "tags": [
+        "communication",
+        "profinet",
+        "network",
+        "timeout",
+        "plc",
+        "io"
+      ],
+      "parts_category": "network_module"
     },
     {
       "code": "E032",
@@ -824,9 +1192,22 @@
         "Reset fault, re-home axis, and attempt motion at reduced speed to isolate issue"
       ],
       "field_trick": "Run the axis at 10% speed. If it completes without faulting, the issue is dynamic — gains, inertia, or friction. If it still faults, the issue is static — obstruction, brake, or coupling.",
-      "equipment_types": ["packaging", "palletizer", "asrs"],
+      "equipment_types": [
+        "packaging",
+        "palletizer",
+        "asrs"
+      ],
       "severity": "high",
-      "tags": ["servo", "following error", "position", "motor", "drive", "axis", "encoder"]
+      "tags": [
+        "servo",
+        "following error",
+        "position",
+        "motor",
+        "drive",
+        "axis",
+        "encoder"
+      ],
+      "parts_category": "servo_drive"
     },
     {
       "code": "R001",
@@ -848,9 +1229,20 @@
         "If using deadman switch in teach mode, verify proper 3-position grip",
         "If E-stop resets but immediately re-faults, teach pendant cable or internal switch may need replacement"
       ],
-      "equipment_types": ["palletizer", "packaging"],
+      "equipment_types": [
+        "palletizer",
+        "packaging"
+      ],
       "severity": "critical",
-      "tags": ["robot", "teach pendant", "estop", "emergency", "safety", "servo"]
+      "tags": [
+        "robot",
+        "teach pendant",
+        "estop",
+        "emergency",
+        "safety",
+        "servo"
+      ],
+      "parts_category": "teach_pendant"
     },
     {
       "code": "90001",
@@ -874,9 +1266,20 @@
         "If intermittent, check for conveyor speed variation causing product to pass through read zone too fast",
         "Verify barcode symbology configured in scanner matches actual barcode type on product"
       ],
-      "equipment_types": ["conveyor", "packaging", "asrs"],
+      "equipment_types": [
+        "conveyor",
+        "packaging",
+        "asrs"
+      ],
       "severity": "medium",
-      "tags": ["barcode", "scanner", "no-read", "label", "optics"]
+      "tags": [
+        "barcode",
+        "scanner",
+        "no-read",
+        "label",
+        "optics"
+      ],
+      "parts_category": "barcode_scanner"
     },
     {
       "code": "90002",
@@ -900,9 +1303,20 @@
         "Check load cell cable connections — corrosion or moisture in junction box causes drift",
         "If readings are erratic, swap load cell with known-good unit to confirm failure"
       ],
-      "equipment_types": ["conveyor", "packaging"],
+      "equipment_types": [
+        "conveyor",
+        "packaging"
+      ],
       "severity": "medium",
-      "tags": ["weight", "scale", "checkweigher", "tolerance", "load cell", "calibration"]
+      "tags": [
+        "weight",
+        "scale",
+        "checkweigher",
+        "tolerance",
+        "load cell",
+        "calibration"
+      ],
+      "parts_category": "scale_load_cell"
     },
     {
       "code": "70004",
@@ -926,9 +1340,19 @@
         "In cold environments, pre-condition film rolls by storing in heated area before use",
         "If using stretch wrapper, reduce pre-stretch ratio and increase number of wraps to compensate"
       ],
-      "equipment_types": ["packaging"],
+      "equipment_types": [
+        "packaging"
+      ],
       "severity": "low",
-      "tags": ["wrapper", "film", "break", "stretch", "tension", "packaging"]
+      "tags": [
+        "wrapper",
+        "film",
+        "break",
+        "stretch",
+        "tension",
+        "packaging"
+      ],
+      "parts_category": "stretch_wrap_film"
     },
     {
       "code": "70005",
@@ -952,9 +1376,19 @@
         "Check hot melt glue temperature and nozzle condition — purge nozzle if clogged",
         "Verify case blank size matches the recipe selected on HMI — changeover if needed"
       ],
-      "equipment_types": ["packaging"],
+      "equipment_types": [
+        "packaging"
+      ],
       "severity": "medium",
-      "tags": ["case erector", "jam", "packaging", "vacuum", "glue", "blank"]
+      "tags": [
+        "case erector",
+        "jam",
+        "packaging",
+        "vacuum",
+        "glue",
+        "blank"
+      ],
+      "parts_category": "pneumatic_valve"
     },
     {
       "code": "90003",
@@ -978,9 +1412,20 @@
         "If communication error, check data cable between printer and PLC/host — reseat connections",
         "Power cycle the printer after clearing any jams and reloading media"
       ],
-      "equipment_types": ["packaging", "conveyor"],
+      "equipment_types": [
+        "packaging",
+        "conveyor"
+      ],
       "severity": "medium",
-      "tags": ["label", "printer", "applicator", "printhead", "media", "packaging"]
+      "tags": [
+        "label",
+        "printer",
+        "applicator",
+        "printhead",
+        "media",
+        "packaging"
+      ],
+      "parts_category": "label_printer"
     },
     {
       "code": "90004",
@@ -1005,9 +1450,143 @@
         "Check camera focus — use live image display to verify sharpness on product features",
         "Review reject history for patterns — same defect location may indicate upstream process issue"
       ],
-      "equipment_types": ["packaging", "conveyor"],
+      "equipment_types": [
+        "packaging",
+        "conveyor"
+      ],
       "severity": "medium",
-      "tags": ["vision", "camera", "inspection", "reject", "quality", "optics"]
+      "tags": [
+        "vision",
+        "camera",
+        "inspection",
+        "reject",
+        "quality",
+        "optics"
+      ],
+      "parts_category": "vision_camera"
+    },
+    {
+      "code": "10039",
+      "name": "Piler Lift Limit Switch Fault",
+      "equipment_type": "piler",
+      "description": "Lift mechanism is not confirming a required position via limit switch or proximity sensor. Machine is waiting for a position confirmation signal that is not arriving.",
+      "probable_causes": [
+        "Final-position proximity sensor target gap too large — target just barely entering sensing zone (most common cause)",
+        "Proximity sensor LED on but PLC input not stable — debounce or dwell issue in ladder logic",
+        "Sensor target plate bent, loose, or shifted — no longer aligned with sensor face",
+        "Sensor cable loose at M12 connector — intermittent signal under vibration",
+        "Lift stopping short of full travel — mechanical obstruction or brake engaging early",
+        "Inhibit key switch in wrong position — lift travel range limited",
+        "PLC input module channel marginal — registering ON/OFF at threshold current"
+      ],
+      "fix_steps": [
+        "Manually jog lift to full down position — hold DOWN button 3-5 seconds past normal stop point",
+        "Observe sensor LED at the final-down position — it must be solid ON, not flickering",
+        "Measure prox sensor gap to target plate with feeler gauge — adjust bracket to close gap by 1-2mm",
+        "Verify target plate covers the full sensing face of the sensor — overlap on all edges",
+        "Wiggle the M12 sensor connector while watching the PLC input LED — if it flickers, replace connector",
+        "In PLC, check the raw input bit — confirm it shows TRUE for at least 100ms before fault clears",
+        "Verify inhibit key switch is OFF (run position) before testing lift travel",
+        "If LED goes ON but PLC does not see it, swap the PLC input to an adjacent channel to rule out module fault"
+      ],
+      "field_trick": "Cover the sensor face by hand while the lift is up — if PLC input goes ON with your hand covering it, the sensor works fine and the issue is purely target alignment. Adjust the bracket until the lift's own target produces the same result.",
+      "equipment_types": [
+        "piler",
+        "asrs"
+      ],
+      "severity": "high",
+      "tags": [
+        "lift",
+        "limit switch",
+        "proximity",
+        "position",
+        "target",
+        "inhibit",
+        "piler"
+      ],
+      "parts_category": "proximity_sensor"
+    },
+    {
+      "code": "GEN001",
+      "name": "Machine Won't Run — No Fault Code Showing",
+      "equipment_type": "general",
+      "description": "Machine is in stopped state with no active fault on HMI. All fault indicators are clear but machine will not start from HMI start button.",
+      "probable_causes": [
+        "E-stop or guard interlock not reset — HMI may clear fault display but circuit is still open",
+        "Mode selector switch in wrong position — machine in manual or maintenance mode",
+        "Permissive condition not met — upstream or downstream equipment not ready",
+        "HMI start command not reaching PLC — communication fault between panel and PLC",
+        "Machine in mid-cycle pause — needs cycle-complete or reset before new start",
+        "Low air or hydraulic pressure inhibiting start — pressure switch preventing motion",
+        "VFD or servo drive in ready fault state — drive ready bit not set to PLC"
+      ],
+      "fix_steps": [
+        "Walk the entire machine — check every E-stop, twist/pull each one, check all guard doors",
+        "Check mode selector switch on main control panel — verify it is in AUTO/RUN position",
+        "Look at HMI for any permissive status screen — identify which ready condition is not met",
+        "Verify upstream equipment (conveyors feeding this machine) is running and in auto mode",
+        "Verify downstream equipment is running and not full or faulted",
+        "Check main air pressure gauge — must be above minimum (typically 80 PSI)",
+        "Check VFD and servo drive displays for any fault codes or non-ready indicators",
+        "Try pressing HMI Reset or Alarm Silence first, wait 5 seconds, then press Start",
+        "If machine was mid-cycle when stopped, try pressing Cycle Reset before Start"
+      ],
+      "field_trick": "On most PLCs, the Start button input and the machine Running output are in different rungs. If pressing Start does nothing, use the PLC status screen to check if the Start input is being received. If yes, the problem is in the permissive logic. If no, the problem is in the HMI or start button wiring.",
+      "equipment_types": [
+        "conveyor",
+        "piler",
+        "asrs",
+        "packaging",
+        "palletizer"
+      ],
+      "severity": "medium",
+      "tags": [
+        "start",
+        "permissive",
+        "mode",
+        "selector",
+        "estop",
+        "ready",
+        "interlock",
+        "no fault"
+      ],
+      "parts_category": "safety_relay"
+    },
+    {
+      "code": "10040",
+      "name": "Piler Inhibit Key Active — Lift Restricted",
+      "equipment_type": "piler",
+      "description": "Piler inhibit key switch is detected as ON. This prevents the lift from traveling to full down position, which means final-down proximity cannot be satisfied and Auto Lost or similar faults follow.",
+      "probable_causes": [
+        "Inhibit key physically left in ON (restrict) position after maintenance or pallet loading",
+        "Inhibit key switch wiring fault — switch reads ON even when physically in OFF position",
+        "PLC bit for inhibit condition stuck ON — logic issue or retained register value",
+        "Multiple inhibit inputs ORed in PLC logic — one of the other inhibit sources still active",
+        "Wrong key inserted — some pilers use different keys for different restrict levels"
+      ],
+      "fix_steps": [
+        "Locate inhibit key switch on piler column or main control panel — turn to OFF (run) position",
+        "Verify key is fully turned and seated in OFF position — some switches require firm turn",
+        "Check PLC input for inhibit key — confirm it shows FALSE (OFF) after switching key",
+        "If PLC still shows inhibit ON after key is OFF, check wiring from switch to PLC input module",
+        "Scan PLC ladder for all conditions that contribute to the inhibit output — identify which one is still ON",
+        "After turning key OFF, jog lift to full down, confirm final-down prox lights, then reset Auto Lost fault"
+      ],
+      "field_trick": "The inhibit key is often found near the pallet loading station or on the piler control column. It looks like a standard keyed selector switch. If the key is vertical (12 o'clock position) it is typically OFF. If rotated 45 or 90 degrees, it is restricting travel. Some sites remove the key and leave it in the ON position as a shortcut during loading — always check here first.",
+      "equipment_types": [
+        "piler",
+        "asrs"
+      ],
+      "severity": "medium",
+      "tags": [
+        "inhibit",
+        "key switch",
+        "lift",
+        "restrict",
+        "piler",
+        "auto lost"
+      ],
+      "parts_category": "proximity_sensor"
     }
   ]
 }

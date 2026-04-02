@@ -4,3 +4,4 @@ pyyaml
 python-multipart
 jinja2
 aiofiles
+stripe
