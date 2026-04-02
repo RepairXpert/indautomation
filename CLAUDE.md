@@ -10,10 +10,10 @@
 - Launch: `run.bat` or `uvicorn indauto.app:app --port 8300`
 
 ## Assets
-- 25 fault codes, 5 equipment profiles
+- 71 fault codes (27 Allen-Bradley), 6 equipment profiles
 - 500+ industrial parts catalog (Allen-Bradley, IFM, Banner, ABB, Siemens, Omron, SMC, Pilz)
 - Amazon Affiliate tag: "repairxpert-20" (2-8% commission on all parts links)
-- Suppliers: AutomationDirect (primary), Amazon, Grainger, Digikey, McMaster-Carr
+- Suppliers: **AutomationDirect (PRIMARY — goto supplier)**, Amazon (affiliate repairxpert-20), Grainger, Digikey, McMaster-Carr
 - 50+ past diagnoses in history
 
 ## Revenue Actions (priority order)

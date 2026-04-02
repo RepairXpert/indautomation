@@ -1587,6 +1587,1138 @@
         "auto lost"
       ],
       "parts_category": "proximity_sensor"
+    },
+    {
+      "code": "AB-PLC-MAJOR01",
+      "name": "Allen-Bradley PLC Major Fault — Power Loss (Type 01)",
+      "equipment_type": "allen-bradley",
+      "description": "CompactLogix or ControlLogix processor detected a power-up or power-cycle event. Controller faulted on startup or after a brown-out condition. Program execution stopped.",
+      "probable_causes": [
+        "Incoming power supply to PLC rack dropped below threshold — utility fluctuation or loose wiring",
+        "PLC power supply module failing — output voltage sagging under load",
+        "Backplane power distribution issue — loose module seating causing intermittent power to CPU",
+        "UPS feeding the PLC panel failed or battery depleted during outage",
+        "Power supply overloaded — too many modules drawing more current than PSU rating"
+      ],
+      "fix_steps": [
+        "Check PLC power supply output voltage — 1756-PA72 should read 5.1V and 24V on status LEDs",
+        "Measure incoming AC voltage at power supply terminals — should be stable 120VAC or 240VAC",
+        "Reseat the CPU module firmly into the backplane — push until retention clips click",
+        "Check power budget — sum all module current draw and compare to power supply rating in RSLogix",
+        "If power loss is intermittent, add a 24VDC UPS to the panel or check utility power quality",
+        "Clear the major fault in RSLogix 5000/Studio 5000 — Controller Properties > Major Faults tab",
+        "After clearing, put controller back in RUN mode — verify program executes normally"
+      ],
+      "field_trick": "In RSLogix 5000, go to Controller Properties > General > Major Faults. The timestamp tells you exactly when the power event occurred. Cross-reference with building power logs to confirm utility vs internal cause.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler",
+        "asrs"
+      ],
+      "severity": "critical",
+      "tags": [
+        "allen-bradley",
+        "plc",
+        "controllogix",
+        "compactlogix",
+        "major fault",
+        "power loss",
+        "1756",
+        "1769"
+      ],
+      "parts_category": "plc_power_supply"
+    },
+    {
+      "code": "AB-PLC-MAJOR03",
+      "name": "Allen-Bradley PLC Major Fault — I/O Module Not Responding (Type 03)",
+      "equipment_type": "allen-bradley",
+      "description": "ControlLogix or CompactLogix processor reports an I/O module is not responding. Connection to local or remote I/O module timed out. Associated I/O data is invalid.",
+      "probable_causes": [
+        "I/O module not fully seated in backplane — partial insertion causes intermittent contact",
+        "I/O module hardware failure — internal circuitry failed, status LED shows red or no LED",
+        "Backplane connector pins damaged or contaminated — poor electrical contact",
+        "Module firmware incompatible with controller firmware revision",
+        "RPI (Requested Packet Interval) set too aggressive for the module type",
+        "Remote I/O adapter (1756-EN2T, 1734-AENT) lost network connection to main controller"
+      ],
+      "fix_steps": [
+        "Identify the faulted module — in RSLogix 5000, expand I/O Configuration tree, look for yellow triangle icons",
+        "Reseat the faulted module — remove and re-insert firmly until retention clips engage",
+        "Check module status LEDs — green=OK, red=fault, off=no power or dead module",
+        "If remote rack, check Ethernet cable between EN2T adapters — verify link LEDs on both ends",
+        "Compare module firmware rev to controller firmware — update if mismatch per Rockwell compatibility matrix",
+        "Inhibit the module in RSLogix if it needs replacement — this allows rest of program to run",
+        "After replacing module, download I/O configuration and verify module identity matches project"
+      ],
+      "field_trick": "In the Controller Organizer, right-click the faulted module and select Properties > Connection. The 'Last Connection Error' field tells you the exact CIP error code. 16#0203 = module not there. 16#0204 = wrong module type.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler",
+        "asrs"
+      ],
+      "severity": "critical",
+      "tags": [
+        "allen-bradley",
+        "plc",
+        "controllogix",
+        "compactlogix",
+        "major fault",
+        "io module",
+        "1756",
+        "1769",
+        "backplane"
+      ],
+      "parts_category": "plc_io_module"
+    },
+    {
+      "code": "AB-PLC-MAJOR04",
+      "name": "Allen-Bradley PLC Major Fault — Program Execution (Type 04)",
+      "equipment_type": "allen-bradley",
+      "description": "ControlLogix or CompactLogix processor encountered a program execution error. Watchdog timer expired, instruction fault, or task overlap detected. Controller went to fault mode.",
+      "probable_causes": [
+        "Watchdog timer expired — scan time exceeded task watchdog setting due to complex logic or infinite loop",
+        "Math overflow or divide-by-zero in ladder logic or structured text",
+        "Array subscript out of range — program tried to access array element beyond defined size",
+        "Task overlap — periodic task frequency too high for available scan time",
+        "Corrupted program — memory error or incomplete download"
+      ],
+      "fix_steps": [
+        "Connect RSLogix 5000/Studio 5000 — read Major Fault Code and Sub-Code from Controller Properties",
+        "Type 04 Code 16: watchdog — increase watchdog time in Task Properties, or optimize logic to reduce scan time",
+        "Type 04 Code 20: array index — find the instruction referencing the out-of-range subscript, add bounds checking",
+        "Type 04 Code 04: math overflow — add error checking before DIV/MOD instructions, check for zero divisor",
+        "Type 04 Code 31: task overlap — reduce periodic task frequency or move non-critical logic to lower priority task",
+        "Download a clean backup of the program if corruption is suspected — verify checksum matches known-good copy",
+        "Clear major fault and return to RUN mode — monitor scan time in Task Properties to confirm normal operation"
+      ],
+      "field_trick": "The fault sub-code tells you exactly what happened. Note the exact Type and Code numbers before clearing — they disappear after reset. Screenshot the Major Faults tab in Controller Properties.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler",
+        "asrs"
+      ],
+      "severity": "critical",
+      "tags": [
+        "allen-bradley",
+        "plc",
+        "controllogix",
+        "compactlogix",
+        "major fault",
+        "watchdog",
+        "program",
+        "execution",
+        "scan time"
+      ],
+      "parts_category": "plc_cpu"
+    },
+    {
+      "code": "AB-PLC-MAJOR06",
+      "name": "Allen-Bradley PLC Major Fault — Motion Axis Fault (Type 06)",
+      "equipment_type": "allen-bradley",
+      "description": "ControlLogix motion axis has faulted. Servo drive reported a critical error through the motion module (1756-M02AE, 1756-M03SE, Kinetix). Axis motion stopped.",
+      "probable_causes": [
+        "Servo drive reported overcurrent, overvoltage, or ground fault",
+        "Motor feedback (encoder/resolver) cable disconnected or damaged",
+        "Physical obstruction preventing axis from following commanded motion profile",
+        "Motion module lost connection to the Kinetix servo drive on SERCOS or CIP Motion bus",
+        "Axis hard limit switch tripped — axis reached physical end of travel",
+        "Motor brake not releasing — brake power supply issue"
+      ],
+      "fix_steps": [
+        "In RSLogix 5000, check the axis properties — Faults tab shows the specific motion fault code",
+        "Check Kinetix drive display for fault code — cross-reference with Kinetix user manual",
+        "Inspect motor encoder/resolver cable at both motor and drive ends — reseat connectors",
+        "Check for mechanical obstruction — with drive disabled, try to move axis by hand",
+        "If CIP Motion bus error, check Ethernet cable between motion module and Kinetix drive",
+        "Clear axis fault using MSF (Motion Servo Off) then MSO (Motion Servo On) instructions in logic",
+        "Home the axis after clearing the fault before resuming automatic motion"
+      ],
+      "equipment_types": [
+        "allen-bradley",
+        "packaging",
+        "palletizer"
+      ],
+      "severity": "critical",
+      "tags": [
+        "allen-bradley",
+        "plc",
+        "controllogix",
+        "motion",
+        "servo",
+        "kinetix",
+        "axis",
+        "major fault"
+      ],
+      "parts_category": "servo_drive"
+    },
+    {
+      "code": "AB-PLC-MINOR10",
+      "name": "Allen-Bradley PLC Minor Fault — Battery Low (Type 10)",
+      "equipment_type": "allen-bradley",
+      "description": "ControlLogix or CompactLogix processor reports low backup battery. Battery maintains the real-time clock and may be needed for energy storage module backup on older controllers.",
+      "probable_causes": [
+        "Battery reached end of life — typical 2-3 year lifespan for 1756-BA1 or 1756-BA2",
+        "Battery not making good contact in the holder — corrosion or loose fit",
+        "Controller in a hot environment — heat accelerates battery drain",
+        "Battery was removed and not replaced after previous maintenance"
+      ],
+      "fix_steps": [
+        "Replace battery with controller powered ON — CompactLogix uses 1769-BA, ControlLogix uses 1756-BA2",
+        "For ControlLogix: battery is in the CPU module — slide open the battery door, swap battery, close door",
+        "For CompactLogix 5370/5380: battery is in a holder on the side of the controller",
+        "After replacement, verify BATTOK status LED is green or battery fault clears in RSLogix",
+        "Note: CompactLogix 5480 and newer ControlLogix 5580 use non-volatile memory and do not require batteries",
+        "Record battery change date on a label inside the panel door"
+      ],
+      "field_trick": "Even though modern Logix controllers save programs to non-volatile memory, the battery still powers the real-time clock. If the clock matters for data logging or shift tracking, replace the battery promptly.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler",
+        "asrs"
+      ],
+      "severity": "low",
+      "tags": [
+        "allen-bradley",
+        "plc",
+        "controllogix",
+        "compactlogix",
+        "minor fault",
+        "battery",
+        "1756-BA2",
+        "1769-BA"
+      ],
+      "parts_category": "plc_battery"
+    },
+    {
+      "code": "AB-PLC-MINOR20",
+      "name": "Allen-Bradley PLC Minor Fault — EtherNet/IP Connection Loss (Type 20)",
+      "equipment_type": "allen-bradley",
+      "description": "A configured EtherNet/IP connection to a remote device has timed out. The connection faulted but the controller continues running. I/O data from the faulted connection is invalid.",
+      "probable_causes": [
+        "Ethernet cable disconnected or damaged between controller and remote device",
+        "Remote device (VFD, I/O adapter, HMI) lost power or crashed",
+        "Network switch port failure or switch power loss",
+        "IP address conflict — two devices assigned the same IP address",
+        "RPI (Requested Packet Interval) too short for network congestion level",
+        "Managed switch VLAN or port security configuration blocking CIP traffic"
+      ],
+      "fix_steps": [
+        "In RSLogix 5000, expand I/O Configuration — find the module with yellow warning icon",
+        "Check Ethernet cable at both ends — verify link LED is lit on switch port and device port",
+        "Ping the remote device IP from a laptop on the same subnet — confirm network path is good",
+        "Power cycle the faulted remote device — wait 30 seconds for full restart",
+        "Check for duplicate IP addresses — use RSLinx Classic Browse or Rockwell BOOTP/DHCP tool",
+        "Increase RPI timeout in module connection properties if timeouts are intermittent under load",
+        "Check managed switch port status and VLAN configuration if applicable"
+      ],
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler",
+        "asrs"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "plc",
+        "controllogix",
+        "compactlogix",
+        "ethernet/ip",
+        "connection",
+        "minor fault",
+        "network",
+        "rpi"
+      ],
+      "parts_category": "network_module"
+    },
+    {
+      "code": "AB-PF-F002",
+      "name": "PowerFlex VFD Fault F002 — Auxiliary Input",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex 525/527 drive faulted on auxiliary input (digital input configured as fault input). External device signaled a fault condition to the drive.",
+      "probable_causes": [
+        "External safety relay or contactor aux contact opened — upstream protective device tripped",
+        "Motor thermistor/PTC wired to aux input has gone high-resistance — motor overheating",
+        "Door interlock switch wired to aux input opened — enclosure door was opened",
+        "External pressure or level switch wired to aux input tripped",
+        "Wiring to aux input broken or terminal loose — open circuit reads as fault"
+      ],
+      "fix_steps": [
+        "Identify what device is wired to the drive's digital input configured as Aux Fault — check panel drawings",
+        "Check the external device status — reset if tripped, verify normal condition",
+        "If motor thermistor, check motor temperature — let cool before resetting drive",
+        "Verify wiring from external device to drive terminal — check for broken wire or loose terminal",
+        "Reset drive fault from keypad, digital input, or via network command",
+        "In drive parameters, check which digital input is configured for 'Auxiliary Fault' (Parameter group A06x)"
+      ],
+      "field_trick": "Parameter A06x in the PowerFlex 525 shows which digital input is configured as the fault input and whether it is normally open or normally closed. Check this first — the aux input might be inverted from what you expect.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "F002",
+        "auxiliary",
+        "input",
+        "525",
+        "527"
+      ],
+      "parts_category": "vfd_drive"
+    },
+    {
+      "code": "AB-PF-F004",
+      "name": "PowerFlex VFD Fault F004 — Undervoltage",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex drive DC bus voltage dropped below the minimum threshold. Drive cannot sustain motor operation. Typically caused by incoming power sag or loss.",
+      "probable_causes": [
+        "Incoming AC power supply voltage dropped — utility sag, generator switchover, or loose main breaker connection",
+        "Power supply wiring to drive has high resistance connection — corroded terminal or undersized wire",
+        "DC bus pre-charge circuit failed — bus capacitors not charging to rated voltage",
+        "Drive input fuses blown on one or more phases — partial power to rectifier",
+        "Large motor starting on same feeder causing voltage dip at drive input"
+      ],
+      "fix_steps": [
+        "Measure incoming AC voltage at drive input terminals — should be within drive rating (typically 200-240V or 380-480V +/-10%)",
+        "Check all three phases at drive input — loss of one phase will cause undervoltage",
+        "Inspect drive input fuses if equipped — replace any blown fuses with correct rating",
+        "Check wire connections at drive input terminals and upstream breaker — tighten all",
+        "If voltage sags are intermittent, check if another large motor starts at the same time — consider adding line reactor",
+        "Reset drive fault after confirming stable input voltage — monitor DC bus voltage parameter during operation"
+      ],
+      "field_trick": "PowerFlex drives log the DC bus voltage at the time of fault. Check parameter 'DC Bus Voltage' or the fault log — if the bus voltage is close to the trip point (typically 60% of nominal), the incoming power is marginal and you may need a line reactor or power conditioning.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "F004",
+        "undervoltage",
+        "dc bus",
+        "power"
+      ],
+      "parts_category": "vfd_drive"
+    },
+    {
+      "code": "AB-PF-F005",
+      "name": "PowerFlex VFD Fault F005 — Overvoltage",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex drive DC bus voltage exceeded the maximum safe threshold. Typically occurs during motor deceleration when regenerative energy from the motor charges the DC bus faster than it can be dissipated.",
+      "probable_causes": [
+        "Deceleration time too short for load inertia — motor regenerating excessive energy to DC bus",
+        "Dynamic braking resistor open circuit, undersized, or disconnected",
+        "Incoming AC voltage too high — check utility supply or transformer tap settings",
+        "Braking transistor in drive failed — cannot switch regen energy to braking resistor",
+        "High-inertia load overdriving motor during coast-down — conveyor on a decline, for example"
+      ],
+      "fix_steps": [
+        "Increase deceleration ramp time — double the current value as a first test (Parameter A092 on PF525)",
+        "Check dynamic braking resistor wiring and resistance — measure with multimeter, compare to spec",
+        "Measure incoming AC voltage at drive input terminals — verify within drive rating",
+        "Enable bus regulator if available (Parameter A096 on PF525) — this automatically extends decel time to avoid overvoltage",
+        "For high-inertia applications, consider coast-to-stop instead of ramp-to-stop",
+        "If braking resistor and settings are correct but fault persists, the internal braking transistor may have failed — requires drive service or replacement"
+      ],
+      "field_trick": "Enable the 'Bus Reg' feature (A096 = 1 on PowerFlex 525) before adjusting decel time. The drive will automatically slow down the deceleration to keep the bus voltage below the trip point. This often fixes F005 without any mechanical changes.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "F005",
+        "overvoltage",
+        "dc bus",
+        "braking",
+        "deceleration"
+      ],
+      "parts_category": "vfd_drive"
+    },
+    {
+      "code": "AB-PF-F007",
+      "name": "PowerFlex VFD Fault F007 — Motor Overload",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex drive electronic motor overload protection tripped. The drive calculated that motor current exceeded the thermal model limits based on motor nameplate data programmed in the drive.",
+      "probable_causes": [
+        "Mechanical overload on driven equipment — jammed product, seized bearing, or excessive friction",
+        "Motor nameplate data entered incorrectly in drive — FLA, service factor, or motor type wrong",
+        "Motor overload protection parameters set too aggressively for the application",
+        "Motor cooling compromised — fan failure on motor or running at low speed without external cooling",
+        "Motor is undersized for the application — continuous current draw near or above nameplate FLA"
+      ],
+      "fix_steps": [
+        "Check motor current draw with clamp meter — compare to motor nameplate FLA",
+        "Inspect driven equipment for mechanical binding — try to rotate by hand with motor disconnected",
+        "Verify motor nameplate data in drive parameters — FLA (A091), Motor NP Volts (A089), Motor NP Hz (A090)",
+        "Check motor cooling — verify fan spins when motor runs, clear any debris from air intake",
+        "If motor runs at reduced speed via VFD, confirm external cooling fan is installed and operational",
+        "Reset drive fault — monitor current during normal operation to establish baseline",
+        "If motor is consistently at or above FLA, the motor may be undersized — evaluate upsizing motor or reducing load"
+      ],
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "F007",
+        "motor overload",
+        "overcurrent",
+        "thermal"
+      ],
+      "parts_category": "vfd_drive"
+    },
+    {
+      "code": "AB-PF-F012",
+      "name": "PowerFlex VFD Fault F012 — HW Overcurrent",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex drive hardware overcurrent protection tripped. Instantaneous current exceeded the drive's hardware-level protection threshold. This is a fast-acting protection that trips before software overload.",
+      "probable_causes": [
+        "Motor winding short — phase-to-phase or phase-to-ground insulation failure",
+        "Output cable short circuit — damaged cable, pinched insulation, or loose terminal causing arc",
+        "IGBT output transistor failing — drive output section degraded",
+        "Acceleration time too fast for high-inertia load — current spike exceeds hardware limit",
+        "Contactor between drive and motor opened/closed while drive was running — caused current transient"
+      ],
+      "fix_steps": [
+        "Disconnect motor leads from drive output — megger each motor phase to ground and phase-to-phase, all should read over 1 Megohm",
+        "Inspect output cable from drive to motor — look for pinched, abraded, or cut insulation at conduit entry points",
+        "Check motor cable connections at drive output terminals — tighten all, look for signs of arcing",
+        "If motor and cable test good, the drive output section (IGBTs) may be damaged — drive needs factory service or replacement",
+        "Increase acceleration ramp time if fault occurs on motor start (Parameter A091 on PF525)",
+        "Never install a contactor between the drive output and motor unless specifically designed for it — use drive enable/disable instead"
+      ],
+      "field_trick": "F012 (hardware) trips instantly and indicates a serious electrical problem. F064 (software) is a slower overcurrent. If you get F012 repeatedly, always megger the motor before resetting — running a shorted motor will destroy the drive's output IGBTs.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "critical",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "F012",
+        "overcurrent",
+        "hardware",
+        "igbt",
+        "motor short"
+      ],
+      "parts_category": "vfd_drive"
+    },
+    {
+      "code": "AB-PF-F013",
+      "name": "PowerFlex VFD Fault F013 — Ground Fault",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex drive detected current leakage to ground on the motor output circuit. Drive tripped to prevent damage to motor, cabling, and drive output electronics.",
+      "probable_causes": [
+        "Motor cable insulation damage — pinched at conduit entry, abraded by sharp edge, or rodent damage",
+        "Moisture in motor terminal box — condensation, water ingress through failed cable gland or seal",
+        "Motor winding insulation breakdown to frame — age, overheating, or chemical exposure degraded insulation",
+        "Long motor cable run (>100 ft) causing capacitive leakage current that triggers ground fault detection",
+        "VFD output dV/dt (voltage rate-of-rise) charging cable capacitance on long runs"
+      ],
+      "fix_steps": [
+        "Disconnect motor leads at drive output — megger each phase to ground, all should read over 1 Megohm",
+        "If motor passes, megger the cable separately — disconnect motor end too and test cable insulation",
+        "Open motor terminal box — inspect for moisture, corrosion, or water pooling, dry and reseal",
+        "Inspect entire cable run for physical damage — especially at conduit entry points and sharp bends",
+        "For long cable runs (>100 ft), add an output line reactor or dV/dt filter between drive and motor",
+        "Seal all cable glands and conduit entries with appropriate sealant to prevent moisture ingress"
+      ],
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "critical",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "F013",
+        "ground fault",
+        "insulation",
+        "motor",
+        "cable"
+      ],
+      "parts_category": "vfd_drive"
+    },
+    {
+      "code": "AB-PF-F029",
+      "name": "PowerFlex VFD Fault F029 — Analog Input Loss",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex drive lost the analog input signal used for speed reference. Signal dropped below the configured loss threshold (typically below 4mA on a 4-20mA loop).",
+      "probable_causes": [
+        "Analog signal wire broken or disconnected at drive terminal or PLC output",
+        "PLC analog output module faulted or channel failed — no output to drive",
+        "Signal wire shorted to shield or ground — pulling signal below 4mA",
+        "PLC program not writing to the analog output — logic fault or task not running",
+        "Analog output scaling mismatch — PLC output 0-10V but drive expecting 4-20mA"
+      ],
+      "fix_steps": [
+        "Measure analog signal at drive input terminal with multimeter set to mA — should read 4-20mA range",
+        "If signal is 0mA, check PLC analog output module — verify channel LED status and output value in PLC program",
+        "Trace analog wiring from PLC output to drive input — check for loose terminals, broken wires, or pinched cable",
+        "Verify PLC program is actively writing to the analog output — check ladder logic or function block",
+        "Confirm signal type matches — drive parameter must match PLC output (4-20mA vs 0-10V)",
+        "If using 4-20mA, check that the loop power supply is functioning — measure voltage across the loop",
+        "As temporary workaround, configure drive for keypad speed reference to keep motor running while troubleshooting analog"
+      ],
+      "field_trick": "Set the drive to LOCAL/KEYPAD speed reference temporarily (front panel). This takes the analog input out of the loop and lets you run the motor at a fixed speed while you troubleshoot the analog signal path.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "F029",
+        "analog input",
+        "4-20mA",
+        "signal loss",
+        "speed reference"
+      ],
+      "parts_category": "vfd_drive"
+    },
+    {
+      "code": "AB-PF-F033",
+      "name": "PowerFlex VFD Fault F033 — Auto Restart Tries Exceeded",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex drive attempted the configured number of automatic fault resets and all attempts failed. The drive has given up trying to auto-restart and requires manual intervention.",
+      "probable_causes": [
+        "Underlying fault condition is persistent — the root cause has not been resolved",
+        "Intermittent fault occurring faster than the auto-restart delay — drive keeps re-faulting",
+        "Power quality issue causing repeated undervoltage or overvoltage trips",
+        "Mechanical issue causing repeated overcurrent or overload — jam not cleared",
+        "Auto restart configured for a fault type that should not be auto-restarted (e.g., ground fault)"
+      ],
+      "fix_steps": [
+        "Check the drive fault log — identify the ORIGINAL fault that triggered the auto-restart sequence, not F033 itself",
+        "Address the root cause fault — F033 is a symptom, not the cause. Fix whatever fault the drive kept retrying on",
+        "Review which faults have auto-restart enabled — disable auto-restart for serious faults like F012 (HW overcurrent) and F013 (ground fault)",
+        "Check Parameter Group A06x for auto-restart configuration — number of tries, delay between tries",
+        "Reset drive manually after fixing the root cause",
+        "Monitor drive operation to confirm the original fault does not return"
+      ],
+      "field_trick": "Read the fault log BEFORE resetting the drive. F033 means the drive tried and failed multiple times. The fault log entries before F033 tell you the real problem. The most recent non-F033 fault in the log is your root cause.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "F033",
+        "auto restart",
+        "retry",
+        "fault log"
+      ],
+      "parts_category": "vfd_drive"
+    },
+    {
+      "code": "AB-PF-F064",
+      "name": "PowerFlex VFD Fault F064 — Software Overcurrent",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex drive software-level overcurrent protection tripped. Motor current exceeded the drive's software current limit. Slower-acting than F012 (hardware overcurrent) — indicates sustained high current rather than instantaneous spike.",
+      "probable_causes": [
+        "Mechanical overload on driven equipment — increased friction, jammed product, or worn bearings",
+        "Motor current limit parameter set too low for the application — drive limiting before motor reaches full load",
+        "Acceleration time too short — current builds up during ramp and hits software limit",
+        "Motor is undersized for the actual load — running continuously above nameplate current",
+        "Winding damage beginning — partial short draws extra current but not enough to trip hardware protection"
+      ],
+      "fix_steps": [
+        "Measure motor current on all three phases with clamp meter — compare to motor nameplate FLA",
+        "Check driven equipment for mechanical binding or increased load — compare current to historical baseline",
+        "Review drive current limit parameter — verify it is set appropriately for the motor and application",
+        "If fault occurs during acceleration, increase accel time or enable current limit to extend accel automatically",
+        "Megger motor windings if current is abnormally high with no mechanical cause",
+        "Reset drive and monitor — if current is consistently near or above FLA, evaluate motor sizing or load reduction"
+      ],
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "F064",
+        "overcurrent",
+        "software",
+        "current limit"
+      ],
+      "parts_category": "vfd_drive"
+    },
+    {
+      "code": "AB-PF-F080",
+      "name": "PowerFlex VFD Fault F080 — Drive Overload",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex drive's own thermal protection tripped. The drive itself (not the motor) has been running at high current output for too long and the internal heat sink temperature exceeded the safe limit.",
+      "probable_causes": [
+        "Drive undersized for the motor or application — drive current rating too low for actual load",
+        "Drive cooling fan failed or heatsink fins blocked by dust — drive cannot dissipate heat",
+        "Ambient temperature inside the panel too high — poor ventilation or adjacent heat-generating equipment",
+        "Drive operating at high duty cycle with little off-time — thermal model needs more cooling time",
+        "Drive mounted too close to other drives or heat sources — insufficient clearance for airflow"
+      ],
+      "fix_steps": [
+        "Check drive heatsink temperature — some PowerFlex models display it in diagnostics parameters",
+        "Inspect drive cooling fan — verify it is spinning when drive is running, replace if dead",
+        "Clean drive heatsink fins — use compressed air to blow out accumulated dust and debris",
+        "Check panel ventilation — verify fans, filters, and louvers are working and not clogged",
+        "Measure ambient temperature inside the panel — should be below 40C (104F) for most drives",
+        "Verify drive frame size is adequate for the motor and load — check Rockwell selection guide",
+        "Ensure minimum clearances around the drive per installation manual — typically 1-2 inches top/bottom for airflow"
+      ],
+      "field_trick": "If the drive fan has failed, you can sometimes get back online temporarily by opening the panel door and directing a portable fan at the drive heatsink. Order the replacement fan immediately — this is not a permanent fix.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "F080",
+        "overload",
+        "thermal",
+        "heatsink",
+        "cooling"
+      ],
+      "parts_category": "vfd_drive"
+    },
+    {
+      "code": "AB-PF-F081",
+      "name": "PowerFlex VFD Fault F081 — Drive Overtemperature",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex drive heatsink temperature sensor reports temperature above safe operating limit. Drive shut down to prevent thermal damage to power electronics.",
+      "probable_causes": [
+        "Drive cooling fan failed — internal fan not spinning or running at reduced speed",
+        "Panel ambient temperature too high — inadequate ventilation, clogged filters, or failed panel fan",
+        "Drive heatsink fins clogged with dust — severely restricted airflow",
+        "Drive mounted in direct sunlight or near radiant heat source",
+        "Continuous heavy load operation in a hot environment — drive operating at thermal margin"
+      ],
+      "fix_steps": [
+        "Let drive cool down before attempting restart — wait minimum 15 minutes",
+        "Check drive internal fan — listen for it running, verify airflow from top of drive",
+        "Clean heatsink fins thoroughly with compressed air — hold fan blade still to prevent overspeed during blowing",
+        "Check panel ambient temperature — install panel cooling fan, AC unit, or larger louvers if too hot",
+        "Verify panel filter is not clogged — replace or clean filter media",
+        "Check drive mounting clearances — minimum spacing per installation manual for adequate airflow",
+        "If fan has failed, order replacement fan from Rockwell — part number is in the drive manual for your frame size"
+      ],
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "F081",
+        "overtemperature",
+        "heatsink",
+        "fan",
+        "cooling"
+      ],
+      "parts_category": "vfd_drive"
+    },
+    {
+      "code": "AB-PF-COMM",
+      "name": "PowerFlex VFD Fault — Communication Loss (F081/F100 Series)",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex drive lost communication with the PLC over EtherNet/IP, DeviceNet, or embedded network port. Drive went to configured fault action (stop, coast, or hold last speed).",
+      "probable_causes": [
+        "Ethernet cable disconnected between drive and network switch",
+        "Drive embedded EtherNet/IP adapter crashed — needs power cycle",
+        "PLC scanner or EN2T communication module faulted or overloaded",
+        "Network switch port failure — no link LED on the port connected to the drive",
+        "IP address conflict or wrong IP assigned to the drive",
+        "RPI timeout too short in the PLC I/O configuration for this drive"
+      ],
+      "fix_steps": [
+        "Check Ethernet cable at drive port and switch — verify link LED is lit on both",
+        "Ping the drive's IP address from a laptop to verify network connectivity",
+        "Power cycle the drive to reset the embedded communication adapter",
+        "In RSLogix 5000, check the drive's I/O connection status — look for specific CIP error codes",
+        "Verify drive IP address matches the PLC I/O configuration — use drive keypad menu or Rockwell BOOTP tool",
+        "Increase RPI (Requested Packet Interval) in the PLC I/O tree for this drive connection",
+        "Check PLC EN2T or embedded Ethernet port status — verify it is not overloaded with too many connections"
+      ],
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "communication",
+        "ethernet/ip",
+        "network",
+        "connection loss"
+      ],
+      "parts_category": "network_module"
+    },
+    {
+      "code": "AB-GUARD-SIL",
+      "name": "Allen-Bradley GuardLogix Safety Fault — Safety Task Fault",
+      "equipment_type": "allen-bradley",
+      "description": "GuardLogix safety controller has faulted. The safety task stopped executing, and all safety outputs went to their de-energized (safe) state. All guarded motion and safety-related outputs are disabled.",
+      "probable_causes": [
+        "Safety partner module (1756-L7SP) communication loss with primary processor — partner not seated or failed",
+        "Safety I/O device connection lost — Guard I/O module (1734-IB8S, 1734-OB8S) went offline",
+        "Safety task watchdog expired — safety program execution time exceeded the configured watchdog",
+        "CIP Safety connection timeout — safety device missed too many consecutive communication packets",
+        "Safety signature mismatch after program change — safety lock/signature validation failed",
+        "Safety I/O module detected internal diagnostic failure — module self-test failed"
+      ],
+      "fix_steps": [
+        "In RSLogix 5000, check Controller Properties > Safety tab for the specific safety fault code",
+        "Check safety partner module (1756-L7SP) status LEDs — must show solid green when healthy",
+        "Verify all CIP Safety connections — expand Safety I/O tree in Controller Organizer, look for faulted modules",
+        "If safety I/O device offline, check its Ethernet cable and power — reseat cable, power cycle device",
+        "If safety signature mismatch, the safety program may need revalidation — contact safety engineer",
+        "Reset safety fault — this typically requires a deliberate reset sequence, not just clearing faults",
+        "After reset, verify all safety I/O devices are online before attempting to run guarded operations"
+      ],
+      "field_trick": "GuardLogix safety faults require a specific reset sequence — you cannot just clear them like standard faults. In most applications, the safety system requires a physical reset button press (hardwired), not just an HMI button.",
+      "equipment_types": [
+        "allen-bradley",
+        "packaging",
+        "palletizer",
+        "conveyor"
+      ],
+      "severity": "critical",
+      "tags": [
+        "allen-bradley",
+        "guardlogix",
+        "safety",
+        "sil",
+        "1756-L7SP",
+        "safety task",
+        "cip safety",
+        "guard io"
+      ],
+      "parts_category": "safety_relay"
+    },
+    {
+      "code": "AB-CR30-FAULT",
+      "name": "Allen-Bradley CR30 Safety Relay Fault",
+      "equipment_type": "allen-bradley",
+      "description": "440C-CR30 configurable safety relay has faulted. All safety outputs are de-energized. The CR30 monitors E-stops, guard doors, light curtains, and safety mats in a single configurable unit.",
+      "probable_causes": [
+        "Safety input device opened — E-stop pressed, guard door opened, or light curtain interrupted",
+        "Input wiring fault detected — CR30 cross-fault monitoring detected a short between input channels",
+        "Output relay contact welded or stuck — CR30 detected output feedback mismatch at startup",
+        "Configuration lost or corrupted — CR30 needs reconfiguration via Connected Components Workbench (CCW)",
+        "Power supply voltage out of range — CR30 requires 24VDC (+/-20%)",
+        "Feedback loop from external contactor not closing — CR30 cannot verify contactor operation"
+      ],
+      "fix_steps": [
+        "Check CR30 LED indicators — the LED pattern identifies which input channel or condition caused the fault",
+        "Verify all E-stop buttons are released and guard doors are closed — walk the entire machine",
+        "Check the external contactor feedback wiring to the CR30 feedback input — contactor aux contact must close when contactor energizes",
+        "Measure 24VDC power supply to CR30 — must be between 19.2V and 28.8V",
+        "If configuration lost, use Connected Components Workbench (CCW) to re-download the safety configuration",
+        "Press the CR30 reset button (if configured for manual reset) after all inputs are in safe state",
+        "If output relay fault, the CR30 may need replacement — internal relay contacts are safety-rated and not field serviceable"
+      ],
+      "field_trick": "The CR30 LED indicator codes are printed on a label on the side of the unit. Red blinking patterns correspond to specific fault channels. Count the blinks to identify which input caused the fault — saves time versus connecting CCW software.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "critical",
+      "tags": [
+        "allen-bradley",
+        "safety relay",
+        "cr30",
+        "440c",
+        "e-stop",
+        "guard",
+        "light curtain",
+        "configurable safety"
+      ],
+      "parts_category": "safety_relay"
+    },
+    {
+      "code": "AB-POINT-FAULT",
+      "name": "Allen-Bradley POINT I/O Module Fault (1734 Series)",
+      "equipment_type": "allen-bradley",
+      "description": "POINT I/O module (1734 series) has faulted. Module status LED shows red or module is not communicating with the I/O adapter. Associated I/O points are invalid.",
+      "probable_causes": [
+        "Module not fully seated on DIN rail adapter base — partial insertion causes intermittent backplane contact",
+        "Module internal failure — electronics failed, status LED shows solid red",
+        "POINT I/O adapter (1734-AENT, 1734-AENTR) lost network connection to PLC",
+        "Module base terminal block wiring fault — shorted or open field wiring pulling module into fault",
+        "Module firmware version incompatible with I/O adapter firmware",
+        "Power supply to POINT I/O system is low or failed — modules require 24VDC system power"
+      ],
+      "fix_steps": [
+        "Identify faulted module — check status LEDs on all modules in the POINT I/O bank, red=fault",
+        "Reseat the faulted module — lift latch, remove, re-insert onto base firmly until it clicks",
+        "Check 24VDC power to the POINT I/O bank — measure at power supply terminals",
+        "Check 1734-AENT adapter status — network LED should be solid green, module status should be green",
+        "Disconnect field wiring from the faulted module terminal block — if fault clears, the issue is in the field wiring",
+        "Compare module catalog number and firmware to the PLC I/O configuration — must match",
+        "If module is dead (no LEDs at all), check the base terminal block for 24VDC — replace module if power is present but no response"
+      ],
+      "field_trick": "POINT I/O modules have a removable terminal block base. You can pull the module off the base without disconnecting field wiring. Snap a new module onto the existing base — all wiring stays intact. This makes swaps very fast in the field.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler",
+        "asrs"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "point io",
+        "1734",
+        "io module",
+        "din rail",
+        "aent",
+        "remote io"
+      ],
+      "parts_category": "plc_io_module"
+    },
+    {
+      "code": "AB-1756-IO",
+      "name": "Allen-Bradley ControlLogix I/O Module Fault (1756 Series)",
+      "equipment_type": "allen-bradley",
+      "description": "ControlLogix 1756 series I/O module has faulted. Module may show red status LED or is reported faulted in the PLC I/O tree. Associated I/O channels are invalid.",
+      "probable_causes": [
+        "Module not fully seated in the ControlLogix chassis backplane — partial insertion causes loss of backplane communication",
+        "Module internal hardware failure — ASIC, relay, or analog circuitry failed",
+        "Field wiring issue — shorted sensor wiring pulling an input channel into fault",
+        "Module firmware needs update — incompatible with current controller firmware level",
+        "Chassis backplane connector damaged — bent pin or contamination on connector",
+        "Module configuration does not match physical module — wrong module type in I/O tree"
+      ],
+      "fix_steps": [
+        "In RSLogix 5000, check I/O tree for the faulted module — right-click > Properties > General shows fault status",
+        "Reseat the module — open retention latches, pull module straight out, re-insert firmly until latches click",
+        "Check module status LED — green=OK, red=fault, flashing red=needs update or config error",
+        "If input module fault, try disconnecting field wiring — if fault clears, issue is in field wiring (shorted sensor, etc.)",
+        "Verify module catalog number matches what is configured in the I/O tree — 1756-IB16 is not 1756-IB32",
+        "Update module firmware using ControlFlash if firmware mismatch is indicated",
+        "If module is dead after reseat, swap to a different chassis slot to rule out backplane connector issue"
+      ],
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler",
+        "asrs"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "controllogix",
+        "1756",
+        "io module",
+        "backplane",
+        "chassis"
+      ],
+      "parts_category": "plc_io_module"
+    },
+    {
+      "code": "AB-EN2T-FAULT",
+      "name": "Allen-Bradley EtherNet/IP Adapter Fault (1756-EN2T / 1756-EN2TR)",
+      "equipment_type": "allen-bradley",
+      "description": "ControlLogix EtherNet/IP communication module has faulted or lost connections. Remote I/O racks, VFDs, and network devices connected through this module are offline.",
+      "probable_causes": [
+        "Module not fully seated in the ControlLogix chassis backplane",
+        "Ethernet port link lost — cable disconnected, switch port down, or cable damaged",
+        "Module IP address conflict — another device on the network has the same IP",
+        "Module connection table full — too many CIP connections configured through this module",
+        "Module firmware crash — needs power cycle to recover",
+        "DLR (Device Level Ring) break detected on 1756-EN2TR — ring topology has an open segment"
+      ],
+      "fix_steps": [
+        "Check module front panel LEDs — Network Status (NS) should be green, Module Status (MS) should be green",
+        "Check Ethernet cable connections at both ports — verify link LEDs on module and switch",
+        "Reseat the module in the chassis if MS LED is off or red",
+        "Verify IP address using module rotary switches or RSLinx — check for conflicts on the network",
+        "Power cycle the module by removing and re-inserting it — allows firmware to restart",
+        "If using DLR ring topology on EN2TR, check ring status — one cable break is OK (ring becomes linear), two breaks cause isolation",
+        "Check connection count in module diagnostics — reduce connections or distribute across multiple EN2T modules if at limit"
+      ],
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler",
+        "asrs"
+      ],
+      "severity": "critical",
+      "tags": [
+        "allen-bradley",
+        "controllogix",
+        "1756-EN2T",
+        "ethernet/ip",
+        "communication",
+        "network adapter",
+        "dlr"
+      ],
+      "parts_category": "network_module"
+    },
+    {
+      "code": "AB-PV-HMI",
+      "name": "Allen-Bradley PanelView HMI Communication Fault",
+      "equipment_type": "allen-bradley",
+      "description": "PanelView or PanelView Plus HMI lost communication with the ControlLogix/CompactLogix PLC. Screen displays communication error or tag values show as '####' or 'Comm Err'.",
+      "probable_causes": [
+        "Ethernet cable between HMI and PLC (or network switch) disconnected or damaged",
+        "PLC went to fault mode or was taken offline — HMI cannot read tags",
+        "HMI application shortcut tag path incorrect after PLC controller name change",
+        "Network switch port failure between HMI and PLC",
+        "HMI IP address changed or conflicts with another device",
+        "PLC EtherNet/IP module overloaded — too many HMI connections competing for resources"
+      ],
+      "fix_steps": [
+        "Check Ethernet cable at HMI and switch — verify link LED on both ends",
+        "Verify PLC is in RUN mode — check keyswitch or RSLogix 5000",
+        "Ping PLC IP address from HMI terminal settings or from a laptop on the same network",
+        "In FactoryTalk View ME/SE, check RSLinx Enterprise shortcut paths — controller name must match PLC",
+        "Restart the HMI application — press Ctrl+Alt+Del on PanelView Plus to access Windows desktop if needed",
+        "If multiple HMIs on the network, check for IP conflicts — each must have a unique IP",
+        "Power cycle the HMI as last resort — hold power button or cycle the 24VDC supply"
+      ],
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler",
+        "asrs"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "panelview",
+        "hmi",
+        "communication",
+        "factorytalk",
+        "rslinx",
+        "display"
+      ],
+      "parts_category": "hmi_panel"
+    },
+    {
+      "code": "AB-FLEX-IO",
+      "name": "Allen-Bradley Flex I/O Module Fault (1794 Series)",
+      "equipment_type": "allen-bradley",
+      "description": "Flex I/O module (1794 series) has faulted. Module may show red status LED. Typically found in remote I/O racks connected via DeviceNet, EtherNet/IP, or ControlNet.",
+      "probable_causes": [
+        "Module not fully seated on the Flex I/O backplane terminal base",
+        "Module internal hardware failure",
+        "Field wiring fault — shorted or open wiring on an I/O channel",
+        "1794-AENT or 1794-ADN adapter lost communication with PLC",
+        "24VDC power supply to the Flex I/O bank is low or failed",
+        "Module configuration mismatch between physical module and PLC I/O tree"
+      ],
+      "fix_steps": [
+        "Check module status LED — green=OK, red=fault, off=no power or dead",
+        "Reseat the module on its terminal base — push firmly until it locks in place",
+        "Check 24VDC power to the Flex I/O bank power supply — measure at terminals",
+        "Check adapter module (1794-AENT for EtherNet/IP or 1794-ADN for DeviceNet) status LEDs",
+        "If field wiring suspected, disconnect wiring from the faulted module — if fault clears, trace the field wiring",
+        "Verify module catalog number matches the PLC I/O configuration",
+        "If module is dead, swap with a spare — the terminal base retains all field wiring for fast swap"
+      ],
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "flex io",
+        "1794",
+        "io module",
+        "remote io",
+        "devicenet",
+        "adapter"
+      ],
+      "parts_category": "plc_io_module"
+    },
+    {
+      "code": "AB-MICRO800",
+      "name": "Allen-Bradley Micro800 PLC Fault (Micro820/850)",
+      "equipment_type": "allen-bradley",
+      "description": "Micro820 or Micro850 controller has faulted or stopped running. Status LED shows red or program execution halted. These compact PLCs are used for standalone machine control.",
+      "probable_causes": [
+        "Program download incomplete or corrupted — program needs re-download from Connected Components Workbench",
+        "I/O expansion module fault — plug-in module not responding or misconfigured",
+        "24VDC power supply voltage out of range — below 19.2V or above 28.8V",
+        "Memory full — program too large for controller memory or data table overflow",
+        "Embedded I/O channel fault — wiring short on built-in I/O point",
+        "Controller firmware corrupted — needs firmware reload via USB"
+      ],
+      "fix_steps": [
+        "Check controller status LED — solid green=running, flashing green=program stopped, red=fault",
+        "Connect with Connected Components Workbench (CCW) via USB or Ethernet — read the fault status",
+        "Verify 24VDC power supply — measure at controller terminals, must be 19.2V to 28.8V",
+        "If program fault, re-download the program from CCW — verify project matches the controller",
+        "Check all plug-in expansion modules — reseat any modules with red LEDs",
+        "If firmware corrupted, use CCW to reload firmware via USB connection",
+        "Check field wiring on embedded I/O — disconnect suspect wiring and test"
+      ],
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "micro800",
+        "micro820",
+        "micro850",
+        "plc",
+        "ccw",
+        "connected components"
+      ],
+      "parts_category": "plc_cpu"
+    },
+    {
+      "code": "AB-PF-PARAM",
+      "name": "PowerFlex VFD Fault — Parameter Error / Factory Reset Needed",
+      "equipment_type": "allen-bradley",
+      "description": "PowerFlex drive reports parameter error, EEPROM fault, or parameters are at factory defaults after unexpected reset. Drive configuration is lost or corrupted.",
+      "probable_causes": [
+        "Drive EEPROM write failure — parameter storage corrupted by power loss during parameter save",
+        "Someone performed a factory reset (Parameter A099 = 1) accidentally or intentionally",
+        "Firmware update cleared drive parameters — backup not restored after flashing",
+        "Drive replacement — new drive from stock has factory default parameters, not application parameters",
+        "Communication adapter pushed factory defaults to drive — configuration mismatch"
+      ],
+      "fix_steps": [
+        "Check if a parameter backup exists — look for a .pf525 or .pf527 parameter file saved during commissioning",
+        "If backup available, download parameters using Connected Components Workbench (CCW) or DriveExplorer",
+        "If no backup, retrieve parameter sheet from the original commissioning documents or integrator",
+        "At minimum, reprogram: Motor NP Volts (A089), Motor NP Hz (A090), Motor NP Amps (A091), Accel Time (A091), Decel Time (A092)",
+        "Set communication parameters to match the PLC configuration — IP address, EtherNet/IP assembly instances",
+        "After reprogramming, do Parameter A099 = 2 (Save to EEPROM) to lock in the new parameters",
+        "Test motor operation at low speed before running at full speed — verify rotation direction and speed reference source"
+      ],
+      "field_trick": "Always keep a backup of every drive's parameters. Save a .pf525 file after commissioning and store it in the panel door pocket or on the plant's engineering PC. A drive swap goes from a 2-hour emergency to a 15-minute swap when parameters are backed up.",
+      "equipment_types": [
+        "allen-bradley",
+        "conveyor",
+        "packaging",
+        "palletizer",
+        "piler"
+      ],
+      "severity": "high",
+      "tags": [
+        "allen-bradley",
+        "powerflex",
+        "vfd",
+        "drive",
+        "parameters",
+        "eeprom",
+        "factory reset",
+        "backup"
+      ],
+      "parts_category": "vfd_drive"
     }
   ]
 }

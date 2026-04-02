@@ -74,6 +74,29 @@
         "annual": ["Full robot calibration if robotic", "Replace elevator chains preventively", "Overhaul sweep mechanism bearings"]
       },
       "brands": ["Columbia", "TopTier", "FANUC", "ABB", "KUKA", "Yaskawa", "Brenton"]
+    },
+    {
+      "type": "allen-bradley",
+      "name": "Allen-Bradley / Rockwell Automation",
+      "description": "Allen-Bradley PLCs, VFDs, safety systems, and I/O modules by Rockwell Automation. Includes ControlLogix, CompactLogix, GuardLogix, Micro800 controllers, PowerFlex drives, POINT I/O, Flex I/O, PanelView HMIs, and Kinetix servo drives. The #1 industrial automation platform in North America.",
+      "common_components": ["ControlLogix 1756 chassis and CPU", "CompactLogix 1769 controller", "GuardLogix safety controller", "1756-EN2T EtherNet/IP module", "PowerFlex 525/527 VFD", "POINT I/O 1734 modules", "Flex I/O 1794 modules", "1756 I/O modules (IB16, OB16, IF8, OF8)", "PanelView Plus HMI", "Kinetix 5500/5700 servo drive", "440C-CR30 safety relay", "Stratix managed switch", "1756-PA72 power supply"],
+      "common_faults": ["AB-PLC-MAJOR01", "AB-PLC-MAJOR03", "AB-PLC-MAJOR04", "AB-PF-F004", "AB-PF-F005", "AB-PF-F007", "AB-PF-F012", "AB-PF-F013", "AB-GUARD-SIL", "AB-CR30-FAULT", "AB-POINT-FAULT", "AB-1756-IO", "AB-EN2T-FAULT", "AB-PV-HMI"],
+      "sensor_types": ["inductive proximity (Allen-Bradley 871TM series)", "photoelectric (42GR series)", "safety light curtain (440L GuardShield)", "encoder (842E series)", "safety interlock (440G/440N TLS-GD2)", "pressure transducer"],
+      "maintenance_intervals": {
+        "daily": ["Check PLC status LEDs — all modules should show solid green", "Verify HMI communication — no comm error banners", "Check PowerFlex drive status — no fault codes on display"],
+        "weekly": ["Review PLC fault log in RSLogix 5000 for minor faults or warnings", "Check EtherNet/IP connection status for all remote I/O racks", "Inspect drive cooling fans — listen for abnormal noise"],
+        "monthly": ["Backup PLC program and drive parameters to engineering PC", "Check PLC battery status — replace if BAT warning LED is lit", "Clean drive heatsink fins with compressed air", "Verify all safety system indicators with test function"],
+        "annual": ["Full firmware audit — compare all modules to Rockwell compatibility matrix", "Replace PLC batteries preventively (1756-BA2, 1769-BA)", "Megger all motor circuits connected to PowerFlex drives", "Full safety system validation — test all E-stops, light curtains, and guard interlocks per safety plan", "Archive complete PLC project backup with annotations"]
+      },
+      "brands": ["Allen-Bradley", "Rockwell Automation"],
+      "software_tools": ["RSLogix 5000 / Studio 5000 Logix Designer", "RSLinx Classic / FactoryTalk Linx", "Connected Components Workbench (CCW)", "FactoryTalk View ME/SE", "DriveExplorer / DriveExecutive", "ControlFlash (firmware updates)", "Rockwell BOOTP/DHCP Server"],
+      "product_families": {
+        "controllers": ["ControlLogix 1756-L8x (5580 series)", "CompactLogix 5370/5380 (1769-L3x)", "GuardLogix 5580 (1756-L8xS)", "Micro820 (2080-LC20)", "Micro850 (2080-LC50)"],
+        "drives": ["PowerFlex 525 (25B series)", "PowerFlex 527 (25C series)", "PowerFlex 755 (20G series)", "Kinetix 5500 (2198 series)", "Kinetix 5700 (2198 series)"],
+        "io": ["POINT I/O 1734 series", "Flex I/O 1794 series", "ControlLogix 1756 I/O", "CompactLogix 1769 I/O", "ArmorBlock 1732E"],
+        "safety": ["GuardLogix 1756-L7xS", "440C-CR30 configurable safety relay", "440G-TLS guard switch", "440L GuardShield light curtain", "440R MSR safety relay"],
+        "networking": ["1756-EN2T/EN2TR EtherNet/IP", "Stratix 5700 managed switch", "1783-NATR NAT router", "1756-DNB DeviceNet scanner"]
+      }
     }
   ]
 }
