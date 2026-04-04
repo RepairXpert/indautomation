@@ -13,6 +13,7 @@ from fastapi.templating import Jinja2Templates
 
 from indauto.diagnosis.engine import diagnose_fault, load_fault_db
 from indauto.diagnosis.photo import analyze_photo
+from indauto.parts.catalog import get_parts_for_category
 
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8"))
@@ -210,6 +211,59 @@ async def history_page(request: Request):
     return templates.TemplateResponse("history.html", {
         "request": request,
         "entries": entries,
+    })
+
+
+@app.get("/faults", response_class=HTMLResponse)
+async def fault_index(request: Request):
+    """SEO index page listing every fault code with links to detail pages."""
+    faults = load_fault_db()
+    # Group by equipment_type for organized display
+    grouped: dict[str, list[dict]] = {}
+    for f in faults:
+        eq = f.get("equipment_type", "general")
+        grouped.setdefault(eq, []).append(f)
+    return templates.TemplateResponse("fault_index.html", {
+        "request": request,
+        "faults": faults,
+        "grouped": grouped,
+        "total": len(faults),
+    })
+
+
+@app.get("/fault/{code}", response_class=HTMLResponse)
+async def fault_detail(request: Request, code: str):
+    """SEO-optimized detail page for a single fault code."""
+    faults = load_fault_db()
+    entry = None
+    for f in faults:
+        if f.get("code", "").lower() == code.lower():
+            entry = f
+            break
+    if not entry:
+        # Try partial/slug match (e.g. AB-PF-F004)
+        for f in faults:
+            if code.lower() in f.get("code", "").lower():
+                entry = f
+                break
+    if not entry:
+        return templates.TemplateResponse("fault_detail.html", {
+            "request": request,
+            "entry": None,
+            "code": code,
+            "parts": [],
+        })
+    # Load suggested parts for this fault category
+    parts = []
+    parts_category = entry.get("parts_category", "")
+    if parts_category:
+        parts = get_parts_for_category(parts_category)
+    return templates.TemplateResponse("fault_detail.html", {
+        "request": request,
+        "entry": entry,
+        "code": entry.get("code", code),
+        "parts": parts,
+        "parts_category": parts_category,
     })
 
 

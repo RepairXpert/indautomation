@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Industrial Fault Codes Directory — {{ total }} Codes | RepairXpert</title>
+<meta name="description" content="Complete directory of {{ total }} industrial automation fault codes with causes, fix steps, and field tricks. Covers pilers, conveyors, VFDs, PLCs, and Allen-Bradley systems.">
+<meta name="keywords" content="industrial fault codes, PLC fault codes, Allen-Bradley faults, VFD fault codes, automation troubleshooting, industrial repair guide">
+<link rel="canonical" href="{{ request.url }}">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Industrial Fault Codes Directory — {{ total }} Codes | RepairXpert">
+<meta property="og:description" content="Complete directory of {{ total }} industrial automation fault codes with causes, fix steps, and field tricks.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.url }}">
+
+<!-- ItemList Structured Data for crawlers -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Industrial Automation Fault Codes",
+  "description": "Complete directory of {{ total }} industrial fault codes with troubleshooting guides",
+  "numberOfItems": {{ total }},
+  "itemListElement": [
+    {% for fault in faults %}
+    {
+      "@type": "ListItem",
+      "position": {{ loop.index }},
+      "name": "{{ fault.code }}: {{ fault.name }}",
+      "url": "{{ request.base_url }}fault/{{ fault.code }}"
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .fault-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+  .fault-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .fault-row:hover {
+    border-color: var(--blue);
+    transform: translateX(3px);
+  }
+  .fault-row-code {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(88,166,255,0.12);
+    color: var(--blue);
+    white-space: nowrap;
+    min-width: 70px;
+    text-align: center;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  }
+  .fault-row-name {
+    font-size: 0.88rem;
+    font-weight: 500;
+    flex: 1;
+  }
+  .fault-row-severity {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .fault-row-severity.critical { background: rgba(248,81,73,0.15); color: var(--red); }
+  .fault-row-severity.high { background: rgba(247,129,102,0.15); color: var(--accent); }
+  .fault-row-severity.medium { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .fault-row-severity.low { background: rgba(63,185,80,0.15); color: var(--green); }
+  .group-header {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-top: 1.25rem;
+    margin-bottom: 0.4rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .group-header:first-child { margin-top: 0; }
+  .index-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .stat-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    text-align: center;
+    flex: 1;
+    min-width: 100px;
+  }
+  .stat-num {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+  }
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  @media (max-width: 480px) {
+    .fault-row { flex-wrap: wrap; gap: 0.4rem; }
+    .fault-row-code { min-width: auto; }
+    .index-stats { gap: 0.5rem; }
+    .stat-box { padding: 0.5rem 0.6rem; }
+    .stat-num { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>RepairXpert</h1>
+  <span class="badge">INDUSTRIAL</span>
+  <nav>
+    <a href="/">Diagnose</a>
+    <a href="/faults" class="active">Fault Codes</a>
+    <a href="/history">History</a>
+    <a href="/pricing">Pricing</a>
+  </nav>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h1 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem;">
+      Industrial Fault Code Directory
+    </h1>
+    <p class="fault-desc">
+      {{ total }} fault codes with probable causes, step-by-step fix procedures, and field tricks from real maintenance experience.
+    </p>
+  </div>
+
+  <!-- Stats -->
+  <div class="index-stats">
+    <div class="stat-box">
+      <span class="stat-num">{{ total }}</span>
+      <span class="stat-label">Fault Codes</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-num">{{ grouped | length }}</span>
+      <span class="stat-label">Equipment Types</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-num">{{ faults | selectattr('severity', 'equalto', 'high') | list | length + faults | selectattr('severity', 'equalto', 'critical') | list | length }}</span>
+      <span class="stat-label">High/Critical</span>
+    </div>
+  </div>
+
+  <!-- Grouped fault list -->
+  <div class="card">
+    {% for eq_type, eq_faults in grouped.items() | sort %}
+    <div class="group-header">{{ eq_type | replace('_', ' ') | title }} ({{ eq_faults | length }})</div>
+    <div class="fault-grid">
+      {% for fault in eq_faults | sort(attribute='code') %}
+      <a href="/fault/{{ fault.code }}" class="fault-row">
+        <span class="fault-row-code">{{ fault.code }}</span>
+        <span class="fault-row-name">{{ fault.name }}</span>
+        {% if fault.severity %}
+        <span class="fault-row-severity {{ fault.severity }}">{{ fault.severity }}</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- CTA -->
+  <div class="card" style="text-align: center; padding: 1.5rem;">
+    <p style="font-size: 0.9rem; color: var(--muted); margin-bottom: 0.75rem;">
+      Can't find your fault code? Run a diagnosis with photo analysis.
+    </p>
+    <a href="/" class="btn" style="max-width: 360px; margin: 0 auto; display: block;">Run Diagnosis</a>
+  </div>
+
+</div>
+</body>
+</html>

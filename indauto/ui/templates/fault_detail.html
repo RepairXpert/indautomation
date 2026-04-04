@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+{% if entry %}
+<title>{{ entry.name }} — Fault Code {{ entry.code }} | RepairXpert</title>
+<meta name="description" content="{{ entry.description[:160] }}">
+<meta name="keywords" content="fault code {{ entry.code }}, {{ entry.name }}, industrial automation, troubleshooting, {{ entry.equipment_type | default('') }}, PLC fault, repair guide">
+<link rel="canonical" href="{{ request.url }}">
+
+<!-- Open Graph -->
+<meta property="og:title" content="{{ entry.name }} — Fault Code {{ entry.code }} | RepairXpert">
+<meta property="og:description" content="{{ entry.description[:160] }}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="{{ request.url }}">
+
+<!-- HowTo Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Fix Fault Code {{ entry.code }}: {{ entry.name }}",
+  "description": "{{ entry.description | replace('"', '\\"') }}",
+  "totalTime": "PT30M",
+  "tool": [
+    {"@type": "HowToTool", "name": "Multimeter"},
+    {"@type": "HowToTool", "name": "PLC Programming Software"}
+  ],
+  "step": [
+    {% for step in entry.fix_steps %}
+    {
+      "@type": "HowToStep",
+      "position": {{ loop.index }},
+      "name": "Step {{ loop.index }}",
+      "text": "{{ step | replace('"', '\\"') }}"
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+
+<!-- FAQPage Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What causes fault code {{ entry.code }} ({{ entry.name }})?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{ entry.probable_causes | join('. ') | replace('"', '\\"') }}"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I fix fault code {{ entry.code }}?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{ entry.fix_steps | join('. ') | replace('"', '\\"') }}"
+      }
+    }
+  ]
+}
+</script>
+
+<!-- BreadcrumbList Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "{{ request.base_url }}"},
+    {"@type": "ListItem", "position": 2, "name": "Fault Codes", "item": "{{ request.base_url }}faults"},
+    {"@type": "ListItem", "position": 3, "name": "{{ entry.code }}: {{ entry.name }}"}
+  ]
+}
+</script>
+
+{% else %}
+<title>Fault Code Not Found | RepairXpert</title>
+<meta name="robots" content="noindex">
+{% endif %}
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <h1>RepairXpert</h1>
+  <span class="badge">INDUSTRIAL</span>
+  <nav>
+    <a href="/">Diagnose</a>
+    <a href="/faults">Fault Codes</a>
+    <a href="/history">History</a>
+    <a href="/pricing">Pricing</a>
+  </nav>
+</header>
+
+<div class="container">
+{% if entry %}
+
+  <!-- Breadcrumb -->
+  <nav style="margin-bottom: 1rem; font-size: 0.78rem; color: var(--muted);">
+    <a href="/" style="color: var(--blue); text-decoration: none;">Home</a>
+    <span style="margin: 0 0.3rem;">/</span>
+    <a href="/faults" style="color: var(--blue); text-decoration: none;">Fault Codes</a>
+    <span style="margin: 0 0.3rem;">/</span>
+    <span style="color: var(--text);">{{ entry.code }}</span>
+  </nav>
+
+  <!-- Fault identification -->
+  <div class="card">
+    <div class="fault-header">
+      <h1 style="font-size: 1.15rem; font-weight: 700; color: var(--text); margin: 0;">
+        {{ entry.name }}
+      </h1>
+      <span class="fault-code-badge">{{ entry.code }}</span>
+    </div>
+
+    <p class="fault-desc">{{ entry.description }}</p>
+
+    <div class="meta-row">
+      {% if entry.severity %}
+      <span class="severity {{ entry.severity }}">{{ entry.severity }}</span>
+      {% endif %}
+      {% if entry.equipment_type %}
+      <span class="fault-code-badge">{{ entry.equipment_type }}</span>
+      {% endif %}
+      {% if entry.equipment_types %}
+        {% for eq in entry.equipment_types %}
+          {% if eq != entry.equipment_type %}
+          <span class="fault-code-badge">{{ eq }}</span>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </div>
+
+    {% if entry.tags %}
+    <div style="margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.35rem;">
+      {% for tag in entry.tags %}
+      <span style="font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 3px; background: var(--surface2); color: var(--muted); border: 1px solid var(--border);">{{ tag }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Probable causes -->
+  {% if entry.probable_causes %}
+  <div class="card">
+    <h2>Probable Causes (ranked)</h2>
+    <ul class="cause-list">
+      {% for cause in entry.probable_causes %}
+      <li>{{ cause }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <!-- Fix steps -->
+  {% if entry.fix_steps %}
+  <div class="card">
+    <h2>Fix Steps</h2>
+    <ol class="step-list">
+      {% for step in entry.fix_steps %}
+      <li>
+        <span class="step-num">{{ loop.index }}</span>
+        <span>{{ step }}</span>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+
+  <!-- Field trick -->
+  {% if entry.field_trick %}
+  <div class="card">
+    <div class="callout callout-trick">
+      <h4>Field Trick</h4>
+      <p>{{ entry.field_trick }}</p>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Suggested replacement parts -->
+  {% if parts %}
+  <div class="card">
+    <h2>Suggested Replacement Parts</h2>
+    <p style="font-size:0.8rem; color:var(--muted); margin-bottom:1rem">
+      Parts matched to fault category: <strong>{{ parts_category | replace('_', ' ') | title }}</strong>
+    </p>
+    {% for part in parts %}
+    <div class="parts-item">
+      <div class="parts-info">
+        <span class="parts-name">{{ part.name }}</span>
+        <span class="parts-partno">P/N: {{ part.part_no }}</span>
+        {% if part.description %}
+        <span class="parts-desc">{{ part.description }}</span>
+        {% endif %}
+      </div>
+      <div class="parts-suppliers">
+        {% for supplier in part.suppliers %}
+        <a href="{{ supplier.url }}" target="_blank" rel="noopener noreferrer" class="btn-buy">
+          {{ supplier.name }}
+          <span class="btn-buy-price">${{ "%.2f"|format(supplier.est_price) }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    <p style="font-size:0.7rem; color:var(--muted); margin-top:0.75rem; font-style:italic">
+      Prices are estimates. Verify part numbers match your equipment before ordering.
+    </p>
+  </div>
+  {% endif %}
+
+  <!-- CTA — run diagnosis -->
+  <div class="card" style="text-align: center; padding: 1.5rem;">
+    <p style="font-size: 0.9rem; color: var(--muted); margin-bottom: 0.75rem;">
+      Need a deeper diagnosis with photo analysis and AI-powered troubleshooting?
+    </p>
+    <a href="/" class="btn" style="max-width: 360px; margin: 0 auto; display: block;">Run Full Diagnosis</a>
+  </div>
+
+  <!-- Back to index -->
+  <a href="/faults" class="btn btn-secondary">All Fault Codes</a>
+
+{% else %}
+
+  <!-- 404 state -->
+  <div class="card" style="text-align: center; padding: 2.5rem 1rem;">
+    <h1 style="font-size: 1.1rem; margin-bottom: 0.5rem;">Fault Code "{{ code }}" Not Found</h1>
+    <p style="font-size: 0.88rem; color: var(--muted); margin-bottom: 1.5rem;">
+      This fault code is not in our database. Try using the diagnosis tool to look it up.
+    </p>
+    <a href="/" class="btn" style="max-width: 320px; margin: 0 auto; display: block;">Run Diagnosis</a>
+  </div>
+  <a href="/faults" class="btn btn-secondary">Browse All Fault Codes</a>
+
+{% endif %}
+</div>
+</body>
+</html>
