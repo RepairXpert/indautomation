@@ -2,7 +2,7 @@
 
 ## Overview
 
-RepairXpert IndAutomation is an AI-powered industrial fault diagnosis system with 71 fault codes, 6 equipment profiles, 500+ replacement parts, and photo-based diagnosis. It helps field technicians diagnose and repair industrial equipment faster.
+RepairXpert IndAutomation is an AI-powered industrial fault diagnosis system with 201 fault codes, 6 equipment profiles, 500+ replacement parts, and photo-based diagnosis. It helps field technicians diagnose and repair industrial equipment faster.
 
 ## MCP Server
 
@@ -38,19 +38,23 @@ Get detailed equipment profiles including components, maintenance schedules, com
 - **Available:** piler, conveyor, asrs, packaging, palletizer, allen-bradley
 
 ### `list_fault_codes`
-List all 71 fault codes, optionally filtered by equipment type.
+List all 201 fault codes, optionally filtered by equipment type.
 - **Input:** `equipment_type` (optional)
 - **Output:** Code, name, severity, equipment type for each entry
 
 ## Equipment Coverage
 
-| Type | Codes | Brands |
+| Type | Count | Brands |
 |------|-------|--------|
-| Piler/Stacker | 10036-10038, 40001 | Alvey, Columbia, TopTier, FANUC |
-| Conveyor | 20010-20012, 50001-50002 | Hytrol, Dorner, Interroll, Dematic |
-| AS/RS | 80001, E030, 60001 | Dematic, Swisslog, Daifuku |
-| Packaging | 70002-70003, E040 | Sealed Air, ProMach |
-| Allen-Bradley | 27 codes (AB-PLC-*, AB-PF-*, AB-GUARD-*, AB-CR30-*, AB-EN2T-*) | Rockwell Automation |
+| General Industrial | 52 | Siemens, Omron, ABB, IFM, Banner, Pilz |
+| Allen-Bradley/Rockwell | 51 | ControlLogix, PowerFlex, GuardMaster, CR30, EN2T |
+| Conveyor | 26 | Hytrol, Dorner, Interroll, Dematic |
+| VFD/Drives | 21 | Allen-Bradley PowerFlex, ABB ACS, Siemens G120, Yaskawa |
+| Packaging | 18 | Sealed Air, ProMach, Nordson |
+| AS/RS | 11 | Dematic, Swisslog, Daifuku |
+| Palletizer | 8 | Alvey, Columbia, TopTier, FANUC |
+| Piler/Stacker | 7 | Alvey, Columbia, TopTier |
+| CR30 Relay | 7 | Rockwell Automation |
 
 ### `get_allen_bradley_fault`
 Look up Allen-Bradley/Rockwell specific fault codes with detailed Rockwell diagnostic steps.

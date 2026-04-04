@@ -10,7 +10,7 @@
 - Launch: `run.bat` or `uvicorn indauto.app:app --port 8300`
 
 ## Assets
-- 71 fault codes (27 Allen-Bradley), 6 equipment profiles
+- 201 fault codes (51 AB, 52 general, 26 conveyor, 21 VFD, 18 packaging, 11 ASRS, 8 palletizer, 7 piler, 7 CR30), 6 equipment profiles
 - 500+ industrial parts catalog (Allen-Bradley, IFM, Banner, ABB, Siemens, Omron, SMC, Pilz)
 - Amazon Affiliate tag: "repairxpert-20" (2-8% commission on all parts links)
 - Suppliers: **AutomationDirect (PRIMARY — goto supplier)**, Amazon (affiliate repairxpert-20), Grainger, Digikey, McMaster-Carr
