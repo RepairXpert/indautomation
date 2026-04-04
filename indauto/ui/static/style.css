@@ -616,6 +616,52 @@ a.btn {
   line-height: 1.5;
 }
 
+/* ── Comparison Tables ── */
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.compare-table th {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  border-bottom: 2px solid var(--border);
+  color: var(--muted);
+}
+.compare-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table td:first-child {
+  color: var(--text);
+  font-weight: 500;
+}
+.cmp-yes {
+  color: var(--green);
+  font-weight: 600;
+}
+.cmp-no {
+  color: var(--red);
+  opacity: 0.7;
+}
+.cmp-na {
+  color: var(--muted);
+  font-style: italic;
+}
+.compare-link-card {
+  transition: border-color 0.15s, transform 0.15s;
+}
+.compare-link-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .container { padding: 0.5rem; }

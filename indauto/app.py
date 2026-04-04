@@ -95,6 +95,37 @@ async def pricing_page(request: Request):
     return templates.TemplateResponse("pricing.html", {"request": request})
 
 
+# ── Comparison pages (SEO) ─────────────────────────────────────────────────
+
+COMPARE_PAGES = {
+    "maintainx": {
+        "template": "compare/maintainx.html",
+        "title": "RepairXpert vs MaintainX",
+    },
+    "servicetitan": {
+        "template": "compare/servicetitan.html",
+        "title": "RepairXpert vs ServiceTitan",
+    },
+    "upkeep": {
+        "template": "compare/upkeep.html",
+        "title": "RepairXpert vs UpKeep",
+    },
+}
+
+
+@app.get("/compare", response_class=HTMLResponse)
+async def compare_index(request: Request):
+    return templates.TemplateResponse("compare/index.html", {"request": request})
+
+
+@app.get("/compare/{competitor}", response_class=HTMLResponse)
+async def compare_page(request: Request, competitor: str):
+    page = COMPARE_PAGES.get(competitor.lower())
+    if not page:
+        return HTMLResponse("<h1>Not found</h1>", status_code=404)
+    return templates.TemplateResponse(page["template"], {"request": request})
+
+
 @app.post("/api/checkout")
 async def create_checkout_session(request: Request):
     """Create a Stripe Checkout Session and return the redirect URL."""
@@ -331,6 +362,10 @@ async def sitemap(request: Request):
         f'<url><loc>{base}/faults</loc><priority>0.9</priority></url>',
         f'<url><loc>{base}/pricing</loc><priority>0.8</priority></url>',
         f'<url><loc>{base}/vin</loc><priority>0.8</priority></url>',
+        f'<url><loc>{base}/compare</loc><priority>0.8</priority></url>',
+        f'<url><loc>{base}/compare/maintainx</loc><priority>0.8</priority></url>',
+        f'<url><loc>{base}/compare/servicetitan</loc><priority>0.8</priority></url>',
+        f'<url><loc>{base}/compare/upkeep</loc><priority>0.8</priority></url>',
     ]
     for f in faults:
         code = f.get("code", "")
