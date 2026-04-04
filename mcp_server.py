@@ -49,13 +49,13 @@ def get_tools():
     return [
         {
             "name": "diagnose_fault",
-            "description": "Diagnose an industrial equipment fault from a fault code, symptoms, and equipment type. Returns probable causes, step-by-step fix instructions, severity, confidence score, field tricks, and suggested replacement parts with supplier links. Covers 71 fault codes across pilers, conveyors, AS/RS, packaging lines, palletizers, and Allen-Bradley/Rockwell Automation systems.",
+            "description": "Diagnose an industrial equipment fault from a fault code, symptoms, and equipment type. Returns probable causes, step-by-step fix instructions, severity, confidence score, field tricks, and suggested replacement parts with supplier links. Covers 201 fault codes across 9 categories: general industrial (52), Allen-Bradley/Rockwell (51), conveyors (26), VFDs (21), packaging lines (18), AS/RS (11), palletizers (8), pilers (7), and CR30 configurable relays (7).",
             "inputSchema": {
                 "type": "object",
                 "properties": {
                     "equipment_type": {
                         "type": "string",
-                        "description": "Equipment type: piler, conveyor, asrs, packaging, palletizer, allen-bradley, or leave empty for auto-detect"
+                        "description": "Equipment type: piler, conveyor, asrs, packaging, palletizer, allen-bradley, vfd, cr30, general, or leave empty for auto-detect"
                     },
                     "fault_code": {
                         "type": "string",
@@ -85,7 +85,7 @@ def get_tools():
         },
         {
             "name": "get_equipment_profile",
-            "description": "Get detailed equipment profile including components, maintenance schedules, common fault codes, and supported brands. Available profiles: piler, conveyor, asrs, packaging, palletizer, allen-bradley.",
+            "description": "Get detailed equipment profile including components, maintenance schedules, common fault codes, and supported brands. Available profiles: piler, conveyor, asrs, packaging, palletizer, allen-bradley, vfd, cr30.",
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -105,7 +105,7 @@ def get_tools():
                 "properties": {
                     "equipment_type": {
                         "type": "string",
-                        "description": "Filter by equipment type (optional). Leave empty to list all 71 codes."
+                        "description": "Filter by equipment type (optional). Leave empty to list all 201 codes."
                     }
                 }
             }
