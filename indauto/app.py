@@ -357,19 +357,20 @@ async def sitemap(request: Request):
     """Dynamic XML sitemap for SEO — lists all fault code pages."""
     faults = load_fault_db()
     base = str(request.base_url).rstrip("/")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     urls = [
-        f'<url><loc>{base}/</loc><priority>1.0</priority></url>',
-        f'<url><loc>{base}/faults</loc><priority>0.9</priority></url>',
-        f'<url><loc>{base}/pricing</loc><priority>0.8</priority></url>',
-        f'<url><loc>{base}/vin</loc><priority>0.8</priority></url>',
-        f'<url><loc>{base}/compare</loc><priority>0.8</priority></url>',
-        f'<url><loc>{base}/compare/maintainx</loc><priority>0.8</priority></url>',
-        f'<url><loc>{base}/compare/servicetitan</loc><priority>0.8</priority></url>',
-        f'<url><loc>{base}/compare/upkeep</loc><priority>0.8</priority></url>',
+        f'<url><loc>{base}/</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>',
+        f'<url><loc>{base}/faults</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>',
+        f'<url><loc>{base}/pricing</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
+        f'<url><loc>{base}/vin</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
+        f'<url><loc>{base}/compare</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
+        f'<url><loc>{base}/compare/maintainx</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
+        f'<url><loc>{base}/compare/servicetitan</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
+        f'<url><loc>{base}/compare/upkeep</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
     ]
     for f in faults:
         code = f.get("code", "")
-        urls.append(f'<url><loc>{base}/fault/{code}</loc><priority>0.7</priority></url>')
+        urls.append(f'<url><loc>{base}/fault/{code}</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>')
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     xml += "\n".join(urls)

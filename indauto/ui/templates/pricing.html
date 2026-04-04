@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Pricing — RepairXpert</title>
+<title>Pricing — RepairXpert Industrial Fault Diagnosis | Free, Pro $19/mo, Enterprise $49/mo</title>
+<meta name="description" content="AI-powered industrial fault diagnosis starting free. Pro plan $19/mo for unlimited diagnoses. Enterprise $49/mo with API access and multi-user support.">
+<meta property="og:title" content="RepairXpert Pricing — Industrial Fault Diagnosis Plans">
+<meta property="og:description" content="Start free with 3 daily diagnoses. Upgrade to Pro ($19/mo) or Enterprise ($49/mo) for unlimited AI-powered fault diagnosis.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://indautomation.onrender.com/pricing">
+<link rel="canonical" href="https://indautomation.onrender.com/pricing">
 <link rel="icon" type="image/svg+xml" href="/static/icon.svg">
 <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -43,7 +49,7 @@
     <ul class="pricing-features">
       <li class="included">3 diagnoses per day</li>
       <li class="included">Text-only analysis</li>
-      <li class="included">25 fault code database</li>
+      <li class="included">Full fault code database (78+ codes)</li>
       <li class="included">Basic fix steps</li>
       <li class="excluded">Photo analysis</li>
       <li class="excluded">Priority support</li>
@@ -67,7 +73,7 @@
     <ul class="pricing-features">
       <li class="included">Unlimited diagnoses</li>
       <li class="included">Photo analysis (AI vision)</li>
-      <li class="included">25 fault code database</li>
+      <li class="included">Full fault code database (78+ codes)</li>
       <li class="included">Detailed fix steps + field tricks</li>
       <li class="included">Parts recommendations with pricing</li>
       <li class="included">Priority support</li>
@@ -125,6 +131,49 @@
   </div>
 </div>
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "RepairXpert Pricing",
+  "description": "AI-powered industrial fault diagnosis plans",
+  "mainEntity": {
+    "@type": "ItemList",
+    "itemListElement": [
+      {
+        "@type": "Product",
+        "name": "RepairXpert Basic",
+        "description": "3 daily diagnoses, text-only analysis, fault code database",
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock"}
+      },
+      {
+        "@type": "Product",
+        "name": "RepairXpert Pro",
+        "description": "Unlimited diagnoses, photo analysis, detailed fix steps, parts recommendations",
+        "offers": {"@type": "Offer", "price": "19.99", "priceCurrency": "USD", "priceValidUntil": "2027-12-31", "availability": "https://schema.org/InStock"}
+      },
+      {
+        "@type": "Product",
+        "name": "RepairXpert Enterprise",
+        "description": "REST API, bulk diagnostics, custom equipment profiles, multi-user team access",
+        "offers": {"@type": "Offer", "price": "49.99", "priceCurrency": "USD", "priceValidUntil": "2027-12-31", "availability": "https://schema.org/InStock"}
+      }
+    ]
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "Can I cancel anytime?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Cancel with one click, no contracts. Your access continues through the end of your billing period."}},
+    {"@type": "Question", "name": "What payment methods do you accept?", "acceptedAnswer": {"@type": "Answer", "text": "All major credit/debit cards via Stripe. Apple Pay and Google Pay where available."}},
+    {"@type": "Question", "name": "Do I need LM Studio running?", "acceptedAnswer": {"@type": "Answer", "text": "Basic and Pro plans use our cloud AI. Enterprise includes the option to run locally with LM Studio for air-gapped environments."}},
+    {"@type": "Question", "name": "Can I upgrade mid-cycle?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. When you upgrade, you only pay the prorated difference for the remainder of your billing period."}}
+  ]
+}
+</script>
 <script>
 async function checkout(plan) {
   const btn = event.target;
