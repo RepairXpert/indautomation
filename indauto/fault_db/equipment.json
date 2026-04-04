@@ -89,6 +89,7 @@
         "annual": ["Full firmware audit — compare all modules to Rockwell compatibility matrix", "Replace PLC batteries preventively (1756-BA2, 1769-BA)", "Megger all motor circuits connected to PowerFlex drives", "Full safety system validation — test all E-stops, light curtains, and guard interlocks per safety plan", "Archive complete PLC project backup with annotations"]
       },
       "brands": ["Allen-Bradley", "Rockwell Automation"],
+      "cr30_profile": "See dedicated cr30 equipment type for 440C-CR30 specific fault codes",
       "software_tools": ["RSLogix 5000 / Studio 5000 Logix Designer", "RSLinx Classic / FactoryTalk Linx", "Connected Components Workbench (CCW)", "FactoryTalk View ME/SE", "DriveExplorer / DriveExecutive", "ControlFlash (firmware updates)", "Rockwell BOOTP/DHCP Server"],
       "product_families": {
         "controllers": ["ControlLogix 1756-L8x (5580 series)", "CompactLogix 5370/5380 (1769-L3x)", "GuardLogix 5580 (1756-L8xS)", "Micro820 (2080-LC20)", "Micro850 (2080-LC50)"],
@@ -96,6 +97,33 @@
         "io": ["POINT I/O 1734 series", "Flex I/O 1794 series", "ControlLogix 1756 I/O", "CompactLogix 1769 I/O", "ArmorBlock 1732E"],
         "safety": ["GuardLogix 1756-L7xS", "440C-CR30 configurable safety relay", "440G-TLS guard switch", "440L GuardShield light curtain", "440R MSR safety relay"],
         "networking": ["1756-EN2T/EN2TR EtherNet/IP", "Stratix 5700 managed switch", "1783-NATR NAT router", "1756-DNB DeviceNet scanner"]
+      }
+    },
+    {
+      "type": "cr30",
+      "name": "Allen-Bradley 440C-CR30 Configurable Safety Relay",
+      "description": "Rockwell Automation 440C-CR30 configurable safety relay. Single device replaces multiple MSR relays. Configurable via Connected Components Workbench (CCW) software for E-stop, guard door, light curtain, safety mat, and enabling switch functions. Supports CIP Safety over EtherNet/IP for integration with GuardLogix controllers. SIL 3, PLe rated.",
+      "common_components": ["24VDC power input", "safety input terminals (dual-channel)", "output relay contacts (K1/K2)", "semiconductor outputs (optional)", "feedback input terminal", "manual reset input", "EtherNet/IP port", "CCW configuration port (USB)"],
+      "common_faults": ["CR30-IN-FAULT", "CR30-OUT-FAULT", "CR30-CFG-ERR", "CR30-PWR-FAULT", "CR30-COMM-ERR", "CR30-DISC-ERR", "CR30-RESET-REQ", "AB-CR30-FAULT"],
+      "sensor_types": ["dual-channel E-stop (NC-NC)", "guard door interlock (440G-TLS, 440N TLS-GD2)", "safety light curtain (440L GuardShield)", "safety mat", "two-hand control", "enabling switch"],
+      "maintenance_intervals": {
+        "daily": ["Verify CR30 status LED is solid green — amber or red indicates fault or reset required", "Confirm machine resets correctly after guard door closure and E-stop release"],
+        "weekly": ["Test each E-stop button and guard door interlock — verify machine stops on actuation", "Check CR30 Ethernet connection status if network-connected"],
+        "monthly": ["Review CR30 diagnostic log via CCW software — look for intermittent input faults", "Verify all contactor/actuator feedback wiring is intact and making good contact", "Test manual reset sequence — hold reset button, confirm outputs energize"],
+        "annual": ["Full safety validation test — actuate every E-stop, guard door, and light curtain per safety plan", "Verify CCW configuration file on engineering PC matches version in CR30 — compare CRC", "Backup CCW project file and store copy on plant server AND panel door USB drive", "Measure 24VDC at CR30 terminals under load — confirm within 19.2–28.8V spec"]
+      },
+      "brands": ["Allen-Bradley", "Rockwell Automation"],
+      "software_tools": ["Connected Components Workbench (CCW) v13+", "Rockwell BOOTP/DHCP Server"],
+      "wiring_categories": {
+        "cat2_single_channel": "One NC contact per input — SIL 1/PLc maximum. Simple applications only.",
+        "cat3_dual_channel": "Two NC contacts (A+B) per input — SIL 2/PLd. Standard for most E-stop and guard door applications.",
+        "cat4_dual_channel_monitored": "Dual NC contacts with cross-fault monitoring enabled — SIL 3/PLe. Required for highest risk applications."
+      },
+      "part_numbers": {
+        "cr30_base": "440C-CR30-22BBB",
+        "cr30_with_io": "440C-CR30-22BBB (22 I/O version)",
+        "replacement_relay": "440C-CR30-22BBB — full unit replacement only (not field serviceable)",
+        "24vdc_supply": "1606-XLP50E (Rockwell 50W DIN rail supply)"
       }
     }
   ]

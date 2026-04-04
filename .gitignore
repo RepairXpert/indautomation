@@ -1,11 +1,11 @@
-__pycache__/
-*.pyc
-*.pyo
-.env
 *.db
 *.log
-data/
-logs/
+*.pyc
+*.pyo
 *.sqlite
 *.sqlite3
+.env
+__pycache__/
+data/
+logs/
 node_modules/

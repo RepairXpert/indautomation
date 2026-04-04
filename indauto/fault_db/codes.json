@@ -2719,6 +2719,199 @@
         "backup"
       ],
       "parts_category": "vfd_drive"
+    },
+    {
+      "code": "CR30-IN-FAULT",
+      "name": "440C-CR30 Input Channel Fault",
+      "equipment_type": "cr30",
+      "description": "The CR30 detected a fault on one or more safety input channels. Dual-channel input wiring fault, cross-fault, or discrepancy between Channel A and Channel B input signals. All safety outputs de-energized.",
+      "probable_causes": [
+        "Cross-fault detected — Channel A and Channel B wires shorted together (common in cable bundles)",
+        "Single-channel input wired to a dual-channel (Category 3/4) function — incorrect wiring for SIL level required",
+        "Input device failed in one channel only — NC contact welded or open on one side of a dual-channel E-stop",
+        "Discrepancy timeout exceeded — both channels of E-stop did not open/close within the configured time window",
+        "Input cable damaged — insulation failure causing channel-to-channel short",
+        "Wrong input terminal used — wired to a terminal not mapped in the CCW configuration"
+      ],
+      "fix_steps": [
+        "Note the CR30 LED blink pattern on the front of the unit — count blinks to identify which input channel faulted",
+        "With the CCW software connected, go to Diagnostics tab to see exact fault description and channel number",
+        "Disconnect field wiring at the CR30 terminal for the faulted channel — if fault clears, fault is in field wiring or device",
+        "Measure continuity between Channel A and Channel B wires at the CR30 terminal — any continuity indicates a cross-fault",
+        "Test the safety input device (E-stop, gate switch) manually — verify both NC contacts open and close simultaneously",
+        "If discrepancy timeout fault: check that both channels of the safety device are actuated within the configured time window",
+        "After wiring is corrected, re-download CR30 configuration from CCW and reset the unit"
+      ],
+      "field_trick": "Use a multimeter on the field wiring before reconnecting — measure resistance between the two channel wires with everything disconnected. Should read open (infinite). Any resistance below 100kΩ is a cross-fault waiting to happen.",
+      "equipment_types": ["cr30", "allen-bradley", "conveyor", "packaging", "palletizer", "piler"],
+      "severity": "critical",
+      "tags": ["allen-bradley", "cr30", "440c", "safety relay", "input fault", "cross-fault", "dual-channel", "e-stop"],
+      "parts_category": "safety_relay"
+    },
+    {
+      "code": "CR30-OUT-FAULT",
+      "name": "440C-CR30 Output Relay Fault",
+      "equipment_type": "cr30",
+      "description": "The CR30 detected a fault on a safety output relay or semiconductor output. Output feedback check failed at startup or during operation. Safety outputs cannot be energized.",
+      "probable_causes": [
+        "Output relay contact welded — CR30 detected output still active when it should have de-energized (feedback NC contact stuck open)",
+        "External contactor auxiliary (feedback) contact wiring fault — feedback loop not correctly wired back to CR30 feedback input",
+        "Overloaded output — output relay contact carrying more current than rated (max 6A AC1 per output relay)",
+        "Short circuit on output wiring — output terminal shorted to ground or to another terminal",
+        "Output relay failed open — output de-energized when it should be active (relay coil open)",
+        "Wrong output type used — relay output wired where semiconductor output is required (or vice versa)"
+      ],
+      "fix_steps": [
+        "Check CR30 LED — solid red output LED indicates output relay or semiconductor output fault",
+        "Measure the external contactor or actuator connected to the output — verify it is de-energized and its auxiliary contact is closed",
+        "Measure feedback wiring back to CR30: the feedback input should read 24VDC when contactor is de-energized",
+        "Check output load current — verify load does not exceed CR30 output rating (6A per relay output, 0.5A per semiconductor output)",
+        "Disconnect the output load — if fault clears, the load is causing the fault (overload, short, or weld)",
+        "If relay welded, the CR30 module requires replacement — internal safety relays are not field serviceable",
+        "If feedback wiring issue, correct wiring and re-download CR30 configuration from CCW"
+      ],
+      "field_trick": "Before assuming the CR30 is bad, measure at the contactor: the normally-closed aux contact on the contactor should be CLOSED (continuity) when the contactor coil is de-energized. If it reads open, the contactor itself is welded — not the CR30.",
+      "equipment_types": ["cr30", "allen-bradley", "conveyor", "packaging", "palletizer", "piler"],
+      "severity": "critical",
+      "tags": ["allen-bradley", "cr30", "440c", "safety relay", "output fault", "relay", "feedback", "contactor"],
+      "parts_category": "safety_relay"
+    },
+    {
+      "code": "CR30-CFG-ERR",
+      "name": "440C-CR30 Configuration Error",
+      "equipment_type": "cr30",
+      "description": "CR30 safety relay configuration is missing, corrupted, or does not match what is expected. Unit boots in a faulted state with no safety outputs active. Requires CCW software to re-download the safety configuration.",
+      "probable_causes": [
+        "Configuration lost after battery backup failure — CR30 has no internal battery; configuration stored in non-volatile memory that was corrupted",
+        "CR30 replaced with a new unit — new units from stock have no configuration loaded",
+        "Configuration CRC mismatch — existing configuration file on PC does not match what was last downloaded to the CR30",
+        "Firmware update cleared configuration — after a firmware flash, configuration must be re-downloaded",
+        "CCW software locked configuration to specific serial number — replacement unit requires configuration unlock and re-download"
+      ],
+      "fix_steps": [
+        "Connect to CR30 via USB cable using Connected Components Workbench (CCW) software",
+        "In CCW, go to the Safety Configuration view — check if configuration is present in the CR30 or blank",
+        "Retrieve the CCW project file (.ccwproj) from the plant's engineering PC or backup drive",
+        "Download (Write) the configuration to the CR30 in CCW — verify CRC matches after download",
+        "If no CCW file exists, the configuration must be rebuilt from the original safety design or commissioning documents",
+        "After successful download, lock the configuration in CCW using the Safety Lock function",
+        "Perform a full functional test of all safety inputs and outputs per the plant's safety validation procedure"
+      ],
+      "field_trick": "Keep the CCW project file (.ccwproj) saved in a folder on the panel door USB drive AND on the plant server. A CR30 replacement with no CCW file on site means rebuilding from scratch — this can take a safety engineer a full day.",
+      "equipment_types": ["cr30", "allen-bradley"],
+      "severity": "critical",
+      "tags": ["allen-bradley", "cr30", "440c", "configuration", "ccw", "firmware", "replacement"],
+      "parts_category": "safety_relay"
+    },
+    {
+      "code": "CR30-PWR-FAULT",
+      "name": "440C-CR30 Power Supply Fault",
+      "equipment_type": "cr30",
+      "description": "CR30 supply voltage is out of specification. The CR30 requires 24VDC nominal (range 19.2–28.8V). Below or above this range causes the unit to de-energize outputs and fault.",
+      "probable_causes": [
+        "24VDC power supply voltage sagged below 19.2V — power supply overloaded or failing",
+        "24VDC supply voltage exceeded 28.8V — power supply regulation failure or incorrect supply used",
+        "Excessive voltage drop on the 24VDC wiring from supply to CR30 — long cable run, undersized wire, or loose terminal",
+        "24VDC fuse blown on the safety circuit feed",
+        "Multiple devices on same power supply overloaded the supply, causing voltage sag"
+      ],
+      "fix_steps": [
+        "Measure 24VDC directly at the CR30 power input terminals (not at the power supply output) — must be 19.2–28.8V",
+        "Compare measurement at CR30 vs. at power supply output — large difference indicates wiring/connection issue",
+        "Check all terminals on the 24VDC safety circuit for tightness — loose terminals cause voltage drops under load",
+        "Check 24VDC fuse or breaker protecting the CR30 supply circuit",
+        "If supply is overloaded, identify all devices on the same supply and verify total current draw is within supply rating",
+        "Replace the 24VDC power supply if its output is out of specification under load"
+      ],
+      "field_trick": "Measure voltage AT the CR30 terminals, not at the supply. A 1V drop over a cable run at 5A is normal Ohm's law — you might see 24.5V at the supply and 22V at the CR30. This is a wiring/terminal issue, not a supply issue.",
+      "equipment_types": ["cr30", "allen-bradley"],
+      "severity": "high",
+      "tags": ["allen-bradley", "cr30", "440c", "power supply", "24vdc", "voltage"],
+      "parts_category": "power_supply"
+    },
+    {
+      "code": "CR30-COMM-ERR",
+      "name": "440C-CR30 EtherNet/IP Communication Fault",
+      "equipment_type": "cr30",
+      "description": "The CR30 EtherNet/IP safety connection to the GuardLogix or CompactGuardLogix controller has been lost or timed out. CIP Safety communication interrupted. Safety outputs may be de-energized depending on the configured connection timeout behavior.",
+      "probable_causes": [
+        "Ethernet cable disconnected or damaged between CR30 and managed switch or GuardLogix",
+        "Managed switch port failed or VLAN configuration blocking CIP Safety traffic",
+        "IP address conflict — another device on the network has the same IP as the CR30",
+        "GuardLogix controller faulted or rebooted — CIP Safety connections dropped",
+        "Network traffic overload causing missed packets — CIP Safety has strict timing requirements",
+        "CR30 IP address or connection parameters changed in CCW without updating GuardLogix configuration"
+      ],
+      "fix_steps": [
+        "Check the CR30 NET LED — solid green is normal, flashing green is connected/active, red is fault",
+        "Ping the CR30 IP address from the engineering PC — confirm network connectivity",
+        "Check the Ethernet cable and RJ45 connector at the CR30 — inspect for damage and reseat",
+        "In RSLogix 5000, check the I/O tree for the CR30 module — look for connection faulted status",
+        "Verify the CR30 IP address matches what is configured in the GuardLogix I/O module definition",
+        "Check for IP address conflict using the Rockwell BOOTP/DHCP server tool",
+        "If switch port, swap to a known-good port and retest",
+        "After resolving network issue, reset the safety fault in GuardLogix"
+      ],
+      "field_trick": "If the CR30 NET LED is green but GuardLogix still shows a connection fault, check for an IP conflict first. Two devices with the same IP on the same subnet causes sporadic comm faults that are hard to trace.",
+      "equipment_types": ["cr30", "allen-bradley"],
+      "severity": "high",
+      "tags": ["allen-bradley", "cr30", "440c", "ethernet/ip", "cip safety", "communication", "network"],
+      "parts_category": "safety_relay"
+    },
+    {
+      "code": "CR30-DISC-ERR",
+      "name": "440C-CR30 Dual-Channel Discrepancy Error",
+      "equipment_type": "cr30",
+      "description": "A dual-channel safety input (E-stop, gate switch, safety mat) did not have both channels activate or de-activate within the configured discrepancy time window. CR30 interprets this as a potential channel failure and de-energizes outputs.",
+      "probable_causes": [
+        "Safety input device has one slow or sticky contact — NC contact on one channel is sluggish",
+        "Input wiring to one channel has higher resistance than the other — different voltage levels reaching CR30 inputs",
+        "Discrepancy time window too tight — configured time window is shorter than the device's mechanical actuation time",
+        "One channel of the E-stop button is mechanically worn and does not actuate consistently",
+        "User releasing and re-pressing E-stop quickly — partial actuation triggers discrepancy",
+        "Cable connector not fully seated on one channel — intermittent connection"
+      ],
+      "fix_steps": [
+        "In CCW Diagnostics, identify which input channel pair has the discrepancy fault",
+        "Manually actuate the safety device slowly while watching both channel LED indicators on the CR30",
+        "If one LED lags the other, the slow channel has a worn contact or wiring resistance issue",
+        "Test the input device contacts with a multimeter — both NC contacts must open simultaneously when actuated",
+        "Temporarily increase the discrepancy time window in CCW to confirm if timing is the issue",
+        "Replace the input device if one contact is worn or sluggish — E-stop mushrooms are consumable parts",
+        "Check connector seating on both input channels and reseat firmly"
+      ],
+      "field_trick": "Press the E-stop slowly and watch the CR30 input LEDs. Both should go off at the same time. If one flickers off then back on before the other, that button needs replacement. Slow actuation reveals contact quality issues that fast actuation hides.",
+      "equipment_types": ["cr30", "allen-bradley", "conveyor", "packaging", "palletizer", "piler"],
+      "severity": "high",
+      "tags": ["allen-bradley", "cr30", "440c", "discrepancy", "dual-channel", "e-stop", "timing"],
+      "parts_category": "safety_relay"
+    },
+    {
+      "code": "CR30-RESET-REQ",
+      "name": "440C-CR30 Manual Reset Required",
+      "equipment_type": "cr30",
+      "description": "The CR30 is configured for manual reset. After a safety input was activated (E-stop, guard door, light curtain), all inputs have returned to the safe/reset-ready state but the system requires a deliberate manual reset before safety outputs will re-energize.",
+      "probable_causes": [
+        "E-stop was pressed and released — machine is now in reset-required state (normal and expected behavior)",
+        "Guard door was opened and re-closed — machine requires reset per safety design",
+        "Light curtain was interrupted and is now clear — reset required before motion can resume",
+        "Power was cycled — CR30 always requires manual reset after power-up when configured for manual reset",
+        "Reset button wiring fault — CR30 is not seeing the reset signal when button is pressed"
+      ],
+      "fix_steps": [
+        "Walk the machine and verify all E-stops are released (twist-and-pull to release), all guard doors are closed, all light curtains are clear",
+        "Locate the machine's safety reset button (typically green pushbutton on the control panel or at a remote station)",
+        "Press and hold the reset button for 1–2 seconds — CR30 requires a minimum pulse width to accept the reset signal",
+        "Verify the CR30 OUTPUT LED changes from amber/off to green after reset — indicates outputs energized",
+        "If reset button press does not clear the condition, check wiring from reset button back to CR30 reset input terminal",
+        "Verify reset button NC/NO contact type matches CR30 configuration in CCW",
+        "If CR30 still does not reset, check that all safety inputs are truly in their de-actuated state — CR30 will not reset with any input in fault"
+      ],
+      "field_trick": "Operators often push the reset button too quickly. The CR30 requires a 0.25–2 second pulse to register a valid reset. Hold the button for a full 2 seconds to ensure the CR30 accepts it. A momentary tap is often ignored by the relay.",
+      "equipment_types": ["cr30", "allen-bradley", "conveyor", "packaging", "palletizer", "piler"],
+      "severity": "medium",
+      "tags": ["allen-bradley", "cr30", "440c", "reset", "e-stop", "guard door", "safety"],
+      "parts_category": "safety_relay"
     }
   ]
 }
