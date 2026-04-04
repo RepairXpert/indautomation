@@ -49,7 +49,7 @@ def get_tools():
     return [
         {
             "name": "diagnose_fault",
-            "description": "Diagnose an industrial equipment fault from a fault code, symptoms, and equipment type. Returns probable causes, step-by-step fix instructions, severity, confidence score, field tricks, and suggested replacement parts with supplier links. Covers 201 fault codes across 9 categories: general industrial (52), Allen-Bradley/Rockwell (51), conveyors (26), VFDs (21), packaging lines (18), AS/RS (11), palletizers (8), pilers (7), and CR30 configurable relays (7).",
+            "description": "Diagnose an industrial equipment fault from a fault code, symptoms, and equipment type. Returns probable causes, step-by-step fix instructions, severity, confidence score, field tricks, and suggested replacement parts with supplier links. Covers 313 fault codes across 9 categories: general industrial (52), Allen-Bradley/Rockwell (51), conveyors (26), VFDs (21), packaging lines (18), AS/RS (11), palletizers (8), pilers (7), and CR30 configurable relays (7).",
             "inputSchema": {
                 "type": "object",
                 "properties": {
@@ -105,7 +105,7 @@ def get_tools():
                 "properties": {
                     "equipment_type": {
                         "type": "string",
-                        "description": "Filter by equipment type (optional). Leave empty to list all 201 codes."
+                        "description": "Filter by equipment type (optional). Leave empty to list all 313 codes."
                     }
                 }
             }

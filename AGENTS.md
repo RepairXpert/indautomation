@@ -2,7 +2,7 @@
 
 ## Overview
 
-RepairXpert IndAutomation is an AI-powered industrial fault diagnosis system with 201 fault codes, 6 equipment profiles, 500+ replacement parts, and photo-based diagnosis. It helps field technicians diagnose and repair industrial equipment faster.
+RepairXpert IndAutomation is an AI-powered industrial fault diagnosis system with 313 fault codes, 6 equipment profiles, 500+ replacement parts, and photo-based diagnosis. It helps field technicians diagnose and repair industrial equipment faster.
 
 ## MCP Server
 
@@ -38,7 +38,7 @@ Get detailed equipment profiles including components, maintenance schedules, com
 - **Available:** piler, conveyor, asrs, packaging, palletizer, allen-bradley
 
 ### `list_fault_codes`
-List all 201 fault codes, optionally filtered by equipment type.
+List all 313 fault codes, optionally filtered by equipment type.
 - **Input:** `equipment_type` (optional)
 - **Output:** Code, name, severity, equipment type for each entry
 
@@ -46,13 +46,13 @@ List all 201 fault codes, optionally filtered by equipment type.
 
 | Type | Count | Brands |
 |------|-------|--------|
-| General Industrial | 52 | Siemens, Omron, ABB, IFM, Banner, Pilz |
-| Allen-Bradley/Rockwell | 51 | ControlLogix, PowerFlex, GuardMaster, CR30, EN2T |
-| Conveyor | 26 | Hytrol, Dorner, Interroll, Dematic |
-| VFD/Drives | 21 | Allen-Bradley PowerFlex, ABB ACS, Siemens G120, Yaskawa |
-| Packaging | 18 | Sealed Air, ProMach, Nordson |
-| AS/RS | 11 | Dematic, Swisslog, Daifuku |
-| Palletizer | 8 | Alvey, Columbia, TopTier, FANUC |
+| Allen-Bradley/Rockwell | 74 | ControlLogix, PowerFlex, GuardMaster, CR30, EN2T, PanelView, Stratix |
+| General Industrial | 62 | Siemens, Omron, ABB, IFM, Banner, Pilz |
+| Conveyor | 45 | Hytrol, Dorner, Interroll, Dematic |
+| VFD/Drives | 39 | Allen-Bradley PowerFlex, ABB ACS, Siemens G120, Yaskawa |
+| Packaging | 32 | Sealed Air, ProMach, Nordson |
+| AS/RS | 25 | Dematic, Swisslog, Daifuku |
+| Palletizer | 22 | Alvey, Columbia, TopTier, FANUC |
 | Piler/Stacker | 7 | Alvey, Columbia, TopTier |
 | CR30 Relay | 7 | Rockwell Automation |
 
