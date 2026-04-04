@@ -267,6 +267,35 @@ async def fault_detail(request: Request, code: str):
     })
 
 
+@app.get("/sitemap.xml")
+async def sitemap(request: Request):
+    """Dynamic XML sitemap for SEO — lists all fault code pages."""
+    faults = load_fault_db()
+    base = str(request.base_url).rstrip("/")
+    urls = [
+        f'<url><loc>{base}/</loc><priority>1.0</priority></url>',
+        f'<url><loc>{base}/faults</loc><priority>0.9</priority></url>',
+        f'<url><loc>{base}/pricing</loc><priority>0.8</priority></url>',
+    ]
+    for f in faults:
+        code = f.get("code", "")
+        urls.append(f'<url><loc>{base}/fault/{code}</loc><priority>0.7</priority></url>')
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    xml += "\n".join(urls)
+    xml += "\n</urlset>"
+    from starlette.responses import Response
+    return Response(content=xml, media_type="application/xml")
+
+
+@app.get("/robots.txt")
+async def robots(request: Request):
+    base = str(request.base_url).rstrip("/")
+    txt = f"User-agent: *\nAllow: /\nSitemap: {base}/sitemap.xml\n"
+    from starlette.responses import Response
+    return Response(content=txt, media_type="text/plain")
+
+
 @app.get("/api/health")
 async def health():
     fault_count = len(load_fault_db())

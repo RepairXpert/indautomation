@@ -1,0 +1,41 @@
+<!-- RepairXpert Industrial Automation Icon (Square)
+     64x64 favicon/avatar: gear + AI circuit motif
+     Colors: Electric Blue #0088FF, White #FFFFFF, Dark Gray #1a1a2e -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="#1a1a2e"/>
+
+  <!-- Gear outer ring -->
+  <circle cx="32" cy="32" r="20" fill="none" stroke="#0088FF" stroke-width="2.5"/>
+
+  <!-- Gear teeth (8 teeth) -->
+  <g fill="#0088FF">
+    <rect x="29.5" y="8" width="5" height="7" rx="1"/>
+    <rect x="29.5" y="49" width="5" height="7" rx="1"/>
+    <rect x="8" y="29.5" width="7" height="5" rx="1"/>
+    <rect x="49" y="29.5" width="7" height="5" rx="1"/>
+    <rect x="15" y="14" width="5" height="7" rx="1" transform="rotate(45 17.5 17.5)"/>
+    <rect x="44" y="14" width="5" height="7" rx="1" transform="rotate(-45 46.5 17.5)"/>
+    <rect x="15" y="43" width="5" height="7" rx="1" transform="rotate(-45 17.5 46.5)"/>
+    <rect x="44" y="43" width="5" height="7" rx="1" transform="rotate(45 46.5 46.5)"/>
+  </g>
+
+  <!-- Inner ring -->
+  <circle cx="32" cy="32" r="12" fill="none" stroke="#0088FF" stroke-width="1.5"/>
+
+  <!-- AI node center -->
+  <circle cx="32" cy="32" r="5" fill="#0088FF"/>
+  <circle cx="32" cy="32" r="2.5" fill="#1a1a2e"/>
+
+  <!-- Circuit nodes -->
+  <circle cx="37" cy="27" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="27" cy="27" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="37" cy="37" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+  <circle cx="27" cy="37" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+
+  <!-- Circuit traces -->
+  <line x1="37" y1="27" x2="44" y2="20" stroke="#FFFFFF" stroke-width="0.8" opacity="0.5"/>
+  <line x1="27" y1="27" x2="20" y2="20" stroke="#FFFFFF" stroke-width="0.8" opacity="0.5"/>
+  <line x1="37" y1="37" x2="44" y2="44" stroke="#FFFFFF" stroke-width="0.8" opacity="0.5"/>
+  <line x1="27" y1="37" x2="20" y2="44" stroke="#FFFFFF" stroke-width="0.8" opacity="0.5"/>
+</svg>

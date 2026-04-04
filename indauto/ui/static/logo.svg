@@ -1,0 +1,68 @@
+<!-- RepairXpert Industrial Automation Logo
+     Horizontal format: gear + AI circuit motif with brand text
+     Colors: Electric Blue #0088FF, White #FFFFFF, Dark Gray #1a1a2e
+     Usage: Website header, documentation, marketing materials -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" width="400" height="120">
+  <defs>
+    <linearGradient id="ia-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0088FF"/>
+      <stop offset="100%" stop-color="#0055CC"/>
+    </linearGradient>
+    <linearGradient id="ia-circuit" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0088FF" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#0088FF" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background plate (transparent, works on any background) -->
+
+  <!-- Gear outer ring -->
+  <circle cx="50" cy="52" r="30" fill="none" stroke="#0088FF" stroke-width="3"/>
+
+  <!-- Gear teeth (8 teeth) -->
+  <g fill="#0088FF">
+    <rect x="46" y="18" width="8" height="10" rx="1"/>
+    <rect x="46" y="76" width="8" height="10" rx="1"/>
+    <rect x="14" y="48" width="10" height="8" rx="1"/>
+    <rect x="76" y="48" width="10" height="8" rx="1"/>
+    <rect x="22.5" y="25.5" width="8" height="10" rx="1" transform="rotate(45 26.5 30.5)"/>
+    <rect x="69.5" y="25.5" width="8" height="10" rx="1" transform="rotate(-45 73.5 30.5)"/>
+    <rect x="22.5" y="68.5" width="8" height="10" rx="1" transform="rotate(-45 26.5 73.5)"/>
+    <rect x="69.5" y="68.5" width="8" height="10" rx="1" transform="rotate(45 73.5 73.5)"/>
+  </g>
+
+  <!-- Inner gear ring -->
+  <circle cx="50" cy="52" r="18" fill="none" stroke="#0088FF" stroke-width="2"/>
+
+  <!-- AI brain/circuit node in center -->
+  <circle cx="50" cy="52" r="6" fill="#0088FF"/>
+  <circle cx="50" cy="52" r="3" fill="#1a1a2e"/>
+
+  <!-- Circuit traces from center -->
+  <line x1="56" y1="52" x2="68" y2="52" stroke="#0088FF" stroke-width="1.5" stroke-dasharray="2,2"/>
+  <line x1="50" y1="46" x2="50" y2="34" stroke="#0088FF" stroke-width="1.5" stroke-dasharray="2,2"/>
+  <line x1="44" y1="52" x2="32" y2="52" stroke="#0088FF" stroke-width="1.5" stroke-dasharray="2,2"/>
+  <line x1="50" y1="58" x2="50" y2="70" stroke="#0088FF" stroke-width="1.5" stroke-dasharray="2,2"/>
+
+  <!-- Circuit nodes -->
+  <circle cx="56" cy="46" r="2" fill="#0088FF"/>
+  <circle cx="44" cy="46" r="2" fill="#0088FF"/>
+  <circle cx="56" cy="58" r="2" fill="#0088FF"/>
+  <circle cx="44" cy="58" r="2" fill="#0088FF"/>
+
+  <!-- Wrench overlay (small, tucked into lower-right of gear) -->
+  <path d="M62 62 L70 70 L68 72 L60 64 Z" fill="#FFFFFF" opacity="0.9"/>
+  <circle cx="71" cy="71" r="3" fill="none" stroke="#FFFFFF" stroke-width="1.5" opacity="0.9"/>
+
+  <!-- Brand text -->
+  <text x="100" y="48" font-family="'Segoe UI', Arial, sans-serif" font-weight="700" font-size="28" fill="#FFFFFF" letter-spacing="0.5">RepairXpert</text>
+
+  <!-- Subtitle -->
+  <text x="100" y="72" font-family="'Segoe UI', Arial, sans-serif" font-weight="400" font-size="14" fill="#0088FF" letter-spacing="3">INDUSTRIAL</text>
+
+  <!-- Decorative circuit line from text area -->
+  <line x1="100" y1="82" x2="260" y2="82" stroke="url(#ia-circuit)" stroke-width="1"/>
+  <circle cx="260" cy="82" r="2" fill="#0088FF" opacity="0.4"/>
+  <circle cx="270" cy="82" r="1.5" fill="#0088FF" opacity="0.3"/>
+  <circle cx="278" cy="82" r="1" fill="#0088FF" opacity="0.2"/>
+</svg>
