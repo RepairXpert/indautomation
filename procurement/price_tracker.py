@@ -9,9 +9,9 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import time
 
-from .catalog import PartsDatabase
-from .accounts import AccountsDatabase
-from .suppliers import SupplierManager
+from catalog import PartsDatabase
+from accounts import AccountsDatabase
+from suppliers import SupplierManager
 
 logger = logging.getLogger(__name__)
 

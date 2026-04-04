@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime
 from enum import Enum
 
-from .suppliers import PartPrice, BaseSupplier, SupplierManager
+from suppliers import PartPrice, BaseSupplier, SupplierManager
 
 logger = logging.getLogger(__name__)
 

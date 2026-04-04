@@ -4,7 +4,7 @@ Loads parts from IndAutomation's existing 500+ part catalog
 """
 
 import logging
-from .catalog import PartsDatabase
+from catalog import PartsDatabase
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

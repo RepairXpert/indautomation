@@ -11,7 +11,7 @@ from typing import List, Dict, Optional, Tuple, Any
 from dataclasses import asdict
 import os
 
-from .suppliers import PartPrice, PartDetails
+from suppliers import PartPrice, PartDetails
 
 logger = logging.getLogger(__name__)
 
