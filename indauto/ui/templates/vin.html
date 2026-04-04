@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Free VIN Decoder — Instant Vehicle Lookup | RepairXpert</title>
+<meta name="description" content="Free VIN decoder for field techs and mechanics. Enter any VIN, get make, model, year, engine, transmission, plant info instantly. Powered by NHTSA data. No signup required.">
+<meta property="og:title" content="Free VIN Decoder — RepairXpert Industrial Automation">
+<meta property="og:description" content="Instant vehicle identification from any VIN. Free, no signup. NHTSA data.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://indautomation.onrender.com/vin">
+<link rel="canonical" href="https://indautomation.onrender.com/vin">
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "RepairXpert VIN Decoder",
+  "url": "https://indautomation.onrender.com/vin",
+  "applicationCategory": "Utility",
+  "operatingSystem": "Web",
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+  "description": "Free VIN decoder for field technicians. Powered by NHTSA vPIC API."
+}
+</script>
+</head>
+<body>
+<header>
+  <div class="logo-row">
+    <img src="/static/logo.svg" alt="RepairXpert Industrial Automation" height="48">
+  </div>
+  <nav>
+    <a href="/">Diagnose</a>
+    <a href="/faults">Fault Codes</a>
+    <a href="/vin" class="active">VIN Decode</a>
+    <a href="/history">History</a>
+    <a href="/pricing">Pricing</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h1 style="font-size:1.1rem; margin-bottom:0.25rem">Free VIN Decoder</h1>
+    <p style="color:var(--muted); font-size:0.8rem; margin-bottom:1rem">Enter any VIN to instantly identify vehicle make, model, year, engine, and more. Powered by NHTSA data.</p>
+
+    <form action="/vin" method="POST">
+      <label for="vinInput">Vehicle Identification Number (VIN)</label>
+      <input type="text" name="vin" id="vinInput"
+             value="{{ vin or '' }}"
+             placeholder="e.g. 1HGBH41JXMN109186"
+             maxlength="17" minlength="11"
+             autocomplete="off" autocapitalize="characters"
+             style="text-transform:uppercase; font-family:monospace; font-size:1rem; letter-spacing:1px">
+
+      <button type="submit" class="btn" style="margin-top:0.75rem">DECODE VIN</button>
+    </form>
+  </div>
+
+  {% if error %}
+  <div class="card" style="border-color:var(--red)">
+    <p style="color:var(--red)">{{ error }}</p>
+  </div>
+  {% endif %}
+
+  {% if result %}
+  <div class="card" style="border-color:var(--green)">
+    <h2 style="font-size:0.95rem; color:var(--green); margin-bottom:0.75rem">Vehicle Identified</h2>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem">
+      {% for key in ['ModelYear', 'Make', 'Model', 'Trim', 'BodyClass', 'DriveType',
+                      'EngineConfiguration', 'EngineCylinders', 'DisplacementL',
+                      'FuelTypePrimary', 'TransmissionStyle', 'PlantCity', 'PlantState',
+                      'PlantCountry', 'Manufacturer', 'VehicleType', 'GVWR',
+                      'ABS', 'ESC', 'AirBagLocFront', 'AirBagLocSide'] %}
+        {% if result.get(key) %}
+        <div style="padding:0.4rem 0; border-bottom:1px solid var(--border)">
+          <div style="font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px">{{ key | replace('_', ' ') }}</div>
+          <div style="font-size:0.85rem; font-weight:500">{{ result[key] }}</div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if result|length > 25 %}
+  <details style="margin-top:0.75rem">
+    <summary style="cursor:pointer; color:var(--blue); font-size:0.8rem; padding:0.5rem 0">Show all {{ result|length }} fields</summary>
+    <div class="card" style="margin-top:0.5rem">
+      <table style="width:100%; font-size:0.75rem">
+        {% for k, v in result.items() %}
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:0.3rem 0.5rem 0.3rem 0; color:var(--muted); white-space:nowrap; vertical-align:top">{{ k }}</td>
+          <td style="padding:0.3rem 0">{{ v }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </details>
+  {% endif %}
+
+  <div class="card" style="margin-top:0.75rem; text-align:center">
+    <p style="font-size:0.8rem; color:var(--muted); margin-bottom:0.5rem">Having equipment issues with this vehicle?</p>
+    <a href="/" class="btn" style="display:inline-block; text-decoration:none; font-size:0.8rem">Run AI Diagnosis</a>
+  </div>
+  {% endif %}
+
+  <div class="card" style="margin-top:1rem">
+    <h2 style="font-size:0.85rem; margin-bottom:0.5rem">About This Tool</h2>
+    <p style="font-size:0.78rem; color:var(--muted); line-height:1.6">
+      This free VIN decoder uses the NHTSA vPIC (Vehicle Product Information Catalog) API
+      to look up detailed vehicle specifications from the manufacturer's VIN encoding.
+      It works for vehicles sold in the US from 1981 onwards. No signup or API key needed.
+    </p>
+    <p style="font-size:0.78rem; color:var(--muted); line-height:1.6; margin-top:0.5rem">
+      Field technicians use VIN decoding to quickly identify engine type, transmission,
+      and equipment specifications before starting diagnostic work. Pair this with
+      <a href="/" style="color:var(--blue)">AI fault diagnosis</a> for a complete workflow.
+    </p>
+  </div>
+</div>
+
+<script>
+document.getElementById('vinInput').addEventListener('input', function() {
+  this.value = this.value.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '');
+});
+</script>
+</body>
+</html>

@@ -267,6 +267,60 @@ async def fault_detail(request: Request, code: str):
     })
 
 
+@app.get("/vin", response_class=HTMLResponse)
+async def vin_page(request: Request):
+    """VIN decoder page — free tool for field techs."""
+    return templates.TemplateResponse("vin.html", {"request": request, "result": None})
+
+
+@app.post("/vin", response_class=HTMLResponse)
+async def vin_lookup(request: Request, vin: str = Form("")):
+    """Decode a VIN using the free NHTSA vPIC API."""
+    result = None
+    error = None
+    if vin and len(vin) >= 11:
+        import urllib.request
+        import urllib.error
+        url = f"https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{vin}?format=json"
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "RepairXpert/1.0"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode())
+                if data.get("Results"):
+                    raw = data["Results"][0]
+                    result = {k: v for k, v in raw.items() if v and v.strip()}
+        except (urllib.error.URLError, json.JSONDecodeError, KeyError) as e:
+            error = str(e)
+    elif vin:
+        error = "VIN must be at least 11 characters"
+    return templates.TemplateResponse("vin.html", {
+        "request": request,
+        "result": result,
+        "vin": vin,
+        "error": error,
+    })
+
+
+@app.get("/api/vin/{vin}")
+async def api_vin_decode(vin: str):
+    """JSON VIN decode endpoint for programmatic access."""
+    import urllib.request
+    import urllib.error
+    if len(vin) < 11:
+        return JSONResponse({"error": "VIN must be at least 11 characters"}, status_code=400)
+    url = f"https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{vin}?format=json"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "RepairXpert/1.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+            if data.get("Results"):
+                raw = data["Results"][0]
+                return JSONResponse({k: v for k, v in raw.items() if v and v.strip()})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=502)
+    return JSONResponse({"error": "No results"}, status_code=404)
+
+
 @app.get("/sitemap.xml")
 async def sitemap(request: Request):
     """Dynamic XML sitemap for SEO — lists all fault code pages."""
@@ -276,6 +330,7 @@ async def sitemap(request: Request):
         f'<url><loc>{base}/</loc><priority>1.0</priority></url>',
         f'<url><loc>{base}/faults</loc><priority>0.9</priority></url>',
         f'<url><loc>{base}/pricing</loc><priority>0.8</priority></url>',
+        f'<url><loc>{base}/vin</loc><priority>0.8</priority></url>',
     ]
     for f in faults:
         code = f.get("code", "")
