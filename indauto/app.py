@@ -1,6 +1,7 @@
 """RepairXpert Industrial Automation — FastAPI diagnostic tool for field techs."""
 import json
 import os
+import sys
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,6 +15,13 @@ from fastapi.templating import Jinja2Templates
 from indauto.diagnosis.engine import diagnose_fault, load_fault_db
 from indauto.diagnosis.photo import analyze_photo
 from indauto.parts.catalog import get_parts_for_category
+
+# === PROCUREMENT ENGINE (auto-integrated) ===
+try:
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from procurement_routes import procurement_router
+except ImportError:
+    procurement_router = None
 
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8"))
@@ -42,6 +50,11 @@ app = FastAPI(title="RepairXpert IndAutomation", version="1.0.0")
 app.mount("/static", StaticFiles(directory=ROOT / "indauto" / "ui" / "static"), name="static")
 templates = Jinja2Templates(directory=str(ROOT / "indauto" / "ui" / "templates"))
 templates.env.auto_reload = True
+
+# Mount procurement router if available
+if procurement_router:
+    app.include_router(procurement_router)
+    print("[PROCUREMENT] Router mounted at /api/procurement/*")
 
 DB_PATH = ROOT / "data" / "diagnosis_log.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)

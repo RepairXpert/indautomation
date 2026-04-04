@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement Engine - Price Comparison</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"], input[type="number"], select {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-size: 12px;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .comparison-table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 13px;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .best-price {
+            background: #e8f5e9;
+            font-weight: 600;
+            color: #2e7d32;
+        }
+
+        .price {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        .in-stock {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .out-of-stock {
+            color: #d32f2f;
+            font-weight: 600;
+        }
+
+        .lead-time {
+            background: #fff3cd;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .summary-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .summary-card h3 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .summary-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 12px;
+            background: #667eea;
+        }
+
+        .btn-small:hover {
+            background: #764ba2;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #d32f2f;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #d32f2f;
+        }
+
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #2e7d32;
+        }
+
+        @media (max-width: 768px) {
+            .search-box {
+                flex-direction: column;
+            }
+
+            .comparison-table {
+                font-size: 12px;
+            }
+
+            .comparison-table th,
+            .comparison-table td {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .summary {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .best-supplier-badge {
+            display: inline-block;
+            background: #ffd700;
+            color: #333;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>Procurement Engine</h1>
+            <p class="subtitle">Real-time price comparison across multiple suppliers</p>
+        </header>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-box">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Enter part number or description (e.g., VFD, motor, PLC)..."
+                    onkeypress="handleKeyPress(event)"
+                >
+                <input
+                    type="number"
+                    id="quantityInput"
+                    placeholder="Quantity"
+                    value="1"
+                    min="1"
+                >
+                <button onclick="searchParts()">Search Prices</button>
+            </div>
+            <div id="messageContainer"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            <div id="resultsContainer">
+                <div class="no-results">
+                    Enter a part number or description to see price comparisons
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8301';
+
+        async function searchParts() {
+            const query = document.getElementById('searchInput').value.trim();
+            const quantity = parseInt(document.getElementById('quantityInput').value) || 1;
+
+            if (!query) {
+                showMessage('Please enter a search query', 'error');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                // Search for parts
+                const searchResponse = await fetch(
+                    `${API_BASE}/parts/search?q=${encodeURIComponent(query)}&limit=5`,
+                    { headers: { 'Accept': 'application/json' } }
+                );
+
+                if (!searchResponse.ok) {
+                    throw new Error(`Search failed: ${searchResponse.status}`);
+                }
+
+                const searchData = await searchResponse.json();
+
+                if (!searchData.results || searchData.results.length === 0) {
+                    document.getElementById('resultsContainer').innerHTML =
+                        '<div class="no-results">No parts found matching your search</div>';
+                    return;
+                }
+
+                // Get comparison for first result
+                const partNumber = searchData.results[0].part_number;
+                const compareResponse = await fetch(
+                    `${API_BASE}/parts/${encodeURIComponent(partNumber)}/compare?quantity=${quantity}`,
+                    { headers: { 'Accept': 'application/json' } }
+                );
+
+                if (!compareResponse.ok) {
+                    throw new Error(`Comparison failed: ${compareResponse.status}`);
+                }
+
+                const compareData = await compareResponse.json();
+                displayResults(compareData, searchData.results[0]);
+
+            } catch (error) {
+                showMessage(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        function displayResults(compareData, partInfo) {
+            const html = `
+                <div>
+                    <h2 style="margin-bottom: 15px; color: #333;">
+                        ${partInfo.part_number} - ${partInfo.description}
+                        <span style="font-size: 14px; color: #999;">(${partInfo.manufacturer})</span>
+                    </h2>
+
+                    <div class="summary">
+                        <div class="summary-card">
+                            <h3>Best Price</h3>
+                            <div class="value">${compareData.best_price}</div>
+                            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                ${compareData.best_supplier}
+                            </div>
+                        </div>
+                        <div class="summary-card">
+                            <h3>Quantity Requested</h3>
+                            <div class="value">${compareData.quantity}</div>
+                        </div>
+                        <div class="summary-card">
+                            <h3>Number of Suppliers</h3>
+                            <div class="value">${compareData.quotes.length}</div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 25px; margin-bottom: 15px; color: #333;">Price Comparison</h3>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Supplier</th>
+                                <th>Unit Price</th>
+                                <th>Subtotal</th>
+                                <th>Shipping</th>
+                                <th>Total Cost</th>
+                                <th>Lead Time</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${compareData.quotes.map((quote, index) => `
+                                <tr ${index === 0 ? 'class="best-price"' : ''}>
+                                    <td>
+                                        ${quote.supplier}
+                                        ${index === 0 ? '<span class="best-supplier-badge">BEST VALUE</span>' : ''}
+                                    </td>
+                                    <td class="price">${quote.unit_price}</td>
+                                    <td>$${(parseFloat(quote.unit_price.substring(1)) * compareData.quantity).toFixed(2)}</td>
+                                    <td>${quote.shipping}</td>
+                                    <td class="price">${quote.total}</td>
+                                    <td><span class="lead-time">${quote.lead_time}</span></td>
+                                    <td>
+                                        <span class="${quote.in_stock === 'Yes' ? 'in-stock' : 'out-of-stock'}">
+                                            ${quote.in_stock === 'Yes' ? '✓ ' : '✗ '}
+                                            ${quote.stock} units
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <div class="action-buttons" style="margin-top: 20px;">
+                        <button class="btn-small" onclick="saveToWishlist('${partInfo.part_number}')">
+                            ♥ Save to Wishlist
+                        </button>
+                        <button class="btn-small" onclick="createPriceAlert('${partInfo.part_number}')">
+                            🔔 Price Alert
+                        </button>
+                        <button class="btn-small" onclick="viewPriceHistory('${partInfo.part_number}')">
+                            📊 Price History
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('resultsContainer').innerHTML = html;
+        }
+
+        function showMessage(message, type) {
+            const container = document.getElementById('messageContainer');
+            const className = type === 'error' ? 'error' : 'success';
+            container.innerHTML = `<div class="${className}">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        function showLoading() {
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading prices...</p>
+                </div>
+            `;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                searchParts();
+            }
+        }
+
+        function saveToWishlist(partNumber) {
+            showMessage(`Added ${partNumber} to wishlist`, 'success');
+        }
+
+        function createPriceAlert(partNumber) {
+            const targetPrice = prompt(`Set target price for ${partNumber}:`);
+            if (targetPrice) {
+                showMessage(`Price alert created for ${partNumber} at $${targetPrice}`, 'success');
+            }
+        }
+
+        function viewPriceHistory(partNumber) {
+            showMessage(`Price history for ${partNumber} - feature coming soon`, 'success');
+        }
+
+        // Auto-focus search input on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('searchInput').focus();
+        });
+    </script>
+</body>
+</html>

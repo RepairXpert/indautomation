@@ -1,0 +1,72 @@
+
+<!-- Procurement Price Widget - embed on fault code result pages -->
+<div id="procurement-widget" style="display:none; margin:20px 0; padding:20px;
+     background:#1a1a2e; border-radius:12px; border:1px solid #16213e;">
+  <h3 style="color:#e94560; margin-bottom:15px;">Best Price Found</h3>
+  <div id="pw-results"></div>
+  <div id="pw-loading" style="color:#999;">Searching suppliers...</div>
+</div>
+
+<script>
+async function findBestPrice(partNumbers) {
+    const widget = document.getElementById('procurement-widget');
+    const results = document.getElementById('pw-results');
+    const loading = document.getElementById('pw-loading');
+    widget.style.display = 'block';
+
+    for (const pn of partNumbers) {
+        try {
+            const resp = await fetch(`/api/procurement/parts/${pn}/best-price?quantity=1`);
+            if (!resp.ok) continue;
+            const data = await resp.json();
+
+            const card = document.createElement('div');
+            card.style.cssText = 'padding:12px; margin:8px 0; background:#16213e; border-radius:8px;';
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="color:#fff;">${pn}</strong>
+                        <span style="color:#999; margin-left:10px;">${data.best_supplier}</span>
+                    </div>
+                    <div>
+                        <span style="color:#0f3460; font-size:24px; font-weight:bold;">$${data.unit_price.toFixed(2)}</span>
+                        ${data.cost_savings > 0 ?
+                            `<span style="color:#4ecca3; margin-left:8px;">Save $${data.cost_savings.toFixed(2)}</span>` : ''}
+                    </div>
+                    <div>
+                        <span style="color:${data.in_stock ? '#4ecca3' : '#e94560'};">
+                            ${data.in_stock ? 'In Stock' : data.lead_time_days + ' day lead'}
+                        </span>
+                    </div>
+                    <a href="/api/procurement/orders/quote"
+                       style="background:#e94560; color:white; padding:8px 16px; border-radius:6px;
+                              text-decoration:none; font-weight:bold;">
+                        Order Now
+                    </a>
+                </div>
+                ${data.alternatives.length > 1 ? `
+                    <div style="margin-top:8px; font-size:12px; color:#999;">
+                        ${data.alternatives.length} suppliers compared |
+                        Prices from $${Math.min(...data.alternatives.map(a => a.unit_price)).toFixed(2)}
+                        to $${Math.max(...data.alternatives.map(a => a.unit_price)).toFixed(2)}
+                    </div>
+                ` : ''}
+            `;
+            results.appendChild(card);
+        } catch(e) {
+            console.error('Price lookup failed for', pn, e);
+        }
+    }
+    loading.style.display = 'none';
+    if (!results.children.length) widget.style.display = 'none';
+}
+
+// Auto-trigger when parts are recommended on fault code pages
+document.addEventListener('DOMContentLoaded', () => {
+    const partElements = document.querySelectorAll('[data-part-number]');
+    if (partElements.length) {
+        const partNumbers = Array.from(partElements).map(el => el.dataset.partNumber);
+        findBestPrice(partNumbers);
+    }
+});
+</script>
