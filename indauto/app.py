@@ -11,6 +11,7 @@ from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from indauto.diagnosis.engine import diagnose_fault, load_fault_db
 from indauto.diagnosis.photo import analyze_photo
@@ -46,7 +47,30 @@ if STRIPE_SECRET_KEY:
     except ImportError:
         pass
 
-app = FastAPI(title="RepairXpert IndAutomation", version="1.0.0")
+_is_debug = os.environ.get("DEBUG", "").lower() in ("1", "true", "yes")
+app = FastAPI(
+    title="RepairXpert IndAutomation",
+    version="1.0.0",
+    docs_url="/docs" if _is_debug else None,
+    redoc_url="/redoc" if _is_debug else None,
+    openapi_url="/openapi.json" if _is_debug else None,
+)
+
+# ── Request size limit middleware (CVE-2024-47874) ───────────────────────────
+MAX_REQUEST_BODY = 10 * 1024 * 1024  # 10 MB
+
+class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > MAX_REQUEST_BODY:
+            return JSONResponse(
+                status_code=413,
+                content={"detail": "Request body too large"},
+            )
+        return await call_next(request)
+
+app.add_middleware(RequestSizeLimitMiddleware)
+
 app.mount("/static", StaticFiles(directory=ROOT / "indauto" / "ui" / "static"), name="static")
 templates = Jinja2Templates(directory=str(ROOT / "indauto" / "ui" / "templates"))
 templates.env.auto_reload = True
