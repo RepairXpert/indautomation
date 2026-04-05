@@ -193,8 +193,15 @@ def diagnose_fault(equipment_type: str, fault_code: str, symptoms: str,
         result = _build_result(best_entry, equipment_type, confidence, "fuzzy_match")
         return _attach_photo(result, photo_analysis)
 
-    # --- Phase 3: LLM fallback ---
+    # --- Phase 3: LLM fallback (with graceful degradation) ---
     result = _llm_diagnose(equipment_type, fault_code, symptoms, config)
+
+    # Graceful degradation: if LLM failed and we had any fuzzy matches, prefer those
+    if result.get("source") == "fallback" and scored and scored[0][0] >= 0.25:
+        best_score, best_entry = scored[0]
+        result = _build_result(best_entry, equipment_type, best_score * 0.7, "fallback_fuzzy")
+        result["ai_note"] = "AI engine temporarily unavailable. Showing best database match."
+
     return _attach_photo(result, photo_analysis)
 
 
@@ -290,8 +297,8 @@ Be specific and practical. Include sensor checks, wiring checks, PLC input verif
             "fault_name": "Diagnosis Unavailable",
             "equipment_type": equipment_type or "unknown",
             "diagnosis": [
-                f"LLM service unavailable ({type(e).__name__})",
-                "Manual inspection recommended — see generic steps below",
+                "AI engine temporarily unavailable — showing general inspection steps",
+                "Manual inspection recommended — see steps below",
             ],
             "fix_steps": [
                 "Check sensor LEDs at fault location — identify which sensor is involved",
@@ -304,4 +311,5 @@ Be specific and practical. Include sensor checks, wiring checks, PLC input verif
             "severity": "medium",
             "confidence": 0.25,
             "source": "fallback",
+            "ai_note": "AI engine temporarily unavailable. Using generic troubleshooting steps.",
         }

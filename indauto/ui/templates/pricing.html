@@ -174,9 +174,52 @@
   ]
 }
 </script>
+<!-- Email capture modal -->
+<div id="emailModal" style="display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.7); align-items:center; justify-content:center">
+  <div class="card" style="max-width:420px; width:90%; padding:2rem; text-align:center; position:relative">
+    <button onclick="closeModal()" style="position:absolute; top:0.75rem; right:1rem; background:none; border:none; color:var(--muted); font-size:1.5rem; cursor:pointer">&times;</button>
+    <h3 style="color:var(--accent); margin-bottom:0.5rem" id="modalTitle">Almost there</h3>
+    <p style="color:var(--muted); font-size:0.85rem; margin-bottom:1.25rem">
+      Enter your work email to continue. We'll send your receipt and account details here.
+    </p>
+    <form onsubmit="submitEmail(event)" style="display:flex; flex-direction:column; gap:0.75rem">
+      <input type="email" id="checkoutEmail" required placeholder="you@company.com"
+        style="padding:0.75rem 1rem; border-radius:var(--radius); border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:0.95rem; outline:none"
+        onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+      <button type="submit" class="btn" id="modalBtn" style="width:100%">Continue to Checkout</button>
+    </form>
+    <p style="color:var(--muted); font-size:0.72rem; margin-top:0.75rem">
+      No spam. Cancel anytime. Powered by Stripe.
+    </p>
+  </div>
+</div>
+
 <script>
-async function checkout(plan) {
-  const btn = event.target;
+let selectedPlan = '';
+
+function checkout(plan) {
+  selectedPlan = plan;
+  const title = plan === 'enterprise' ? 'Enterprise — $49.99/mo' : 'Pro — $19.99/mo';
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('emailModal').style.display = 'flex';
+  document.getElementById('checkoutEmail').focus();
+}
+
+function closeModal() {
+  document.getElementById('emailModal').style.display = 'none';
+  selectedPlan = '';
+}
+
+document.getElementById('emailModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+async function submitEmail(e) {
+  e.preventDefault();
+  const email = document.getElementById('checkoutEmail').value.trim();
+  if (!email) return;
+
+  const btn = document.getElementById('modalBtn');
   btn.disabled = true;
   btn.textContent = 'Redirecting...';
 
@@ -184,7 +227,7 @@ async function checkout(plan) {
     const resp = await fetch('/api/checkout', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({plan: plan}),
+      body: JSON.stringify({plan: selectedPlan, email: email}),
     });
     const data = await resp.json();
 
@@ -193,12 +236,12 @@ async function checkout(plan) {
     } else if (data.error) {
       alert(data.error);
       btn.disabled = false;
-      btn.textContent = plan === 'pro' ? 'Subscribe \u2014 $19.99/mo' : 'Subscribe \u2014 $49.99/mo';
+      btn.textContent = 'Continue to Checkout';
     }
   } catch (err) {
     alert('Connection error. Please try again.');
     btn.disabled = false;
-    btn.textContent = plan === 'pro' ? 'Subscribe \u2014 $19.99/mo' : 'Subscribe \u2014 $49.99/mo';
+    btn.textContent = 'Continue to Checkout';
   }
 }
 </script>

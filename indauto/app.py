@@ -59,6 +59,12 @@ if procurement_router:
 DB_PATH = ROOT / "data" / "diagnosis_log.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
+# ── Stripe webhook + Resend config ───────────────────────────────────────────
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+LOGS_PATH = ROOT / "logs"
+LOGS_PATH.mkdir(parents=True, exist_ok=True)
+
 # Load equipment types for dropdowns
 EQUIPMENT_DB_PATH = ROOT / "indauto" / "fault_db" / "equipment.json"
 
@@ -86,6 +92,15 @@ def get_db():
         severity TEXT,
         confidence REAL,
         source TEXT
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS checkout_leads (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TEXT NOT NULL,
+        email TEXT NOT NULL,
+        plan TEXT NOT NULL,
+        stripe_session_id TEXT,
+        status TEXT DEFAULT 'pending',
+        recovery_sent_at TEXT
     )""")
     db.commit()
     return db
@@ -150,6 +165,7 @@ async def create_checkout_session(request: Request):
 
     body = await request.json()
     plan = body.get("plan", "")
+    email = body.get("email", "").strip()
 
     if plan not in STRIPE_PRICE_IDS:
         return JSONResponse({"error": f"Unknown plan: {plan}"}, status_code=400)
@@ -161,17 +177,34 @@ async def create_checkout_session(request: Request):
             status_code=503,
         )
 
-    # Build absolute URLs for success/cancel redirects
     base_url = str(request.base_url).rstrip("/")
 
     try:
-        session = stripe.checkout.Session.create(
-            mode="subscription",
-            payment_method_types=["card"],
-            line_items=[{"price": price_id, "quantity": 1}],
-            success_url=f"{base_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
-            cancel_url=f"{base_url}/checkout/cancel",
-        )
+        session_params = {
+            "mode": "subscription",
+            "payment_method_types": ["card"],
+            "line_items": [{"price": price_id, "quantity": 1}],
+            "success_url": f"{base_url}/checkout/success?session_id={{CHECKOUT_SESSION_ID}}",
+            "cancel_url": f"{base_url}/checkout/cancel",
+        }
+        if email:
+            session_params["customer_email"] = email
+
+        session = stripe.checkout.Session.create(**session_params)
+
+        # Log lead to SQLite for recovery
+        if email:
+            try:
+                db = get_db()
+                db.execute(
+                    "INSERT INTO checkout_leads (created_at, email, plan, stripe_session_id) VALUES (?,?,?,?)",
+                    (datetime.now(timezone.utc).isoformat(), email, plan, session.id),
+                )
+                db.commit()
+                db.close()
+            except Exception:
+                pass  # Don't block checkout on logging failure
+
         return JSONResponse({"checkout_url": session.url})
     except stripe.error.StripeError as e:
         return JSONResponse({"error": str(e)}, status_code=502)
@@ -185,6 +218,177 @@ async def checkout_success(request: Request):
 @app.get("/checkout/cancel", response_class=HTMLResponse)
 async def checkout_cancel(request: Request):
     return templates.TemplateResponse("checkout_cancel.html", {"request": request})
+
+
+# ── Stripe Webhook ────────────────────────────────────────────────────────────
+
+
+@app.post("/api/stripe/webhook")
+async def stripe_webhook(request: Request):
+    """Handle Stripe webhook events for cart recovery and conversion tracking."""
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature", "")
+
+    if STRIPE_WEBHOOK_SECRET and _stripe_available:
+        try:
+            event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
+        except (ValueError, stripe.error.SignatureVerificationError):
+            return JSONResponse({"error": "Invalid signature"}, status_code=400)
+    else:
+        try:
+            event = json.loads(payload)
+        except json.JSONDecodeError:
+            return JSONResponse({"error": "Invalid payload"}, status_code=400)
+
+    event_type = event.get("type", "")
+    data_obj = event.get("data", {}).get("object", {})
+
+    _log_stripe_event(event_type, data_obj)
+
+    if event_type == "checkout.session.completed":
+        _handle_checkout_completed(data_obj)
+    elif event_type == "checkout.session.expired":
+        _handle_checkout_expired(data_obj)
+
+    return JSONResponse({"status": "ok"})
+
+
+@app.post("/api/checkout/recover")
+async def recover_checkout(request: Request):
+    """Email capture on cancel page — creates a new checkout session and sends recovery email."""
+    body = await request.json()
+    email = body.get("email", "").strip()
+    plan = body.get("plan", "pro")
+
+    if not email:
+        return JSONResponse({"error": "Email required"}, status_code=400)
+
+    # Log the lead
+    try:
+        db = get_db()
+        db.execute(
+            "INSERT INTO checkout_leads (created_at, email, plan, status) VALUES (?,?,?,?)",
+            (datetime.now(timezone.utc).isoformat(), email, plan, "recover_requested"),
+        )
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+
+    # Send recovery email with fresh checkout link
+    base_url = os.environ.get("RENDER_EXTERNAL_URL", "https://indautomation.onrender.com")
+    _send_recovery_email(email, plan, base_url)
+
+    return JSONResponse({"status": "ok", "message": "We'll send you a link to complete your subscription."})
+
+
+def _handle_checkout_completed(session: dict):
+    """Mark lead as converted."""
+    email = session.get("customer_email", "") or session.get("customer_details", {}).get("email", "")
+    if email:
+        try:
+            db = get_db()
+            db.execute("UPDATE checkout_leads SET status='converted' WHERE email=? AND status='pending'", (email,))
+            db.commit()
+            db.close()
+        except Exception:
+            pass
+
+
+def _handle_checkout_expired(session: dict):
+    """Send recovery email for expired checkout sessions."""
+    email = session.get("customer_email", "")
+    if not email:
+        return
+
+    # Check if we already sent a recovery for this email recently
+    try:
+        db = get_db()
+        row = db.execute(
+            "SELECT recovery_sent_at FROM checkout_leads WHERE email=? ORDER BY id DESC LIMIT 1",
+            (email,),
+        ).fetchone()
+        if row and row["recovery_sent_at"]:
+            db.close()
+            return  # Already sent recovery
+        db.execute(
+            "UPDATE checkout_leads SET status='expired', recovery_sent_at=? WHERE email=? AND status='pending'",
+            (datetime.now(timezone.utc).isoformat(), email),
+        )
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+
+    # Determine plan from session metadata
+    plan = "pro"
+    line_items = session.get("line_items", {}).get("data", [])
+    if line_items:
+        price_id = line_items[0].get("price", {}).get("id", "")
+        if price_id == STRIPE_PRICE_IDS.get("enterprise"):
+            plan = "enterprise"
+
+    base_url = os.environ.get("RENDER_EXTERNAL_URL", "https://indautomation.onrender.com")
+    _send_recovery_email(email, plan, base_url)
+
+
+def _send_recovery_email(email: str, plan: str, base_url: str):
+    """Send abandoned cart recovery email via Resend."""
+    if not RESEND_API_KEY:
+        _log_stripe_event("recovery_email_skipped", {"email": email, "reason": "no_resend_key"})
+        return
+
+    plan_name = "Enterprise" if plan == "enterprise" else "Pro"
+    plan_price = "$49.99" if plan == "enterprise" else "$19.99"
+
+    html_body = f"""<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;color:#e6edf3;background:#161b22;padding:2rem;border-radius:8px">
+<h2 style="color:#f78166;margin-bottom:1rem">You were close to upgrading</h2>
+<p>You started checking out the <strong>{plan_name}</strong> plan ({plan_price}/mo) for RepairXpert Industrial Fault Diagnosis but didn't finish.</p>
+<p style="margin:1.5rem 0">Ready to pick up where you left off? Your diagnostic power-up is one click away:</p>
+<a href="{base_url}/pricing" style="display:inline-block;background:#f78166;color:#fff;padding:0.75rem 2rem;border-radius:6px;text-decoration:none;font-weight:600">Complete Your Subscription</a>
+<p style="margin-top:1.5rem;color:#8b949e;font-size:0.85rem">Cancel anytime. No contracts. 313+ fault codes, AI diagnosis, parts recommendations.</p>
+<hr style="border:1px solid #30363d;margin:1.5rem 0">
+<p style="color:#8b949e;font-size:0.78rem">RepairXpert Industrial Automation — AI-powered fault diagnosis for field technicians</p>
+</div>"""
+
+    try:
+        import urllib.request
+        payload = json.dumps({
+            "from": "RepairXpert <hello@getclawgrab.com>",
+            "to": [email],
+            "subject": f"Complete your RepairXpert {plan_name} subscription",
+            "html": html_body,
+        }).encode()
+
+        req = urllib.request.Request(
+            "https://api.resend.com/emails",
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=10) as res:
+            _log_stripe_event("recovery_email_sent", {"email": email, "plan": plan})
+    except Exception as e:
+        _log_stripe_event("recovery_email_failed", {"email": email, "error": str(e)})
+
+
+def _log_stripe_event(event_type: str, data: dict):
+    """Append Stripe/recovery event to JSONL log."""
+    try:
+        log_entry = json.dumps({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "event": event_type,
+            "data": {k: v for k, v in data.items() if k in (
+                "id", "customer_email", "email", "plan", "status",
+                "amount_total", "currency", "reason", "error",
+            )},
+        })
+        with open(LOGS_PATH / "stripe_events.jsonl", "a", encoding="utf-8") as f:
+            f.write(log_entry + "\n")
+    except Exception:
+        pass
 
 
 @app.post("/diagnose", response_class=HTMLResponse)
@@ -480,7 +684,8 @@ async def api_history(limit: int = 50):
 
 def _save_diagnosis(result: dict, equipment_type: str, fault_code: str,
                     symptoms: str, photo_result: dict | None):
-    """Persist diagnosis to SQLite."""
+    """Persist diagnosis to SQLite and log outcome for SAFLA learning."""
+    now = datetime.now(timezone.utc).isoformat()
     db = get_db()
     db.execute(
         """INSERT INTO diagnoses
@@ -488,7 +693,7 @@ def _save_diagnosis(result: dict, equipment_type: str, fault_code: str,
             diagnosis, fix_steps, photo_analysis, severity, confidence, source)
            VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
         (
-            datetime.now(timezone.utc).isoformat(),
+            now,
             equipment_type,
             fault_code,
             symptoms,
@@ -503,6 +708,33 @@ def _save_diagnosis(result: dict, equipment_type: str, fault_code: str,
     )
     db.commit()
     db.close()
+
+    # Log diagnosis outcome for SAFLA self-learning feedback loop
+    _log_diagnosis_outcome(now, equipment_type, fault_code, symptoms, result)
+
+
+def _log_diagnosis_outcome(timestamp: str, equipment_type: str, fault_code: str,
+                           symptoms: str, result: dict):
+    """Log diagnosis outcome to JSONL for SAFLA learning cycle consumption."""
+    try:
+        log_path = LOGS_PATH / "diagnosis_outcomes.jsonl"
+        entry = json.dumps({
+            "timestamp": timestamp,
+            "equipment_type": equipment_type,
+            "fault_code": fault_code,
+            "symptoms": symptoms[:200] if symptoms else "",
+            "matched_fault": result.get("fault_code", ""),
+            "fault_name": result.get("fault_name", ""),
+            "confidence": result.get("confidence", 0),
+            "source": result.get("source", "unknown"),
+            "severity": result.get("severity", "medium"),
+            "had_photo": bool(result.get("photo_insight")),
+            "parts_suggested": len(result.get("suggested_parts", [])),
+        })
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(entry + "\n")
+    except Exception:
+        pass  # Never block diagnosis on logging failure
 
 
 if __name__ == "__main__":

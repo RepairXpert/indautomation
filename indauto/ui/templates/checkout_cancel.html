@@ -34,11 +34,43 @@
     </a>
   </div>
 
-  <div class="card" style="text-align:center; padding:0.75rem">
-    <span style="font-size:0.78rem; color:var(--muted)">
+  <div class="card" style="text-align:center; padding:1.5rem">
+    <p style="color:var(--text); font-size:0.9rem; margin-bottom:0.75rem">
+      Not ready yet? Get notified about special offers:
+    </p>
+    <form id="recoverForm" onsubmit="recoverSubmit(event)" style="display:flex; gap:0.5rem; max-width:360px; margin:0 auto">
+      <input type="email" id="recoverEmail" required placeholder="you@company.com"
+        style="flex:1; padding:0.6rem 0.75rem; border-radius:var(--radius); border:1px solid var(--border); background:var(--surface2); color:var(--text); font-size:0.85rem; outline:none">
+      <button type="submit" class="btn" id="recoverBtn" style="white-space:nowrap; padding:0.6rem 1rem; font-size:0.85rem">Send Link</button>
+    </form>
+    <p id="recoverMsg" style="display:none; color:var(--green); font-size:0.82rem; margin-top:0.5rem">
+      Check your inbox for a checkout link.
+    </p>
+    <p style="font-size:0.72rem; color:var(--muted); margin-top:0.75rem">
       Still have questions? Reach out at support@repairxpert.com
-    </span>
+    </p>
   </div>
 </div>
+<script>
+async function recoverSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('recoverBtn');
+  const email = document.getElementById('recoverEmail').value.trim();
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  try {
+    await fetch('/api/checkout/recover', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email: email, plan: 'pro'}),
+    });
+    document.getElementById('recoverForm').style.display = 'none';
+    document.getElementById('recoverMsg').style.display = 'block';
+  } catch {
+    btn.disabled = false;
+    btn.textContent = 'Send Link';
+  }
+}
+</script>
 </body>
 </html>
