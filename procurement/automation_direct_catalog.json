@@ -1,0 +1,16 @@
+{
+  "PART-001": {
+    "part_number": "PART-001",
+    "description": "Test Part 1",
+    "manufacturer": "TestMfg",
+    "category": "Test",
+    "price": 100.0,
+    "stock": 50
+  },
+  "PART-002": {
+    "part_number": "PART-002",
+    "price": 250.0,
+    "stock": 30,
+    "lead_time": 2
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "indautomation",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "indauto.app:app", "--host", "127.0.0.1", "--port", "8300", "--reload"],
+      "port": 8300
+    }
+  ]
+}
