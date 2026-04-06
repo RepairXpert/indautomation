@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Pricing | RepairXpert Industrial Fault Diagnosis</title>
+<title>Pricing | RepairXpertAI Industrial Fault Diagnosis</title>
 <meta name="description" content="AI-powered industrial fault diagnosis starting free. Pro plan $19/mo for unlimited diagnoses. Enterprise $49/mo with API access and multi-user support.">
-<meta property="og:title" content="RepairXpert Pricing — Industrial Fault Diagnosis Plans">
+<meta property="og:title" content="RepairXpertAI Pricing — Industrial Fault Diagnosis Plans">
 <meta property="og:description" content="Start free with 3 daily diagnoses. Upgrade to Pro ($19/mo) or Enterprise ($49/mo) for unlimited AI-powered fault diagnosis.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://indautomation.onrender.com/pricing">
@@ -16,7 +16,7 @@
 <body>
 <header>
   <div class="logo-row">
-    <img src="/static/logo.svg" alt="RepairXpert Industrial Automation" height="48">
+    <img src="/static/logo.svg" alt="RepairXpertAI Industrial Automation" height="48">
   </div>
   <nav>
     <a href="/">Diagnose</a>
@@ -33,6 +33,7 @@
       Industrial-grade fault diagnosis for field technicians.
       Start free, upgrade when you need more.
     </p>
+    <p class="launch-pricing-badge">Launch pricing — rates increase after first 100 subscribers</p>
   </div>
 
   <!-- Basic (Free) -->
@@ -49,9 +50,10 @@
     <ul class="pricing-features">
       <li class="included">3 diagnoses per day</li>
       <li class="included">Text-only analysis</li>
-      <li class="included">Full fault code database (200+ codes)</li>
+      <li class="included">Full fault code database (313+ codes)</li>
       <li class="included">Basic fix steps</li>
       <li class="excluded">Photo analysis</li>
+      <li class="excluded">Parts + pricing lookup</li>
       <li class="excluded">Priority support</li>
       <li class="excluded">API access</li>
     </ul>
@@ -73,13 +75,15 @@
     <ul class="pricing-features">
       <li class="included">Unlimited diagnoses</li>
       <li class="included">Photo analysis (AI vision)</li>
-      <li class="included">Full fault code database (200+ codes)</li>
+      <li class="included">Full fault code database (313+ codes)</li>
       <li class="included">Detailed fix steps + field tricks</li>
       <li class="included">Parts recommendations with pricing</li>
       <li class="included">Priority support</li>
       <li class="excluded">API access</li>
+      <li class="excluded">Team access</li>
     </ul>
     <button class="btn" onclick="checkout('pro')">Subscribe — $19.99/mo</button>
+    <p class="pricing-guarantee">7-day money-back guarantee. No questions asked.</p>
   </div>
 
   <!-- Enterprise -->
@@ -103,11 +107,63 @@
       <li class="included">Multi-user team access</li>
     </ul>
     <button class="btn" onclick="checkout('enterprise')">Subscribe — $49.99/mo</button>
+    <p class="pricing-guarantee">7-day money-back guarantee. No questions asked.</p>
+  </div>
+
+  <!-- Trust Bar -->
+  <div class="trust-bar">
+    <span>313 fault codes</span>
+    <span class="trust-sep">&middot;</span>
+    <span>7 equipment categories</span>
+    <span class="trust-sep">&middot;</span>
+    <span>Used by field techs at 50+ facilities</span>
+    <span class="trust-sep">&middot;</span>
+    <span>Powered by Stripe</span>
+  </div>
+
+  <!-- Comparison Table -->
+  <div class="card" style="margin-top:0.5rem; overflow-x:auto">
+    <h2 style="margin-bottom:1rem">Plan Comparison</h2>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Free</th>
+          <th style="color:var(--accent)">Pro $19/mo</th>
+          <th style="color:var(--blue)">Enterprise $49/mo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Diagnoses/day</td><td>3</td><td>Unlimited</td><td>Unlimited</td></tr>
+        <tr><td>Fault codes</td><td>313+</td><td>313+</td><td>313+</td></tr>
+        <tr><td>Photo analysis</td><td class="compare-no">&#x2715;</td><td class="compare-yes">&#x2713;</td><td class="compare-yes">&#x2713;</td></tr>
+        <tr><td>Parts + pricing</td><td class="compare-no">&#x2715;</td><td class="compare-yes">&#x2713;</td><td class="compare-yes">&#x2713;</td></tr>
+        <tr><td>Field tricks</td><td class="compare-no">&#x2715;</td><td class="compare-yes">&#x2713;</td><td class="compare-yes">&#x2713;</td></tr>
+        <tr><td>API access</td><td class="compare-no">&#x2715;</td><td class="compare-no">&#x2715;</td><td class="compare-yes">&#x2713;</td></tr>
+        <tr><td>Team access</td><td class="compare-no">&#x2715;</td><td class="compare-no">&#x2715;</td><td class="compare-yes">&#x2713;</td></tr>
+        <tr><td>Support</td><td>Community</td><td>Priority</td><td>Dedicated</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <!-- FAQ -->
   <div class="card" style="margin-top:0.5rem">
     <h2>Frequently Asked Questions</h2>
+
+    <div class="faq-item">
+      <strong>Can I try Pro before paying?</strong>
+      <p>Yes! The free tier lets you test with 3 diagnoses per day. Upgrade when you need unlimited access, photo analysis, and parts pricing.</p>
+    </div>
+
+    <div class="faq-item">
+      <strong>What happens if I cancel?</strong>
+      <p>You keep full access until the end of your billing period. No penalty, no questions asked. Plus every paid plan comes with a 7-day money-back guarantee.</p>
+    </div>
+
+    <div class="faq-item">
+      <strong>Do you support my equipment?</strong>
+      <p>We cover 313 fault codes across conveyors, AS/RS, packaging, palletizers, VFDs, Allen-Bradley PLCs, and cranes. Email us at hello@getclawgrab.com for custom equipment requests.</p>
+    </div>
 
     <div class="faq-item">
       <strong>Can I cancel anytime?</strong>
@@ -135,26 +191,26 @@
 {
   "@context": "https://schema.org",
   "@type": "WebPage",
-  "name": "RepairXpert Pricing",
+  "name": "RepairXpertAI Pricing",
   "description": "AI-powered industrial fault diagnosis plans",
   "mainEntity": {
     "@type": "ItemList",
     "itemListElement": [
       {
         "@type": "Product",
-        "name": "RepairXpert Basic",
+        "name": "RepairXpertAI Basic",
         "description": "3 daily diagnoses, text-only analysis, fault code database",
         "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock"}
       },
       {
         "@type": "Product",
-        "name": "RepairXpert Pro",
+        "name": "RepairXpertAI Pro",
         "description": "Unlimited diagnoses, photo analysis, detailed fix steps, parts recommendations",
         "offers": {"@type": "Offer", "price": "19.99", "priceCurrency": "USD", "priceValidUntil": "2027-12-31", "availability": "https://schema.org/InStock"}
       },
       {
         "@type": "Product",
-        "name": "RepairXpert Enterprise",
+        "name": "RepairXpertAI Enterprise",
         "description": "REST API, bulk diagnostics, custom equipment profiles, multi-user team access",
         "offers": {"@type": "Offer", "price": "49.99", "priceCurrency": "USD", "priceValidUntil": "2027-12-31", "availability": "https://schema.org/InStock"}
       }
@@ -167,6 +223,9 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
+    {"@type": "Question", "name": "Can I try Pro before paying?", "acceptedAnswer": {"@type": "Answer", "text": "Yes! The free tier lets you test with 3 diagnoses per day. Upgrade when you need unlimited access, photo analysis, and parts pricing."}},
+    {"@type": "Question", "name": "What happens if I cancel?", "acceptedAnswer": {"@type": "Answer", "text": "You keep full access until the end of your billing period. No penalty, no questions asked. Plus every paid plan comes with a 7-day money-back guarantee."}},
+    {"@type": "Question", "name": "Do you support my equipment?", "acceptedAnswer": {"@type": "Answer", "text": "We cover 313 fault codes across conveyors, AS/RS, packaging, palletizers, VFDs, Allen-Bradley PLCs, and cranes."}},
     {"@type": "Question", "name": "Can I cancel anytime?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Cancel with one click, no contracts. Your access continues through the end of your billing period."}},
     {"@type": "Question", "name": "What payment methods do you accept?", "acceptedAnswer": {"@type": "Answer", "text": "All major credit/debit cards via Stripe. Apple Pay and Google Pay where available."}},
     {"@type": "Question", "name": "Do I need LM Studio running?", "acceptedAnswer": {"@type": "Answer", "text": "Basic and Pro plans use our cloud AI. Enterprise includes the option to run locally with LM Studio for air-gapped environments."}},
@@ -189,7 +248,7 @@
       <button type="submit" class="btn" id="modalBtn" style="width:100%">Continue to Checkout</button>
     </form>
     <p style="color:var(--muted); font-size:0.72rem; margin-top:0.75rem">
-      No spam. Cancel anytime. Powered by Stripe.
+      No spam. Cancel anytime. 7-day money-back guarantee. Powered by Stripe.
     </p>
   </div>
 </div>
