@@ -780,8 +780,8 @@ async def feedback_stats():
         FROM diagnosis_feedback
     """).fetchone()
     db.close()
-    total = row["total"] if row else 0
-    helpful_count = row["helpful_count"] if row else 0
+    total = (row["total"] or 0) if row else 0
+    helpful_count = (row["helpful_count"] or 0) if row else 0
     return JSONResponse({
         "total": total,
         "helpful": helpful_count,
