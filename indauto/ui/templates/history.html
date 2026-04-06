@@ -27,6 +27,20 @@
     <h2>Diagnosis History</h2>
   </div>
 
+  {% if feedback_total > 0 %}
+  <div class="card feedback-summary">
+    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap">
+      <div>
+        <span style="font-size:1.5rem; font-weight:700; color:{{ 'var(--green)' if satisfaction_pct >= 70 else ('var(--yellow)' if satisfaction_pct >= 40 else 'var(--red)') }}">{{ satisfaction_pct }}%</span>
+        <span style="font-size:0.85rem; color:var(--muted); margin-left:0.3rem">satisfaction</span>
+      </div>
+      <div style="font-size:0.8rem; color:var(--muted)">
+        {{ feedback_helpful }} helpful / {{ feedback_total }} total responses
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   {% if entries %}
   {% for entry in entries %}
   <div class="history-entry" onclick="this.classList.toggle('open')">

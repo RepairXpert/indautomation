@@ -734,3 +734,36 @@ a.btn {
   color: var(--muted);
   opacity: 0.4;
 }
+
+/* ── Feedback ── */
+.feedback-card { text-align: center; }
+.feedback-buttons { display: flex; gap: 0.75rem; justify-content: center; }
+.btn-feedback {
+  padding: 0.6rem 2rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.btn-feedback:hover { background: var(--border); }
+.btn-yes:hover, .btn-yes:focus { border-color: var(--green); color: var(--green); }
+.btn-no:hover, .btn-no:focus { border-color: var(--red); color: var(--red); }
+.feedback-comment textarea {
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+.feedback-summary {
+  border-left: 3px solid var(--accent);
+}

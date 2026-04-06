@@ -144,8 +144,57 @@
     </span>
   </div>
 
+  <!-- Feedback -->
+  {% if diagnosis_id %}
+  <div class="card feedback-card" id="feedbackCard">
+    <h2 style="font-size:0.9rem; margin-bottom:0.75rem">Was this diagnosis helpful?</h2>
+    <div class="feedback-buttons" id="feedbackButtons">
+      <button class="btn-feedback btn-yes" onclick="submitFeedback({{ diagnosis_id }}, true)">Yes</button>
+      <button class="btn-feedback btn-no" onclick="submitFeedback({{ diagnosis_id }}, false)">No</button>
+    </div>
+    <div class="feedback-comment" id="feedbackComment" style="display:none">
+      <textarea id="feedbackText" placeholder="Optional: what could be improved?" rows="2" maxlength="500"></textarea>
+      <button class="btn btn-secondary" style="margin-top:0.5rem; font-size:0.8rem" onclick="sendComment({{ diagnosis_id }})">Send</button>
+    </div>
+    <div class="feedback-thanks" id="feedbackThanks" style="display:none">
+      <span style="color:var(--green)">Thanks for your feedback!</span>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Actions -->
   <a href="/" class="btn btn-secondary">New Diagnosis</a>
 </div>
+
+<script>
+let _fbHelpful = null;
+function submitFeedback(diagId, helpful) {
+  _fbHelpful = helpful;
+  if (!helpful) {
+    document.getElementById('feedbackButtons').style.display = 'none';
+    document.getElementById('feedbackComment').style.display = 'block';
+    return;
+  }
+  _sendFeedback(diagId, true, '');
+}
+function sendComment(diagId) {
+  const comment = document.getElementById('feedbackText').value;
+  _sendFeedback(diagId, _fbHelpful, comment);
+}
+function _sendFeedback(diagId, helpful, comment) {
+  fetch('/api/feedback', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({diagnosis_id: diagId, helpful: helpful, comment: comment})
+  }).then(() => {
+    document.getElementById('feedbackButtons').style.display = 'none';
+    document.getElementById('feedbackComment').style.display = 'none';
+    document.getElementById('feedbackThanks').style.display = 'block';
+  }).catch(() => {
+    document.getElementById('feedbackThanks').innerHTML = '<span style="color:var(--muted)">Could not send feedback.</span>';
+    document.getElementById('feedbackThanks').style.display = 'block';
+  });
+}
+</script>
 </body>
 </html>

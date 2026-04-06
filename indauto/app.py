@@ -126,6 +126,14 @@ def get_db():
         status TEXT DEFAULT 'pending',
         recovery_sent_at TEXT
     )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS diagnosis_feedback (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        diagnosis_id INTEGER NOT NULL,
+        helpful INTEGER NOT NULL,
+        comment TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (diagnosis_id) REFERENCES diagnoses(id)
+    )""")
     db.commit()
     return db
 
@@ -431,11 +439,12 @@ async def diagnose_form(
             photo_result = analyze_photo(photo_bytes, equipment_type, fault_code, CONFIG)
 
     result = diagnose_fault(equipment_type, fault_code, symptoms, photo_result, CONFIG)
-    _save_diagnosis(result, equipment_type, fault_code, symptoms, photo_result)
+    diagnosis_id = _save_diagnosis(result, equipment_type, fault_code, symptoms, photo_result)
 
     return templates.TemplateResponse("diagnose.html", {
         "request": request,
         "result": result,
+        "diagnosis_id": diagnosis_id,
     })
 
 
@@ -480,9 +489,24 @@ async def history_page(request: Request):
         except (json.JSONDecodeError, TypeError):
             entry["fix_steps_list"] = []
         entries.append(entry)
+    # Feedback satisfaction stats
+    db2 = get_db()
+    fb_row = db2.execute("""
+        SELECT COUNT(*) as total,
+               SUM(CASE WHEN helpful=1 THEN 1 ELSE 0 END) as helpful_count
+        FROM diagnosis_feedback
+    """).fetchone()
+    db2.close()
+    fb_total = fb_row["total"] if fb_row else 0
+    fb_helpful = fb_row["helpful_count"] if fb_row else 0
+    satisfaction_pct = round(fb_helpful / fb_total * 100, 1) if fb_total > 0 else 0
+
     return templates.TemplateResponse("history.html", {
         "request": request,
         "entries": entries,
+        "feedback_total": fb_total,
+        "feedback_helpful": fb_helpful,
+        "satisfaction_pct": satisfaction_pct,
     })
 
 
@@ -689,7 +713,8 @@ async def api_diagnose(
             photo_result = analyze_photo(photo_bytes, equipment_type, fault_code, CONFIG)
 
     result = diagnose_fault(equipment_type, fault_code, symptoms, photo_result, CONFIG)
-    _save_diagnosis(result, equipment_type, fault_code, symptoms, photo_result)
+    diagnosis_id = _save_diagnosis(result, equipment_type, fault_code, symptoms, photo_result)
+    result["diagnosis_id"] = diagnosis_id
     return JSONResponse(result)
 
 
@@ -703,15 +728,77 @@ async def api_history(limit: int = 50):
     return JSONResponse([dict(r) for r in rows])
 
 
+@app.post("/api/feedback")
+async def submit_feedback(request: Request):
+    """Record user feedback on a diagnosis result."""
+    body = await request.json()
+    diagnosis_id = body.get("diagnosis_id")
+    helpful = body.get("helpful")
+    comment = body.get("comment", "").strip()[:500]
+
+    if diagnosis_id is None or helpful is None:
+        return JSONResponse({"error": "diagnosis_id and helpful are required"}, status_code=400)
+
+    now = datetime.now(timezone.utc).isoformat()
+    try:
+        db = get_db()
+        # Verify diagnosis exists
+        row = db.execute("SELECT id FROM diagnoses WHERE id=?", (diagnosis_id,)).fetchone()
+        if not row:
+            db.close()
+            return JSONResponse({"error": "Diagnosis not found"}, status_code=404)
+        db.execute(
+            "INSERT INTO diagnosis_feedback (diagnosis_id, helpful, comment, created_at) VALUES (?,?,?,?)",
+            (diagnosis_id, 1 if helpful else 0, comment or None, now),
+        )
+        db.commit()
+        db.close()
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+    # Log for SAFLA learning
+    try:
+        entry = json.dumps({
+            "timestamp": now, "diagnosis_id": diagnosis_id,
+            "helpful": bool(helpful), "comment": comment,
+        })
+        with open(LOGS_PATH / "feedback.jsonl", "a", encoding="utf-8") as f:
+            f.write(entry + "\n")
+    except Exception:
+        pass
+
+    return JSONResponse({"status": "ok"})
+
+
+@app.get("/api/feedback/stats")
+async def feedback_stats():
+    """Return aggregate feedback statistics."""
+    db = get_db()
+    row = db.execute("""
+        SELECT COUNT(*) as total,
+               SUM(CASE WHEN helpful=1 THEN 1 ELSE 0 END) as helpful_count
+        FROM diagnosis_feedback
+    """).fetchone()
+    db.close()
+    total = row["total"] if row else 0
+    helpful_count = row["helpful_count"] if row else 0
+    return JSONResponse({
+        "total": total,
+        "helpful": helpful_count,
+        "not_helpful": total - helpful_count,
+        "satisfaction_pct": round(helpful_count / total * 100, 1) if total > 0 else 0,
+    })
+
+
 # ── Helpers ──
 
 
 def _save_diagnosis(result: dict, equipment_type: str, fault_code: str,
-                    symptoms: str, photo_result: dict | None):
-    """Persist diagnosis to SQLite and log outcome for SAFLA learning."""
+                    symptoms: str, photo_result: dict | None) -> int:
+    """Persist diagnosis to SQLite and log outcome for SAFLA learning. Returns row ID."""
     now = datetime.now(timezone.utc).isoformat()
     db = get_db()
-    db.execute(
+    cursor = db.execute(
         """INSERT INTO diagnoses
            (created_at, equipment_type, fault_code, symptoms, fault_name,
             diagnosis, fix_steps, photo_analysis, severity, confidence, source)
@@ -730,11 +817,13 @@ def _save_diagnosis(result: dict, equipment_type: str, fault_code: str,
             result.get("source", "unknown"),
         ),
     )
+    diagnosis_id = cursor.lastrowid
     db.commit()
     db.close()
 
     # Log diagnosis outcome for SAFLA self-learning feedback loop
     _log_diagnosis_outcome(now, equipment_type, fault_code, symptoms, result)
+    return diagnosis_id
 
 
 def _log_diagnosis_outcome(timestamp: str, equipment_type: str, fault_code: str,
