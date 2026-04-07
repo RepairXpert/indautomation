@@ -892,7 +892,7 @@ def _call_deepseek(messages: list, max_tokens: int = 800) -> str | None:
                 "Authorization": f"Bearer {key}",
             },
         )
-        resp = urllib.request.urlopen(req, timeout=30)
+        resp = urllib.request.urlopen(req, timeout=15)
         result = json.loads(resp.read())
         return result["choices"][0]["message"]["content"]
     except Exception as e:
@@ -1003,7 +1003,10 @@ async def chat_endpoint(request: Request):
 
     if not response_text:
         # Ultimate fallback: use diagnosis engine directly
-        result = diagnose_fault("", user_message, user_message, None, CONFIG)
+        try:
+            result = diagnose_fault("", user_message, user_message, None, CONFIG)
+        except Exception:
+            result = {"source": "fallback"}
         if result.get("source") != "fallback":
             response_text = f"**{result.get('fault_name', 'Unknown')}** (Code: {result.get('fault_code', '?')}, Confidence: {result.get('confidence', 0):.0%})\n\n"
             response_text += "**Probable causes:**\n"
@@ -1014,8 +1017,18 @@ async def chat_endpoint(request: Request):
                 response_text += f"{i}. {s}\n"
             if result.get("field_trick"):
                 response_text += f"\n**Field trick:** {result['field_trick']}"
+            response_text += "\n\n*Our AI assistant is temporarily busy. This answer is from our fault code database. For full AI-powered diagnosis, try again in a moment.*"
+        elif relevant_faults:
+            # AI down + diagnosis engine couldn't match, but we found faults in DB search
+            response_text = "Our AI assistant is temporarily busy. Here's what we found in our fault code database:\n\n"
+            for f in relevant_faults[:3]:
+                response_text += f"- **{f.get('code', '?')}** — {f.get('name', 'Unknown')}\n"
+                symptoms = f.get("symptoms", [])
+                if symptoms:
+                    response_text += f"  Symptoms: {', '.join(symptoms[:3])}\n"
+            response_text += "\nFor full AI-powered diagnosis, try again in a moment."
         else:
-            response_text = "I'm having trouble connecting to my AI engine right now. Try describing the fault code or symptoms and I'll search the database directly."
+            response_text = "Our AI assistant is temporarily busy and we couldn't find an exact match in the fault code database. Please try again in a moment, or include a specific fault code (e.g. F001, E-Stop) for a direct database lookup."
 
     # Log chat for learning
     try:
