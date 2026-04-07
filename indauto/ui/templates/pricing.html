@@ -69,7 +69,7 @@
       <span class="pricing-tier-badge pricing-pro">PRO</span>
     </div>
     <div class="pricing-price">
-      <span class="pricing-amount">$19.99</span>
+      <span class="pricing-amount">$19</span>
       <span class="pricing-period">/month</span>
     </div>
     <p class="pricing-desc">Full diagnostic power for working technicians</p>
@@ -83,7 +83,7 @@
       <li class="excluded">API access</li>
       <li class="excluded">Team access</li>
     </ul>
-    <button class="btn" onclick="checkout('pro')">Subscribe — $19.99/mo</button>
+    <button class="btn" onclick="checkout('pro')">Subscribe — $19/mo</button>
     <p class="pricing-guarantee">7-day money-back guarantee. No questions asked.</p>
   </div>
 
@@ -94,7 +94,7 @@
       <span class="pricing-tier-badge pricing-enterprise">ENTERPRISE</span>
     </div>
     <div class="pricing-price">
-      <span class="pricing-amount">$49.99</span>
+      <span class="pricing-amount">$49</span>
       <span class="pricing-period">/month</span>
     </div>
     <p class="pricing-desc">For maintenance teams and integrators</p>
@@ -107,7 +107,7 @@
       <li class="included">Dedicated support channel</li>
       <li class="included">Multi-user team access</li>
     </ul>
-    <button class="btn" onclick="checkout('enterprise')">Subscribe — $49.99/mo</button>
+    <button class="btn" onclick="checkout('enterprise')">Subscribe — $49/mo</button>
     <p class="pricing-guarantee">7-day money-back guarantee. No questions asked.</p>
   </div>
 
@@ -259,7 +259,7 @@ let selectedPlan = '';
 
 function checkout(plan) {
   selectedPlan = plan;
-  const title = plan === 'enterprise' ? 'Enterprise — $49.99/mo' : 'Pro — $19.99/mo';
+  const title = plan === 'enterprise' ? 'Enterprise — $49/mo' : 'Pro — $19/mo';
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('emailModal').style.display = 'flex';
   document.getElementById('checkoutEmail').focus();
