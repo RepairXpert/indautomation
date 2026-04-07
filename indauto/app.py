@@ -155,6 +155,17 @@ async def diagnose_page(request: Request):
     })
 
 
+@app.get("/blog/{slug}", response_class=HTMLResponse)
+async def blog_post(request: Request, slug: str):
+    """Serve blog posts from templates/blog/ directory."""
+    safe_slug = slug.replace("..", "").replace("/", "")
+    template_path = f"blog/{safe_slug}.html"
+    try:
+        return templates.TemplateResponse(template_path, {"request": request})
+    except Exception:
+        return HTMLResponse("<h1>Post not found</h1>", status_code=404)
+
+
 @app.get("/pricing", response_class=HTMLResponse)
 async def pricing_page(request: Request):
     return templates.TemplateResponse("pricing.html", {"request": request})
