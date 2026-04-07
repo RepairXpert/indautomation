@@ -84,7 +84,7 @@
   <text x="220" y="540" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#555577" letter-spacing="3">INDUSTRIAL DIAGNOSTICS PLATFORM</text>
 
   <!-- URL -->
-  <text x="220" y="575" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#e94560" opacity="0.7">indautomation.onrender.com</text>
+  <text x="220" y="575" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#e94560" opacity="0.7">repairxpertai.com</text>
 
   <!-- Bottom accent bar -->
   <rect x="0" y="626" width="1200" height="4" fill="url(#accent)"/>

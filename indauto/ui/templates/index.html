@@ -2,118 +2,404 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>AI Fault Code Diagnosis | 313 Codes | RepairXpertAI</title>
-<meta name="description" content="AI-powered industrial fault diagnosis. 313 fault codes for Allen-Bradley, conveyors, VFDs, AS/RS, packaging. Enter a code or snap a photo — get fix steps in seconds. Free.">
-<meta property="og:title" content="AI Industrial Fault Diagnosis | RepairXpertAI">
-<meta property="og:description" content="313 fault codes. Allen-Bradley, conveyors, VFDs, AS/RS. Enter a code, get fix steps in seconds.">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RepairXpertAI — AI Fault Diagnosis for Industrial Field Technicians</title>
+<meta name="description" content="313 fault codes. Photo diagnosis. Parts lookup. Built for field techs, maintenance teams, and plant operations. The first AI-powered industrial diagnostics platform with MCP integration.">
+<meta name="keywords" content="AI fault diagnosis, industrial maintenance, PLC troubleshooting, field service technician, predictive maintenance, fault code lookup, industrial automation AI, MCP server, equipment diagnostics, HVAC diagnosis, Allen-Bradley fault codes, Siemens fault codes">
+<link rel="canonical" href="https://repairxpertai.com">
+<meta property="og:title" content="RepairXpertAI — AI Fault Diagnosis for Field Technicians">
+<meta property="og:description" content="Snap a photo. Get a diagnosis. Find the part. 313 fault codes, 9 equipment types, instant AI diagnosis from your phone.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://indautomation.onrender.com">
-<meta property="og:image" content="https://indautomation.onrender.com/static/og-image.svg">
+<meta property="og:url" content="https://repairxpertai.com">
+<meta property="og:image" content="/static/og-image.svg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://indautomation.onrender.com/static/og-image.svg">
+<meta name="twitter:image" content="https://repairxpertai.com/static/og-image.svg">
 <link rel="icon" type="image/svg+xml" href="/static/icon.svg">
-<link rel="stylesheet" href="/static/style.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a28;--border:#1e1e2e;--text:#e8e8ed;--dim:#7a7a8e;--accent:#3b82f6;--green:#10b981;--gold:#f59e0b;--red:#ef4444}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Nav */
+nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid var(--border);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;background:rgba(10,10,15,0.95)}
+nav .logo{font-size:18px;font-weight:800;letter-spacing:-0.5px}
+nav .logo span{color:var(--accent)}
+nav .links{display:flex;gap:24px;font-size:14px;color:var(--dim)}
+nav .links a{color:var(--dim);transition:color 0.2s}
+nav .links a:hover{color:var(--text);text-decoration:none}
+nav .cta-btn{background:var(--accent);color:#fff;padding:8px 20px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s}
+nav .cta-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,0.3);text-decoration:none}
+
+/* Hero */
+.hero{text-align:center;padding:80px 32px 48px;max-width:860px;margin:0 auto}
+.hero .badge{display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 16px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:24px}
+.hero h1{font-size:52px;font-weight:800;line-height:1.08;letter-spacing:-1.5px;margin-bottom:20px}
+.hero h1 span{background:linear-gradient(135deg,var(--accent),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:19px;color:var(--dim);max-width:580px;margin:0 auto 32px;line-height:1.6}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.hero-btns a{padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600;transition:transform 0.2s,box-shadow 0.2s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(59,130,246,0.3);text-decoration:none}
+.btn-secondary{border:1px solid var(--border);color:var(--text)}
+.btn-secondary:hover{border-color:var(--dim);text-decoration:none}
+
+/* Stats */
+.stats{display:flex;justify-content:center;gap:48px;padding:48px 32px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.stat{text-align:center}
+.stat .num{font-size:36px;font-weight:800;color:var(--green)}
+.stat .label{font-size:13px;color:var(--dim);margin-top:4px}
+
+/* How it works */
+.workflow{padding:80px 32px;max-width:900px;margin:0 auto}
+.workflow h2{text-align:center;font-size:28px;margin-bottom:12px}
+.workflow .sub{text-align:center;color:var(--dim);margin-bottom:48px;font-size:15px}
+.steps{display:flex;gap:0;position:relative;justify-content:center;flex-wrap:wrap}
+.step{flex:1;min-width:180px;max-width:220px;text-align:center;padding:24px 16px;position:relative}
+.step .num{width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;margin-bottom:12px}
+.step h3{font-size:15px;font-weight:700;margin-bottom:6px}
+.step p{font-size:13px;color:var(--dim);line-height:1.5}
+.step-arrow{color:var(--dim);font-size:24px;display:flex;align-items:center;padding:0 4px}
+
+/* Features */
+.features{padding:80px 32px;max-width:1000px;margin:0 auto}
+.features h2{text-align:center;font-size:28px;margin-bottom:12px}
+.features .sub{text-align:center;color:var(--dim);margin-bottom:48px;font-size:15px}
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.feature-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;transition:border-color 0.2s}
+.feature-card:hover{border-color:var(--accent)}
+.feature-card .icon{font-size:28px;margin-bottom:12px}
+.feature-card h3{font-size:16px;font-weight:700;margin-bottom:8px}
+.feature-card p{font-size:14px;color:var(--dim);line-height:1.5}
+
+/* MCP Section */
+.mcp{padding:80px 32px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.mcp-inner{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.mcp-text h2{font-size:28px;margin-bottom:16px}
+.mcp-text p{color:var(--dim);font-size:15px;line-height:1.6;margin-bottom:16px}
+.mcp-text .highlight{color:var(--gold);font-weight:600}
+.mcp-tools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mcp-tool{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:13px}
+.mcp-tool code{color:var(--green);font-weight:600;font-size:12px;display:block;margin-bottom:2px}
+.mcp-tool span{color:var(--dim);font-size:11px}
+
+/* Pricing */
+.pricing{padding:80px 32px;max-width:900px;margin:0 auto}
+.pricing h2{text-align:center;font-size:28px;margin-bottom:12px}
+.pricing .sub{text-align:center;color:var(--dim);margin-bottom:48px}
+.price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.price-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;position:relative;display:flex;flex-direction:column}
+.price-card.featured{border-color:var(--accent);box-shadow:0 0 30px rgba(59,130,246,0.15)}
+.price-card .badge{position:absolute;top:-10px;right:16px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px}
+.price-card .tier{font-size:14px;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.price-card .amount{font-size:36px;font-weight:800;margin:8px 0}
+.price-card .amount span{font-size:16px;color:var(--dim);font-weight:400}
+.price-card .desc{font-size:13px;color:var(--dim);margin-bottom:16px}
+.price-card ul{list-style:none;margin-bottom:20px;flex:1}
+.price-card li{font-size:13px;padding:5px 0;color:var(--dim)}
+.price-card li::before{content:""; display:inline-block;width:16px;height:16px;margin-right:6px;vertical-align:middle;background:var(--green);-webkit-mask:url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13.3 4.3L6 11.6 2.7 8.3' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13.3 4.3L6 11.6 2.7 8.3' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat}
+.price-card .price-btn{display:block;text-align:center;padding:12px;border-radius:8px;font-size:14px;font-weight:600;margin-top:auto;transition:transform 0.2s,box-shadow 0.2s}
+.price-card .price-btn.primary{background:var(--accent);color:#fff}
+.price-card .price-btn.primary:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,0.3);text-decoration:none}
+.price-card .price-btn.outline{border:1px solid var(--border);color:var(--text)}
+.price-card .price-btn.outline:hover{border-color:var(--dim);text-decoration:none}
+
+/* Use Cases */
+.usecases{padding:80px 32px;max-width:900px;margin:0 auto}
+.usecases h2{text-align:center;font-size:28px;margin-bottom:12px}
+.usecases .sub{text-align:center;color:var(--dim);margin-bottom:48px;font-size:15px}
+.usecase-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.usecase-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;transition:border-color 0.2s}
+.usecase-card:hover{border-color:var(--gold)}
+.usecase-card .tag{display:inline-block;background:rgba(245,158,11,0.1);color:var(--gold);font-size:11px;font-weight:700;padding:4px 10px;border-radius:4px;margin-bottom:12px;letter-spacing:0.5px}
+.usecase-card h3{font-size:16px;margin-bottom:6px;font-weight:700}
+.usecase-card p{font-size:13px;color:var(--dim);line-height:1.5}
+
+/* Credibility */
+.credibility{padding:60px 32px;border-top:1px solid var(--border)}
+.cred-inner{max-width:900px;margin:0 auto;display:flex;gap:32px;justify-content:center;flex-wrap:wrap}
+.cred-item{text-align:center;padding:16px 24px}
+.cred-item .val{font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px}
+.cred-item .desc{font-size:12px;color:var(--dim)}
+
+/* CTA */
+.cta-section{text-align:center;padding:80px 32px;background:var(--surface);border-top:1px solid var(--border)}
+.cta-section h2{font-size:32px;margin-bottom:12px;font-weight:800}
+.cta-section p{color:var(--dim);margin-bottom:28px;font-size:16px}
+
+/* Footer */
+footer{padding:32px;text-align:center;font-size:12px;color:var(--dim);border-top:1px solid var(--border)}
+footer a{color:var(--dim)}
+footer .footer-links{margin-bottom:12px}
+footer .footer-links a{margin:0 12px}
+
+@media(max-width:768px){
+  .hero h1{font-size:36px}
+  .hero p{font-size:16px}
+  .stats{flex-wrap:wrap;gap:24px}
+  .stat{min-width:120px}
+  nav .links{display:none}
+  .mcp-inner{grid-template-columns:1fr}
+  .steps{flex-direction:column;align-items:center}
+  .step-arrow{transform:rotate(90deg)}
+  .usecase-grid{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .hero h1{font-size:28px}
+  .stats{gap:16px}
+  .stat .num{font-size:28px}
+}
+</style>
 </head>
 <body>
-<header>
-  <div class="logo-row">
-    <img src="/static/logo.svg" alt="RepairXpert Industrial Automation" height="48">
-  </div>
-  <nav>
-    <a href="/" class="active">Diagnose</a>
-    <a href="/chat">Chat</a>
+
+<nav>
+  <a href="/" class="logo" style="text-decoration:none;color:var(--text);cursor:pointer">Repair<span>Xpert</span>AI</a>
+  <div class="links">
+    <a href="#how">How It Works</a>
+    <a href="#features">Features</a>
+    <a href="/chat">AI Chat</a>
     <a href="/faults">Fault Codes</a>
-    <a href="/history">History</a>
-    <a href="/pricing">Pricing</a>
-  </nav>
-</header>
+    <a href="#pricing">Pricing</a>
+    <a href="/diagnose">Diagnose Now</a>
+  </div>
+  <a href="/chat" class="cta-btn">Try Free</a>
+</nav>
 
-<div class="container">
-  <h1 style="text-align:center;margin-bottom:0.5rem">When Your Best Tech Retires, The Knowledge Stays.</h1>
-  <p style="text-align:center;color:var(--text-muted);margin-bottom:1.5rem">500,000 manufacturing jobs go unfilled by 2030. 1 in 3 techs is over 55. RepairXpertAI captures 30 years of field experience and puts it in every junior tech's pocket &mdash; 313 fault codes, instant diagnosis, for <a href="/pricing" style="color:var(--accent);text-decoration:underline">$19/month</a>.</p>
-  <form action="/diagnose" method="POST" enctype="multipart/form-data" id="diagForm">
-    <div class="card">
-      <h2>Equipment &amp; Fault</h2>
+<section class="hero">
+  <div class="badge">First AI-powered industrial diagnostics MCP server</div>
+  <h1>Diagnose Equipment Faults <span>From Your Phone</span></h1>
+  <p>Photo a nameplate, a fault screen, or a broken part. Get the diagnosis, fault code, fix steps, and replacement parts — in seconds. No laptop required.</p>
+  <div class="hero-btns">
+    <a href="/chat" class="btn-primary">Try AI Chat Free</a>
+    <a href="/diagnose" class="btn-secondary">Diagnose a Fault</a>
+  </div>
+</section>
 
-      <label for="eqType">Equipment Type</label>
-      <select name="equipment_type" id="eqType">
-        <option value="">-- Any / Unknown --</option>
-        {% for eq in equipment %}
-        <option value="{{ eq.type }}">{{ eq.name }}</option>
-        {% endfor %}
-        <option value="other">Other</option>
-      </select>
+<div class="stats">
+  <div class="stat"><div class="num">313</div><div class="label">Fault Codes</div></div>
+  <div class="stat"><div class="num">9</div><div class="label">Equipment Types</div></div>
+  <div class="stat"><div class="num">500+</div><div class="label">Parts Catalog</div></div>
+  <div class="stat"><div class="num">&lt;30s</div><div class="label">Diagnosis Time</div></div>
+  <div class="stat"><div class="num">8</div><div class="label">MCP Tools</div></div>
+</div>
 
-      <label for="faultCode">Fault Code</label>
-      <input type="text" name="fault_code" id="faultCode"
-             placeholder="e.g. 10036, E001, 50001, F-120"
-             autocomplete="off" autocapitalize="characters">
-
-      <label for="symptoms">Symptoms (what you see / hear / smell)</label>
-      <textarea name="symptoms" id="symptoms"
-                placeholder="e.g. lift stops before reaching bottom, prox LED flickering, VFD showing OC fault, burning smell from motor..."></textarea>
+<section class="workflow" id="how">
+  <h2>How It Works</h2>
+  <p class="sub">From fault to fix in four steps. Works from any phone.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="num">1</div>
+      <h3>Snap a Photo</h3>
+      <p>Point your phone at the equipment, nameplate, HMI screen, or fault indicator.</p>
     </div>
-
-    <div class="card">
-      <h2>Photo (optional)</h2>
-      <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
-        <div class="icon">&#128247;</div>
-        <p>Tap to take photo or upload</p>
-        <input type="file" id="photoInput" name="photo" accept="image/*" capture="environment"
-               onchange="previewPhoto(this)">
-      </div>
-      <img id="photoPreview" class="photo-preview" alt="preview">
+    <div class="step-arrow">&rarr;</div>
+    <div class="step">
+      <div class="num">2</div>
+      <h3>Get Diagnosis</h3>
+      <p>AI identifies the equipment, matches fault codes, and ranks probable causes.</p>
     </div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step">
+      <div class="num">3</div>
+      <h3>Find Parts</h3>
+      <p>Matched parts from Allen-Bradley, Siemens, ABB, IFM with supplier links and pricing.</p>
+    </div>
+    <div class="step-arrow">&rarr;</div>
+    <div class="step">
+      <div class="num">4</div>
+      <h3>Fix It</h3>
+      <p>Step-by-step repair instructions. Save to history. Track recurring faults.</p>
+    </div>
+  </div>
+</section>
 
-    <button type="submit" class="btn" id="submitBtn">DIAGNOSE</button>
-  </form>
+<section class="features" id="features">
+  <h2>Built for the Field</h2>
+  <p class="sub">Every feature designed for technicians working with their hands.</p>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="icon">📸</div>
+      <h3>Photo Diagnosis</h3>
+      <p>AI vision analyzes photos of equipment, nameplates, HMI screens, and error displays. Identifies faults without typing a single code.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔍</div>
+      <h3>313 Fault Codes</h3>
+      <p>Covering PLCs, VFDs, servo drives, HMIs, sensors, HVAC, pneumatics, hydraulics, and conveyors. Searchable by code or symptom description.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔧</div>
+      <h3>Parts + Suppliers</h3>
+      <p>500+ industrial parts mapped to fault codes. Direct links to AutomationDirect, Grainger, McMaster-Carr, and OEM suppliers.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🧠</div>
+      <h3>AI Chat Assistant</h3>
+      <p>Talk to it like ChatGPT. Describe a symptom, ask about a fault code, or upload a photo. Gets smarter with every diagnosis.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📱</div>
+      <h3>Phone-First Design</h3>
+      <p>Dark theme for plant floors. Touch-optimized controls. Camera access built in. No app install — works in any browser, any phone.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📊</div>
+      <h3>Diagnosis History</h3>
+      <p>Every diagnosis logged and searchable. Build equipment health profiles. Spot recurring faults before they become downtime.</p>
+    </div>
+  </div>
+</section>
 
-  <div class="spinner" id="spinner"></div>
+<section class="mcp" id="mcp">
+  <div class="mcp-inner">
+    <div class="mcp-text">
+      <h2>MCP Integration</h2>
+      <p>The <span class="highlight">first industrial diagnostics MCP server ever built.</span> Connect RepairXpertAI to Claude, ChatGPT, or any MCP-compatible AI assistant.</p>
+      <p>Your AI assistant becomes an industrial maintenance expert — diagnosing faults, looking up parts, and analyzing equipment photos through natural conversation.</p>
+      <p style="font-size:13px;color:var(--dim)">8 tools. JSON-RPC 2.0. Works with any MCP client.</p>
+    </div>
+    <div class="mcp-tools">
+      <div class="mcp-tool"><code>diagnose_fault</code><span>AI fault diagnosis from code or symptom</span></div>
+      <div class="mcp-tool"><code>lookup_fault_code</code><span>Search 313 fault codes</span></div>
+      <div class="mcp-tool"><code>analyze_photo</code><span>Vision-based equipment analysis</span></div>
+      <div class="mcp-tool"><code>get_parts</code><span>Parts + supplier lookup</span></div>
+      <div class="mcp-tool"><code>equipment_profile</code><span>9 equipment type specs</span></div>
+      <div class="mcp-tool"><code>diagnosis_history</code><span>Query past diagnoses</span></div>
+      <div class="mcp-tool"><code>health_check</code><span>System status monitoring</span></div>
+      <div class="mcp-tool"><code>submit_feedback</code><span>Improve AI accuracy</span></div>
+    </div>
+  </div>
+</section>
 
-  <div class="card quick-help">
-    <h2>Quick Help — Before You Call Maintenance</h2>
-    <ul class="quick-help-list">
-      <li>
-        <span class="quick-help-icon">&#9888;</span>
-        <span><strong>Check all E-stops</strong> — Walk the entire machine and twist/pull every E-stop button before calling maintenance. Most "machine won't run" calls are a bumped E-stop.</span>
-      </li>
-      <li>
-        <span class="quick-help-icon">&#9211;</span>
-        <span><strong>Power cycle the PLC if comms are down</strong> — Turn the PLC off, wait 10 seconds, turn it back on. This clears most communication faults with remote I/O and drives.</span>
-      </li>
-      <li>
-        <span class="quick-help-icon">&#128161;</span>
-        <span><strong>Verify sensor LEDs before replacing</strong> — A sensor with its LED on but not triggering the PLC usually means a wiring or input card issue, not a bad sensor.</span>
-      </li>
-      <li>
-        <span class="quick-help-icon">&#128295;</span>
-        <span><strong>Check air pressure first</strong> — Low plant air causes random pneumatic faults across the whole machine. Check the FRL gauge before troubleshooting individual cylinders.</span>
-      </li>
-      <li>
-        <span class="quick-help-icon">&#128220;</span>
-        <span><strong>Note the exact fault code</strong> — Write down the fault code from the HMI or VFD display before resetting. The code disappears after reset and maintenance needs it.</span>
-      </li>
-    </ul>
+<section class="pricing" id="pricing">
+  <h2>Simple Pricing</h2>
+  <p class="sub">Start free. Upgrade when your team needs more.</p>
+  <div class="price-grid">
+    <div class="price-card">
+      <div class="tier">Starter</div>
+      <div class="amount">Free</div>
+      <div class="desc">Try it on your next service call</div>
+      <ul>
+        <li>3 diagnoses per day</li>
+        <li>Text-based fault lookup</li>
+        <li>Parts catalog access</li>
+        <li>Diagnosis history</li>
+        <li>Mobile-optimized UI</li>
+      </ul>
+      <a href="/chat" class="price-btn outline">Start Free</a>
+    </div>
+    <div class="price-card featured">
+      <div class="badge">Most Popular</div>
+      <div class="tier">Pro</div>
+      <div class="amount">$19<span>/mo</span></div>
+      <div class="desc">For field technicians</div>
+      <ul>
+        <li>Unlimited diagnoses</li>
+        <li>AI photo analysis</li>
+        <li>Priority AI processing</li>
+        <li>Equipment profiles</li>
+        <li>Export reports</li>
+        <li>MCP server access</li>
+      </ul>
+      <a href="/pricing" class="price-btn primary">Start Pro Trial</a>
+    </div>
+    <div class="price-card">
+      <div class="tier">Enterprise</div>
+      <div class="amount">$49<span>/mo</span></div>
+      <div class="desc">For maintenance teams &amp; plants</div>
+      <ul>
+        <li>Everything in Pro</li>
+        <li>Full API access</li>
+        <li>Custom equipment profiles</li>
+        <li>Custom fault code database</li>
+        <li>Bulk diagnostics</li>
+        <li>On-site install option</li>
+        <li>Dedicated support</li>
+      </ul>
+      <a href="mailto:hello@repairxpertai.com?subject=Enterprise%20Inquiry" class="price-btn outline">Contact Sales</a>
+    </div>
+  </div>
+</section>
+
+<section class="usecases" id="usecases">
+  <h2>Built For Your Industry</h2>
+  <p class="sub">Technicians across industrial sectors use RepairXpertAI daily.</p>
+  <div class="usecase-grid">
+    <div class="usecase-card">
+      <div class="tag">PLC / AUTOMATION</div>
+      <h3>PLC Programmers &amp; Controls Engineers</h3>
+      <p>Fault codes across Allen-Bradley, Siemens, ABB. Photo-analyze HMI screens, error displays, and I/O modules. Covers CompactLogix, MicroLogix, PowerFlex, Kinetix.</p>
+    </div>
+    <div class="usecase-card">
+      <div class="tag">HVAC / MECHANICAL</div>
+      <h3>HVAC &amp; Refrigeration Techs</h3>
+      <p>Compressor faults, sensor failures, VFD errors, control board issues. Diagnose from the rooftop or the mechanical room.</p>
+    </div>
+    <div class="usecase-card">
+      <div class="tag">MANUFACTURING</div>
+      <h3>Manufacturing &amp; Production</h3>
+      <p>Conveyor jams, sensor misalignment, motor overload, servo faults. Find the replacement part and the fix procedure in under 30 seconds.</p>
+    </div>
+    <div class="usecase-card">
+      <div class="tag">WAREHOUSE / LOGISTICS</div>
+      <h3>Warehouse &amp; Distribution</h3>
+      <p>AS/RS systems, pallet wrappers, sortation equipment, barcode scanners. Keep the line moving with instant troubleshooting.</p>
+    </div>
+    <div class="usecase-card">
+      <div class="tag">FIELD SERVICE</div>
+      <h3>Traveling Field Techs</h3>
+      <p>No laptop, no manual, no problem. Photo the nameplate from your truck, get the diagnosis on your phone, order the part before you walk in the door.</p>
+    </div>
+    <div class="usecase-card">
+      <div class="tag">PLANT MAINTENANCE</div>
+      <h3>In-House Maintenance Teams</h3>
+      <p>Install on your plant network. Connect to your equipment. Build a fault history that makes your whole team faster over time.</p>
+    </div>
+  </div>
+</section>
+
+<div class="credibility">
+  <div class="cred-inner">
+    <div class="cred-item">
+      <div class="val">Built by a Field Tech</div>
+      <div class="desc">20+ years industrial maintenance</div>
+    </div>
+    <div class="cred-item">
+      <div class="val">Real Fault Data</div>
+      <div class="desc">From actual plant floors, not textbooks</div>
+    </div>
+    <div class="cred-item">
+      <div class="val">Open MCP Standard</div>
+      <div class="desc">Works with any AI assistant</div>
+    </div>
+    <div class="cred-item">
+      <div class="val">$19/mo vs $200+</div>
+      <div class="desc">90% less than ServiceTitan or eMaint</div>
+    </div>
   </div>
 </div>
 
-<script>
-function previewPhoto(input) {
-  const preview = document.getElementById('photoPreview');
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
-    reader.readAsDataURL(input.files[0]);
-  }
-}
+<section class="cta-section">
+  <h2>Stop Guessing. Start Diagnosing.</h2>
+  <p>313 fault codes. 9 equipment types. Instant AI diagnosis from your phone.</p>
+  <a href="/chat" class="cta-btn" style="display:inline-block;padding:14px 36px;font-size:16px">Try AI Chat Free — No Sign Up</a>
+</section>
 
-document.getElementById('diagForm').addEventListener('submit', function() {
-  document.getElementById('submitBtn').disabled = true;
-  document.getElementById('spinner').style.display = 'block';
-});
-</script>
+<footer>
+  <div class="footer-links">
+    <a href="#features">Features</a>
+    <a href="/chat">AI Chat</a>
+    <a href="/faults">Fault Codes</a>
+    <a href="#pricing">Pricing</a>
+    <a href="/diagnose">Diagnose</a>
+    <a href="mailto:hello@repairxpertai.com">Contact</a>
+  </div>
+  <p>&copy; 2026 RepairXpertAI. Built in the field, for the field. | <a href="mailto:hello@repairxpertai.com">hello@repairxpertai.com</a></p>
+</footer>
+
 </body>
 </html>

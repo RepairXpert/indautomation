@@ -143,8 +143,13 @@ def get_db():
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/diagnose", response_class=HTMLResponse)
+async def diagnose_page(request: Request):
     equipment = _load_equipment()
-    return templates.TemplateResponse("index.html", {
+    return templates.TemplateResponse("diagnose.html", {
         "request": request,
         "equipment": equipment,
     })
@@ -308,7 +313,7 @@ async def recover_checkout(request: Request):
         pass
 
     # Send recovery email with fresh checkout link
-    base_url = os.environ.get("RENDER_EXTERNAL_URL", "https://indautomation.onrender.com")
+    base_url = os.environ.get("RENDER_EXTERNAL_URL", "https://repairxpertai.com")
     _send_recovery_email(email, plan, base_url)
 
     return JSONResponse({"status": "ok", "message": "We'll send you a link to complete your subscription."})
@@ -360,7 +365,7 @@ def _handle_checkout_expired(session: dict):
         if price_id == STRIPE_PRICE_IDS.get("enterprise"):
             plan = "enterprise"
 
-    base_url = os.environ.get("RENDER_EXTERNAL_URL", "https://indautomation.onrender.com")
+    base_url = os.environ.get("RENDER_EXTERNAL_URL", "https://repairxpertai.com")
     _send_recovery_email(email, plan, base_url)
 
 

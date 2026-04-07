@@ -3,9 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>AI Fault Diagnosis Results — RepairXpert Industrial Automation</title>
-<meta name="description" content="AI-generated fault diagnosis with probable causes, step-by-step repair instructions, and recommended parts for industrial automation equipment.">
-<meta name="robots" content="noindex">
+<title>AI Fault Code Diagnosis | 313 Codes | RepairXpertAI</title>
+<meta name="description" content="AI-powered industrial fault diagnosis. 313 fault codes for Allen-Bradley, conveyors, VFDs, AS/RS, packaging. Enter a code or snap a photo — get fix steps in seconds. Free.">
+<meta property="og:title" content="AI Industrial Fault Diagnosis | RepairXpertAI">
+<meta property="og:description" content="313 fault codes. Allen-Bradley, conveyors, VFDs, AS/RS. Enter a code, get fix steps in seconds.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://repairxpertai.com">
+<meta property="og:image" content="https://repairxpertai.com/static/og-image.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://repairxpertai.com/static/og-image.svg">
 <link rel="icon" type="image/svg+xml" href="/static/icon.svg">
 <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -15,7 +23,7 @@
     <img src="/static/logo.svg" alt="RepairXpert Industrial Automation" height="48">
   </div>
   <nav>
-    <a href="/">Diagnose</a>
+    <a href="/" class="active">Diagnose</a>
     <a href="/chat">Chat</a>
     <a href="/faults">Fault Codes</a>
     <a href="/history">History</a>
@@ -24,178 +32,88 @@
 </header>
 
 <div class="container">
-  <!-- Fault identification -->
-  <div class="card">
-    <div class="fault-header">
-      <span class="fault-name">{{ result.fault_name }}</span>
-      <span class="fault-code-badge">{{ result.fault_code }}</span>
+  <h1 style="text-align:center;margin-bottom:0.5rem">When Your Best Tech Retires, The Knowledge Stays.</h1>
+  <p style="text-align:center;color:var(--text-muted);margin-bottom:1.5rem">500,000 manufacturing jobs go unfilled by 2030. 1 in 3 techs is over 55. RepairXpertAI captures 30 years of field experience and puts it in every junior tech's pocket &mdash; 313 fault codes, instant diagnosis, for <a href="/pricing" style="color:var(--accent);text-decoration:underline">$19/month</a>.</p>
+  <form action="/diagnose" method="POST" enctype="multipart/form-data" id="diagForm">
+    <div class="card">
+      <h2>Equipment &amp; Fault</h2>
+
+      <label for="eqType">Equipment Type</label>
+      <select name="equipment_type" id="eqType">
+        <option value="">-- Any / Unknown --</option>
+        {% for eq in equipment %}
+        <option value="{{ eq.type }}">{{ eq.name }}</option>
+        {% endfor %}
+        <option value="other">Other</option>
+      </select>
+
+      <label for="faultCode">Fault Code</label>
+      <input type="text" name="fault_code" id="faultCode"
+             placeholder="e.g. 10036, E001, 50001, F-120"
+             autocomplete="off" autocapitalize="characters">
+
+      <label for="symptoms">Symptoms (what you see / hear / smell)</label>
+      <textarea name="symptoms" id="symptoms"
+                placeholder="e.g. lift stops before reaching bottom, prox LED flickering, VFD showing OC fault, burning smell from motor..."></textarea>
     </div>
 
-    {% if result.description %}
-    <p class="fault-desc">{{ result.description }}</p>
-    {% endif %}
-
-    <div class="meta-row">
-      {% set pct = (result.confidence * 100)|round|int %}
-      <span class="confidence {{ 'high' if pct >= 70 else ('med' if pct >= 45 else 'low') }}">
-        {{ pct }}% confidence
-      </span>
-      {% if result.severity %}
-      <span class="severity {{ result.severity }}">{{ result.severity }}</span>
-      {% endif %}
-      {% if result.equipment_type %}
-      <span class="fault-code-badge">{{ result.equipment_type }}</span>
-      {% endif %}
+    <div class="card">
+      <h2>Photo (optional)</h2>
+      <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+        <div class="icon">&#128247;</div>
+        <p>Tap to take photo or upload</p>
+        <input type="file" id="photoInput" name="photo" accept="image/*" capture="environment"
+               onchange="previewPhoto(this)">
+      </div>
+      <img id="photoPreview" class="photo-preview" alt="preview">
     </div>
-  </div>
 
-  <!-- Probable causes -->
-  <div class="card">
-    <h2>Probable Causes (ranked)</h2>
-    <ul class="cause-list">
-      {% for cause in result.diagnosis %}
-      <li>{{ cause }}</li>
-      {% endfor %}
+    <button type="submit" class="btn" id="submitBtn">DIAGNOSE</button>
+  </form>
+
+  <div class="spinner" id="spinner"></div>
+
+  <div class="card quick-help">
+    <h2>Quick Help — Before You Call Maintenance</h2>
+    <ul class="quick-help-list">
+      <li>
+        <span class="quick-help-icon">&#9888;</span>
+        <span><strong>Check all E-stops</strong> — Walk the entire machine and twist/pull every E-stop button before calling maintenance. Most "machine won't run" calls are a bumped E-stop.</span>
+      </li>
+      <li>
+        <span class="quick-help-icon">&#9211;</span>
+        <span><strong>Power cycle the PLC if comms are down</strong> — Turn the PLC off, wait 10 seconds, turn it back on. This clears most communication faults with remote I/O and drives.</span>
+      </li>
+      <li>
+        <span class="quick-help-icon">&#128161;</span>
+        <span><strong>Verify sensor LEDs before replacing</strong> — A sensor with its LED on but not triggering the PLC usually means a wiring or input card issue, not a bad sensor.</span>
+      </li>
+      <li>
+        <span class="quick-help-icon">&#128295;</span>
+        <span><strong>Check air pressure first</strong> — Low plant air causes random pneumatic faults across the whole machine. Check the FRL gauge before troubleshooting individual cylinders.</span>
+      </li>
+      <li>
+        <span class="quick-help-icon">&#128220;</span>
+        <span><strong>Note the exact fault code</strong> — Write down the fault code from the HMI or VFD display before resetting. The code disappears after reset and maintenance needs it.</span>
+      </li>
     </ul>
   </div>
-
-  <!-- Fix steps -->
-  <div class="card">
-    <h2>Fix Steps</h2>
-    <ol class="step-list">
-      {% for step in result.fix_steps %}
-      <li>
-        <span class="step-num">{{ loop.index }}</span>
-        <span>{{ step }}</span>
-      </li>
-      {% endfor %}
-    </ol>
-  </div>
-
-  <!-- Field trick -->
-  {% if result.field_trick %}
-  <div class="card">
-    <div class="callout callout-trick">
-      <h4>Field Trick</h4>
-      <p>{{ result.field_trick }}</p>
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- Photo analysis -->
-  {% if result.photo_insight and result.photo_insight.identified_issue %}
-  <div class="card">
-    <div class="callout callout-photo">
-      <h4>Photo Analysis</h4>
-      <p>{{ result.photo_insight.identified_issue }}</p>
-      {% if result.photo_insight.alignment_assessment %}
-      <p style="margin-top:0.5rem"><strong>Alignment:</strong> {{ result.photo_insight.alignment_assessment }}</p>
-      {% endif %}
-      {% if result.photo_insight.wiring_observations %}
-      <p><strong>Wiring:</strong> {{ result.photo_insight.wiring_observations }}</p>
-      {% endif %}
-      {% if result.photo_insight.recommendations %}
-      <h4 style="margin-top:0.75rem">Recommendations</h4>
-      <ul style="padding-left:1rem">
-        {% for rec in result.photo_insight.recommendations %}
-        <li>{{ rec }}</li>
-        {% endfor %}
-      </ul>
-      {% endif %}
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- Suggested replacement parts -->
-  {% if result.suggested_parts %}
-  <div class="card">
-    <h2>Suggested Replacement Parts</h2>
-    <p style="font-size:0.8rem; color:var(--muted); margin-bottom:1rem">
-      Parts matched to fault category: <strong>{{ result.parts_category | replace('_', ' ') | title }}</strong>
-    </p>
-    {% for part in result.suggested_parts %}
-    <div class="parts-item">
-      <div class="parts-info">
-        <span class="parts-name">{{ part.name }}</span>
-        <span class="parts-partno">P/N: {{ part.part_no }}</span>
-        {% if part.description %}
-        <span class="parts-desc">{{ part.description }}</span>
-        {% endif %}
-      </div>
-      <div class="parts-suppliers">
-        {% for supplier in part.suppliers %}
-        <a href="/api/affiliate/click?url={{ supplier.url | urlencode }}&supplier={{ supplier.name | urlencode }}&part={{ part.part_no | urlencode }}" target="_blank" rel="noopener noreferrer" class="btn-buy">
-          {{ supplier.name }}
-          <span class="btn-buy-price">${{ "%.2f"|format(supplier.est_price) }}</span>
-        </a>
-        {% endfor %}
-      </div>
-    </div>
-    {% endfor %}
-    <p style="font-size:0.7rem; color:var(--muted); margin-top:0.75rem; font-style:italic">
-      Prices are estimates. Verify part numbers match your equipment before ordering.
-    </p>
-  </div>
-  {% endif %}
-
-  <!-- Source indicator -->
-  <div class="card" style="text-align:center; padding:0.75rem">
-    <span style="font-size:0.75rem; color:var(--muted)">
-      Source: {{ result.source | default('unknown') }}
-    </span>
-  </div>
-
-  <!-- Feedback -->
-  {% if diagnosis_id %}
-  <div class="card feedback-card" id="feedbackCard">
-    <h2 style="font-size:0.9rem; margin-bottom:0.75rem">Was this diagnosis helpful?</h2>
-    <div class="feedback-buttons" id="feedbackButtons">
-      <button class="btn-feedback btn-yes" onclick="submitFeedback({{ diagnosis_id }}, true)">Yes</button>
-      <button class="btn-feedback btn-no" onclick="submitFeedback({{ diagnosis_id }}, false)">No</button>
-    </div>
-    <div class="feedback-comment" id="feedbackComment" style="display:none">
-      <textarea id="feedbackText" placeholder="Optional: what could be improved?" rows="2" maxlength="500"></textarea>
-      <button class="btn btn-secondary" style="margin-top:0.5rem; font-size:0.8rem" onclick="sendComment({{ diagnosis_id }})">Send</button>
-    </div>
-    <div class="feedback-thanks" id="feedbackThanks" style="display:none">
-      <span style="color:var(--green)">Thanks for your feedback!</span>
-    </div>
-  </div>
-  {% endif %}
-
-  <!-- Actions -->
-  <a href="/" class="btn btn-secondary">New Diagnosis</a>
 </div>
 
 <script>
-let _fbHelpful = null;
-function submitFeedback(diagId, helpful) {
-  _fbHelpful = helpful;
-  if (!helpful) {
-    document.getElementById('feedbackButtons').style.display = 'none';
-    document.getElementById('feedbackComment').style.display = 'block';
-    return;
+function previewPhoto(input) {
+  const preview = document.getElementById('photoPreview');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+    reader.readAsDataURL(input.files[0]);
   }
-  _sendFeedback(diagId, true, '');
 }
-function sendComment(diagId) {
-  const comment = document.getElementById('feedbackText').value;
-  _sendFeedback(diagId, _fbHelpful, comment);
-}
-function _sendFeedback(diagId, helpful, comment) {
-  fetch('/api/feedback', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({diagnosis_id: diagId, helpful: helpful, comment: comment})
-  }).then(() => {
-    document.getElementById('feedbackButtons').style.display = 'none';
-    document.getElementById('feedbackComment').style.display = 'none';
-    document.getElementById('feedbackThanks').style.display = 'block';
-  }).catch(() => {
-    document.getElementById('feedbackThanks').innerHTML = '<span style="color:var(--muted)">Could not send feedback.</span>';
-    document.getElementById('feedbackThanks').style.display = 'block';
-  });
-}
+
+document.getElementById('diagForm').addEventListener('submit', function() {
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('spinner').style.display = 'block';
+});
 </script>
 </body>
 </html>
