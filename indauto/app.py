@@ -386,7 +386,7 @@ def _send_recovery_email(email: str, plan: str, base_url: str):
     try:
         import urllib.request
         payload = json.dumps({
-            "from": "RepairXpert <hello@getclawgrab.com>",
+            "from": "RepairXpert <hello@repairxpertai.com>",
             "to": [email],
             "subject": f"Complete your RepairXpert {plan_name} subscription",
             "html": html_body,
@@ -770,6 +770,50 @@ async def submit_feedback(request: Request):
     return JSONResponse({"status": "ok"})
 
 
+@app.get("/api/affiliate/click")
+async def affiliate_click(request: Request, url: str = "", supplier: str = "", part: str = ""):
+    """Log Amazon affiliate click then redirect to supplier URL."""
+    if not url:
+        return JSONResponse({"error": "url required"}, status_code=400)
+    try:
+        entry = json.dumps({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "supplier": supplier,
+            "part": part,
+            "url": url,
+            "referrer": request.headers.get("referer", ""),
+        })
+        with open(LOGS_PATH / "affiliate_clicks.jsonl", "a", encoding="utf-8") as f:
+            f.write(entry + "\n")
+    except Exception:
+        pass
+    from starlette.responses import RedirectResponse
+    return RedirectResponse(url=url, status_code=302)
+
+
+@app.get("/api/affiliate/stats")
+async def affiliate_stats():
+    """Return aggregate affiliate click counts by supplier."""
+    log_path = LOGS_PATH / "affiliate_clicks.jsonl"
+    if not log_path.exists():
+        return JSONResponse({"total": 0, "by_supplier": {}})
+    counts: dict[str, int] = {}
+    total = 0
+    try:
+        with open(log_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                d = json.loads(line)
+                s = d.get("supplier", "unknown")
+                counts[s] = counts.get(s, 0) + 1
+                total += 1
+    except Exception:
+        pass
+    return JSONResponse({"total": total, "by_supplier": counts})
+
+
 @app.get("/api/feedback/stats")
 async def feedback_stats():
     """Return aggregate feedback statistics."""
@@ -787,6 +831,195 @@ async def feedback_stats():
         "helpful": helpful_count,
         "not_helpful": total - helpful_count,
         "satisfaction_pct": round(helpful_count / total * 100, 1) if total > 0 else 0,
+    })
+
+
+# ── Chat — conversational diagnostic assistant ──────────────────────────────
+
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
+
+CHAT_SYSTEM_PROMPT = """You are RepairXpertAI, an expert industrial maintenance diagnostic assistant. You help field technicians diagnose equipment faults, find parts, and get step-by-step repair instructions.
+
+You have access to a database of 313 fault codes across 11 equipment types: Allen-Bradley PLCs, VFDs, servos, conveyors, palletizers, pilers, AS/RS, motors, packaging, and general industrial equipment.
+
+When a technician describes a problem:
+1. Identify the likely fault code(s) from the database
+2. Explain the probable causes in plain language
+3. Give step-by-step fix instructions a field tech can follow
+4. Suggest specific replacement parts with supplier names
+5. Share field tricks — the stuff that saves time on the floor
+
+Be direct. Talk like a fellow tech, not a manual. If you're unsure, say so and suggest what to check first.
+
+Keep answers concise — the tech is reading this on their phone, possibly standing on a ladder."""
+
+
+def _call_deepseek(messages: list, max_tokens: int = 800) -> str | None:
+    """Call DeepSeek chat API. Returns response text or None on failure."""
+    key = DEEPSEEK_API_KEY
+    if not key:
+        # Fallback: try LM Studio local
+        return _call_lm_studio_chat(messages, max_tokens)
+    try:
+        import urllib.request
+        data = json.dumps({
+            "model": "deepseek-chat",
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": 0.3,
+        }).encode()
+        req = urllib.request.Request(
+            "https://api.deepseek.com/v1/chat/completions",
+            data=data,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {key}",
+            },
+        )
+        resp = urllib.request.urlopen(req, timeout=30)
+        result = json.loads(resp.read())
+        return result["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"[CHAT] DeepSeek error: {e}")
+        return _call_lm_studio_chat(messages, max_tokens)
+
+
+def _call_lm_studio_chat(messages: list, max_tokens: int = 800) -> str | None:
+    """Fallback: call LM Studio local for chat."""
+    try:
+        import urllib.request
+        base_url = CONFIG.get("lm_studio", {}).get("base_url", "http://127.0.0.1:1234/v1")
+        model = CONFIG.get("lm_studio", {}).get("text_model", "qwen3.5-9b")
+        data = json.dumps({
+            "model": model,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": 0.3,
+        }).encode()
+        req = urllib.request.Request(
+            f"{base_url}/chat/completions",
+            data=data,
+            headers={"Content-Type": "application/json"},
+        )
+        resp = urllib.request.urlopen(req, timeout=60)
+        result = json.loads(resp.read())
+        return result["choices"][0]["message"]["content"]
+    except Exception:
+        return None
+
+
+def _find_relevant_faults(query: str, top_n: int = 5) -> list[dict]:
+    """Search fault DB for entries relevant to the user's query."""
+    from indauto.diagnosis.engine import _fuzzy_score, _symptom_score
+    db = load_fault_db()
+    scored = []
+    for entry in db:
+        code_s = _fuzzy_score(query, entry)
+        symp_s = _symptom_score(query, entry)
+        combined = max(code_s, symp_s)
+        if combined > 0.2:
+            scored.append((combined, entry))
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [e for _, e in scored[:top_n]]
+
+
+def _build_context_from_faults(faults: list[dict]) -> str:
+    """Build concise context string from matched fault entries."""
+    if not faults:
+        return ""
+    parts = ["Relevant fault codes from database:"]
+    for f in faults:
+        parts.append(f"\n[{f.get('code','?')}] {f.get('name','?')} ({f.get('equipment_type','?')})")
+        parts.append(f"  Description: {f.get('description','')[:200]}")
+        causes = f.get("probable_causes", [])
+        if causes:
+            parts.append(f"  Probable causes: {'; '.join(causes[:3])}")
+        steps = f.get("fix_steps", [])
+        if steps:
+            parts.append(f"  Fix steps: {'; '.join(steps[:3])}")
+        trick = f.get("field_trick", "")
+        if trick:
+            parts.append(f"  Field trick: {trick[:150]}")
+        pcat = f.get("parts_category", "")
+        if pcat:
+            suggested = get_parts_for_category(pcat)
+            if suggested:
+                pnames = [p.get("name", "") for p in suggested[:3]]
+                parts.append(f"  Parts: {', '.join(pnames)}")
+    return "\n".join(parts)
+
+
+@app.get("/chat", response_class=HTMLResponse)
+async def chat_page(request: Request):
+    return templates.TemplateResponse("chat.html", {"request": request})
+
+
+@app.post("/api/chat")
+async def chat_endpoint(request: Request):
+    """Conversational diagnostic assistant. Accepts message + history."""
+    body = await request.json()
+    user_message = body.get("message", "").strip()
+    history = body.get("history", [])  # list of {role, content}
+
+    if not user_message:
+        return JSONResponse({"error": "Empty message"}, status_code=400)
+
+    # Search fault DB for relevant context
+    relevant_faults = _find_relevant_faults(user_message)
+    context = _build_context_from_faults(relevant_faults)
+
+    # Build messages for LLM
+    messages = [{"role": "system", "content": CHAT_SYSTEM_PROMPT}]
+
+    # Add context as system message if we found relevant faults
+    if context:
+        messages.append({"role": "system", "content": context})
+
+    # Add conversation history (last 10 exchanges to stay in token budget)
+    for msg in history[-20:]:
+        messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
+
+    # Add current message
+    messages.append({"role": "user", "content": user_message})
+
+    # Call LLM
+    response_text = _call_deepseek(messages)
+
+    if not response_text:
+        # Ultimate fallback: use diagnosis engine directly
+        result = diagnose_fault("", user_message, user_message, None, CONFIG)
+        if result.get("source") != "fallback":
+            response_text = f"**{result.get('fault_name', 'Unknown')}** (Code: {result.get('fault_code', '?')}, Confidence: {result.get('confidence', 0):.0%})\n\n"
+            response_text += "**Probable causes:**\n"
+            for c in result.get("diagnosis", [])[:3]:
+                response_text += f"- {c}\n"
+            response_text += "\n**Fix steps:**\n"
+            for i, s in enumerate(result.get("fix_steps", [])[:5], 1):
+                response_text += f"{i}. {s}\n"
+            if result.get("field_trick"):
+                response_text += f"\n**Field trick:** {result['field_trick']}"
+        else:
+            response_text = "I'm having trouble connecting to my AI engine right now. Try describing the fault code or symptoms and I'll search the database directly."
+
+    # Log chat for learning
+    try:
+        log_path = LOGS_PATH / "chat_log.jsonl"
+        entry = json.dumps({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "user_message": user_message[:500],
+            "faults_matched": len(relevant_faults),
+            "fault_codes": [f.get("code") for f in relevant_faults],
+            "response_length": len(response_text),
+            "source": "deepseek" if DEEPSEEK_API_KEY else "lm_studio",
+        })
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(entry + "\n")
+    except Exception:
+        pass
+
+    return JSONResponse({
+        "response": response_text,
+        "faults_referenced": [{"code": f.get("code"), "name": f.get("name")} for f in relevant_faults],
     })
 
 

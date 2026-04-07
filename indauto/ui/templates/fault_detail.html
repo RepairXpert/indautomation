@@ -92,6 +92,7 @@
   </div>
   <nav>
     <a href="/">Diagnose</a>
+    <a href="/chat">Chat</a>
     <a href="/faults">Fault Codes</a>
     <a href="/history">History</a>
     <a href="/pricing">Pricing</a>
@@ -201,7 +202,7 @@
       </div>
       <div class="parts-suppliers">
         {% for supplier in part.suppliers %}
-        <a href="{{ supplier.url }}" target="_blank" rel="noopener noreferrer" class="btn-buy">
+        <a href="/api/affiliate/click?url={{ supplier.url | urlencode }}&supplier={{ supplier.name | urlencode }}&part={{ part.part_no | urlencode }}" target="_blank" rel="noopener noreferrer" class="btn-buy">
           {{ supplier.name }}
           <span class="btn-buy-price">${{ "%.2f"|format(supplier.est_price) }}</span>
         </a>

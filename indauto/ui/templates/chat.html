@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Chat with RepairXpertAI | Industrial Diagnostic Assistant</title>
+<meta name="description" content="Talk to RepairXpertAI like a fellow tech. Describe your fault, get diagnosis, fix steps, and parts — all from your phone.">
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+.chat-wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;height:calc(100vh - 80px);padding:0 12px}
+.chat-messages{flex:1;overflow-y:auto;padding:16px 0;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:88%;padding:12px 16px;border-radius:12px;font-size:15px;line-height:1.5;word-wrap:break-word}
+.msg.user{align-self:flex-end;background:#2563eb;color:#fff;border-bottom-right-radius:4px}
+.msg.assistant{align-self:flex-start;background:#1e1e2e;color:#e8e8ed;border-bottom-left-radius:4px;border:1px solid #2a2a3a}
+.msg.assistant pre{background:#0a0a14;padding:8px;border-radius:6px;overflow-x:auto;font-size:13px;margin:8px 0}
+.msg.assistant code{font-size:13px}
+.msg.assistant strong{color:#10b981}
+.msg.system{align-self:center;background:transparent;color:#7a7a8e;font-size:13px;text-align:center;padding:8px}
+.msg .faults-ref{margin-top:8px;padding-top:8px;border-top:1px solid #2a2a3a;font-size:12px;color:#7a7a8e}
+.msg .faults-ref a{color:#3b82f6;text-decoration:none}
+.chat-input-wrap{padding:12px 0;border-top:1px solid #1e1e2e;display:flex;gap:8px;align-items:end}
+.chat-input{flex:1;background:#12121a;border:1px solid #2a2a3a;border-radius:12px;color:#e8e8ed;padding:12px 16px;font-size:16px;resize:none;max-height:120px;min-height:48px;font-family:inherit;outline:none;transition:border-color 0.2s}
+.chat-input:focus{border-color:#3b82f6}
+.chat-send{background:#2563eb;color:#fff;border:none;border-radius:12px;width:48px;height:48px;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;transition:background 0.2s}
+.chat-send:hover{background:#1d4ed8}
+.chat-send:disabled{background:#333;cursor:not-allowed}
+.typing{display:none;align-self:flex-start;color:#7a7a8e;font-size:13px;padding:4px 0}
+.typing.show{display:block}
+.typing span{animation:blink 1.4s infinite both}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:0}40%{opacity:1}}
+.welcome{text-align:center;padding:32px 16px;color:#7a7a8e}
+.welcome h2{color:#e8e8ed;font-size:22px;margin-bottom:8px}
+.welcome p{font-size:14px;margin-bottom:16px}
+.quick-btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.quick-btn{background:#1e1e2e;border:1px solid #2a2a3a;border-radius:8px;color:#e8e8ed;padding:8px 14px;font-size:13px;cursor:pointer;transition:border-color 0.2s}
+.quick-btn:hover{border-color:#3b82f6}
+@media(max-width:640px){
+  .chat-wrap{height:calc(100dvh - 70px);padding:0 8px}
+  .msg{max-width:92%;font-size:14px}
+  .chat-input{font-size:16px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-row">
+    <img src="/static/logo.svg" alt="RepairXpert Industrial Automation" height="48">
+  </div>
+  <nav>
+    <a href="/">Diagnose</a>
+    <a href="/chat" class="active">Chat</a>
+    <a href="/faults">Fault Codes</a>
+    <a href="/history">History</a>
+    <a href="/pricing">Pricing</a>
+  </nav>
+</header>
+
+<div class="chat-wrap">
+  <div class="chat-messages" id="messages">
+    <div class="welcome" id="welcome">
+      <h2>Talk to RepairXpertAI</h2>
+      <p>Describe your problem like you'd tell a fellow tech. I know 313 fault codes, parts, and fix steps.</p>
+      <div class="quick-btns">
+        <button class="quick-btn" onclick="sendQuick(this)">PowerFlex 525 fault 12</button>
+        <button class="quick-btn" onclick="sendQuick(this)">Conveyor keeps jamming at the merge</button>
+        <button class="quick-btn" onclick="sendQuick(this)">What causes a piler auto lost?</button>
+        <button class="quick-btn" onclick="sendQuick(this)">Need a prox sensor for Allen-Bradley</button>
+      </div>
+    </div>
+  </div>
+  <div class="typing" id="typing"><span>.</span><span>.</span><span>.</span> thinking</div>
+  <div class="chat-input-wrap">
+    <textarea class="chat-input" id="input" rows="1" placeholder="Describe the fault, ask about a code, or tell me what you see..." autofocus></textarea>
+    <button class="chat-send" id="sendBtn" onclick="sendMessage()">&#9654;</button>
+  </div>
+</div>
+
+<script>
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('input');
+const typingEl = document.getElementById('typing');
+const sendBtn = document.getElementById('sendBtn');
+const welcomeEl = document.getElementById('welcome');
+let history = [];
+let sending = false;
+
+inputEl.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+inputEl.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+function sendQuick(btn) {
+  inputEl.value = btn.textContent;
+  sendMessage();
+}
+
+function addMsg(role, content, faults) {
+  if (welcomeEl) welcomeEl.style.display = 'none';
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  if (role === 'assistant') {
+    div.innerHTML = formatMarkdown(content);
+    if (faults && faults.length > 0) {
+      const ref = document.createElement('div');
+      ref.className = 'faults-ref';
+      ref.innerHTML = 'Referenced: ' + faults.map(f =>
+        '<a href="/fault/' + f.code + '">' + f.code + ': ' + f.name + '</a>'
+      ).join(', ');
+      div.appendChild(ref);
+    }
+  } else {
+    div.textContent = content;
+  }
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function formatMarkdown(text) {
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text || sending) return;
+  sending = true;
+  sendBtn.disabled = true;
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+
+  addMsg('user', text);
+  history.push({role: 'user', content: text});
+
+  typingEl.classList.add('show');
+
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: text, history: history.slice(-20)})
+    });
+    const data = await resp.json();
+    const reply = data.response || 'Sorry, something went wrong.';
+    addMsg('assistant', reply, data.faults_referenced);
+    history.push({role: 'assistant', content: reply});
+  } catch (e) {
+    addMsg('system', 'Connection error. Check your internet and try again.');
+  }
+
+  typingEl.classList.remove('show');
+  sending = false;
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+</script>
+</body>
+</html>
