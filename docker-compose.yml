@@ -1,0 +1,56 @@
+###############################################################################
+# RepairXpert IndAutomation — Plant Install (Enterprise $49/mo)
+# Model A: On-premise deployment, no cloud required
+#
+# Usage:  docker compose up -d
+# Access: http://localhost:8300
+###############################################################################
+
+services:
+  indautomation:
+    build: .
+    container_name: repairxpert-indauto
+    restart: unless-stopped
+    ports:
+      - "8300:8300"
+
+    environment:
+      # --- LM Studio (AI engine) ---
+      # Points to LM Studio on the host machine by default.
+      # Change if LM Studio runs on another machine on the plant network.
+      LM_STUDIO_URL: ${LM_STUDIO_URL:-http://host.docker.internal:1234}
+
+      # --- Optional: DeepSeek cloud fallback ---
+      # If set, uses DeepSeek API when LM Studio is unavailable.
+      # Leave blank for fully offline / air-gapped operation.
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+
+      # --- Stripe (optional for on-prem) ---
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+
+      # --- App settings ---
+      PORT: "8300"
+      DEBUG: ${DEBUG:-false}
+
+    volumes:
+      # Persist diagnosis logs across container restarts
+      - diagnosis_logs:/app/data
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8300/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+    # DNS for plant network resolution
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+
+    command: ["uvicorn", "indauto.app:app", "--host", "0.0.0.0", "--port", "8300"]
+
+volumes:
+  diagnosis_logs:
+    driver: local
