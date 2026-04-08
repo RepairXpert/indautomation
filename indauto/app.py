@@ -294,16 +294,16 @@ async def stripe_webhook(request: Request):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature", "")
 
-    if STRIPE_WEBHOOK_SECRET and _stripe_available:
-        try:
-            event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
-        except (ValueError, stripe.error.SignatureVerificationError):
-            return JSONResponse({"error": "Invalid signature"}, status_code=400)
-    else:
-        try:
-            event = json.loads(payload)
-        except json.JSONDecodeError:
-            return JSONResponse({"error": "Invalid payload"}, status_code=400)
+    if not (STRIPE_WEBHOOK_SECRET and _stripe_available):
+        # SECURITY: never accept unsigned events. Code scout 2026-04-07 flagged
+        # this branch as a free-access bypass when STRIPE_WEBHOOK_SECRET is unset.
+        return JSONResponse(
+            {"error": "Webhook verification not configured"}, status_code=503
+        )
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
+    except (ValueError, stripe.error.SignatureVerificationError):
+        return JSONResponse({"error": "Invalid signature"}, status_code=400)
 
     event_type = event.get("type", "")
     data_obj = event.get("data", {}).get("object", {})
