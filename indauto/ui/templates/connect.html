@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connect | IndAutomation — Matchmaker for Industrial Pros</title>
+<meta name="description" content="Field techs, plant managers, vendors, and product builders — find your match. Free for techs. $50/qualified intro for vendors.">
+<link rel="canonical" href="https://indautomation.onrender.com/connect">
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+.connect-hero{text-align:center;padding:60px 24px 32px;max-width:680px;margin:0 auto}
+.connect-hero h1{font-size:2.1rem;font-weight:800;line-height:1.15;letter-spacing:-0.5px;margin-bottom:.5rem}
+.connect-hero h1 span{color:var(--accent)}
+.connect-hero .sub{font-size:1rem;color:var(--muted,#888);line-height:1.6;margin-bottom:2rem}
+.connect-form{max-width:520px;margin:0 auto;padding:0 24px 80px}
+.form-group{margin-bottom:1.2rem}
+label{display:block;font-size:.85rem;font-weight:600;color:var(--text,#e8e8ed);margin-bottom:.4rem;letter-spacing:.3px}
+input,select,textarea{width:100%;box-sizing:border-box;background:var(--card-bg,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:8px;color:var(--text,#e8e8ed);font-size:.95rem;padding:10px 14px;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent,#7c6cf8)}
+select option{background:#12121a}
+textarea{resize:vertical;min-height:80px}
+.role-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.2rem}
+.role-card{cursor:pointer;background:var(--card-bg,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:10px;padding:16px 12px;text-align:center;transition:border-color .15s,background .15s}
+.role-card:hover{border-color:var(--accent)}
+.role-card.selected{border-color:var(--accent);background:rgba(124,108,248,.08)}
+.role-card .icon{font-size:1.6rem;margin-bottom:6px}
+.role-card .title{font-size:.85rem;font-weight:700;color:var(--text,#e8e8ed)}
+.role-card .desc{font-size:.75rem;color:var(--muted,#888);margin-top:2px}
+.btn-submit{width:100%;padding:14px;background:var(--accent,#7c6cf8);color:#fff;font-size:1rem;font-weight:700;border:none;border-radius:8px;cursor:pointer;transition:opacity .15s}
+.btn-submit:hover{opacity:.88}
+.error-msg{background:#2a1015;border:1px solid #c0392b;border-radius:8px;padding:12px 16px;color:#e74c3c;font-size:.9rem;margin-bottom:1rem}
+.value-row{display:flex;gap:12px;justify-content:center;margin-bottom:2rem;flex-wrap:wrap}
+.badge{background:var(--card-bg,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:20px;padding:6px 14px;font-size:.8rem;color:var(--muted,#888)}
+.badge b{color:var(--text,#e8e8ed)}
+</style>
+</head>
+<body>
+<nav style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border,#1e1e2e);gap:16px">
+  <a href="/" style="font-weight:800;font-size:1rem;text-decoration:none;color:var(--text,#e8e8ed)">IndAutomation</a>
+  <a href="/diagnose" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Diagnose</a>
+  <a href="/chat" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">AI Chat</a>
+  <a href="/pricing" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Pricing</a>
+</nav>
+
+<div class="connect-hero">
+  <h1>Connect with <span>Industrial Pros</span></h1>
+  <p class="sub">Field techs meet product builders. Plant managers meet vendors.<br>
+  Free for techs &amp; plant managers. <b>$50/qualified intro</b> for vendors &amp; builders.</p>
+  <div class="value-row">
+    <span class="badge"><b>Free</b> for Techs</span>
+    <span class="badge"><b>Free</b> for Plant Managers</span>
+    <span class="badge"><b>$50</b> / qualified intro (vendor side)</span>
+  </div>
+</div>
+
+<div class="connect-form">
+  {% if error %}
+  <div class="error-msg">{{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="/connect" id="connectForm">
+    <div class="form-group">
+      <label>I am a...</label>
+      <div class="role-cards">
+        <div class="role-card" data-role="tech" onclick="selectRole('tech')">
+          <div class="icon">🔧</div>
+          <div class="title">Field Tech</div>
+          <div class="desc">Maintenance, controls, PLC</div>
+        </div>
+        <div class="role-card" data-role="plant_manager" onclick="selectRole('plant_manager')">
+          <div class="icon">🏭</div>
+          <div class="title">Plant Manager</div>
+          <div class="desc">Operations, reliability</div>
+        </div>
+        <div class="role-card" data-role="vendor" onclick="selectRole('vendor')">
+          <div class="icon">📦</div>
+          <div class="title">Vendor / Supplier</div>
+          <div class="desc">Parts, services, tools</div>
+        </div>
+        <div class="role-card" data-role="builder" onclick="selectRole('builder')">
+          <div class="icon">💡</div>
+          <div class="title">Product Builder</div>
+          <div class="desc">SaaS, tools, platforms</div>
+        </div>
+      </div>
+      <input type="hidden" name="role" id="roleInput" value="" required>
+    </div>
+
+    <div class="form-group">
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" placeholder="Your name" required autocomplete="name">
+    </div>
+
+    <div class="form-group">
+      <label for="email">Work Email</label>
+      <input type="email" id="email" name="email" placeholder="you@company.com" required autocomplete="email">
+    </div>
+
+    <div class="form-group">
+      <label for="company">Company <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+      <input type="text" id="company" name="company" placeholder="Company or plant name" autocomplete="organization">
+    </div>
+
+    <div class="form-group">
+      <label for="message">What are you looking for? <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+      <textarea id="message" name="message" placeholder="e.g. Looking for a VFD supplier with local support, or want to reach maintenance techs in automotive plants."></textarea>
+    </div>
+
+    <button type="submit" class="btn-submit" id="submitBtn" disabled>Get Matched</button>
+  </form>
+</div>
+
+<script>
+function selectRole(role) {
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector('[data-role="' + role + '"]').classList.add('selected');
+  document.getElementById('roleInput').value = role;
+  document.getElementById('submitBtn').disabled = false;
+}
+</script>
+</body>
+</html>

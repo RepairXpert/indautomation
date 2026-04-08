@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You're In | IndAutomation Matchmaker</title>
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+.success-wrap{max-width:560px;margin:80px auto;padding:0 24px;text-align:center}
+.check{font-size:3.5rem;margin-bottom:1rem}
+h1{font-size:2rem;font-weight:800;margin-bottom:.5rem}
+.sub{font-size:1rem;color:var(--muted,#888);line-height:1.6;margin-bottom:2rem}
+.next-steps{background:var(--card-bg,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:12px;padding:24px;text-align:left;margin-bottom:2rem}
+.next-steps h2{font-size:.95rem;font-weight:700;color:var(--accent,#7c6cf8);margin-bottom:1rem;letter-spacing:.3px}
+.step{display:flex;gap:12px;margin-bottom:.8rem;font-size:.9rem;color:var(--text-secondary,#b0b0c0);line-height:1.5}
+.step b{color:var(--text,#e8e8ed)}
+.btn-back{display:inline-block;padding:12px 28px;background:var(--accent,#7c6cf8);color:#fff;font-weight:700;border-radius:8px;text-decoration:none;font-size:.95rem}
+</style>
+</head>
+<body>
+<div class="success-wrap">
+  <div class="check">✅</div>
+  <h1>You're on the list, {{ name }}.</h1>
+  <p class="sub">We'll reach out when there's a qualified match for your profile.<br>
+  No spam — one intro at a time.</p>
+
+  <div class="next-steps">
+    <h2>WHAT HAPPENS NEXT</h2>
+    {% if role in ("vendor", "builder") %}
+    <div class="step"><span>1.</span><span>We review your submission and confirm fit within 2 business days.</span></div>
+    <div class="step"><span>2.</span><span>When a tech or plant manager matches your target profile, we send a warm intro via email.</span></div>
+    <div class="step"><span>3.</span><span><b>$50 invoice</b> only after you confirm the intro was qualified. No upfront cost.</span></div>
+    {% else %}
+    <div class="step"><span>1.</span><span>Your profile is added to the tech/manager pool — completely free.</span></div>
+    <div class="step"><span>2.</span><span>When a vendor or builder matches your area (equipment type, industry, region) we send you a short intro.</span></div>
+    <div class="step"><span>3.</span><span>You decide whether to connect. No obligation, no cost.</span></div>
+    {% endif %}
+  </div>
+
+  <a href="/diagnose" class="btn-back">Try the AI Diagnostic Tool</a>
+</div>
+</body>
+</html>
