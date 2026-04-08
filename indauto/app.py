@@ -191,6 +191,14 @@ COMPARE_PAGES = {
         "template": "compare/upkeep.html",
         "title": "RepairXpert vs UpKeep",
     },
+    "emaint": {
+        "template": "compare/emaint.html",
+        "title": "RepairXpert vs eMaint",
+    },
+    "limble": {
+        "template": "compare/limble.html",
+        "title": "RepairXpert vs Limble CMMS",
+    },
 }
 
 
@@ -663,6 +671,8 @@ async def sitemap(request: Request):
         f'<url><loc>{base}/compare/maintainx</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
         f'<url><loc>{base}/compare/servicetitan</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
         f'<url><loc>{base}/compare/upkeep</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
+        f'<url><loc>{base}/compare/emaint</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
+        f'<url><loc>{base}/compare/limble</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
     ]
     for f in faults:
         code = f.get("code", "")
