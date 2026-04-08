@@ -92,6 +92,26 @@ docker run -p 8300:8300 repairxpert-indauto
 
 Built by a working field tech, not a vendor.
 
+## Hosted Service
+
+A hosted version of IndAutomation runs at **[indautomation.onrender.com](https://indautomation.onrender.com)** with a web UI, REST API, and the same diagnostic engine the MCP servers expose.
+
+### Pricing (hosted)
+
+| Plan | Price | Includes |
+|------|-------|----------|
+| Free | $0 | Try the diagnostic engine, limited queries |
+| Pro | $19/mo | Unlimited diagnoses, parts search, fault history |
+| Enterprise | $49/mo | Multi-user, priority support, custom equipment profiles |
+
+Billing is handled by Stripe. The MCP servers in this repo are **free and open source** — the hosted tier only exists for teams that want a managed web UI and shared history.
+
+## Support & Contact
+
+- Issues: [GitHub Issues](https://github.com/RepairXpert/indautomation/issues)
+- Email: support@repairxpert.ai
+- Hosted service: [indautomation.onrender.com](https://indautomation.onrender.com)
+
 ## License
 
 MIT
