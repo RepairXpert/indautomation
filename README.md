@@ -4,7 +4,7 @@
 
 <!-- mcp-name: io.github.repairxpert/indautomation -->
 
-AI-powered equipment diagnosis. This repo ships **TWO** MCP servers — one for industrial automation, and the **first-ever automotive OBD-II MCP server** publicly available.
+AI-powered equipment diagnosis. This repo ships **TWO** MCP servers — one for industrial automation, and an automotive OBD-II MCP server with a built-in **expert DTC database** (probable causes, ranked fix steps, field tricks) — the first OBD MCP server focused on repair knowledge rather than raw PID passthrough.
 
 ---
 
@@ -27,7 +27,7 @@ Fault diagnosis for Allen-Bradley PLCs, conveyors, pilers, AS/RS, packaging line
 
 **Coverage:** 313 fault codes — 52 general industrial, 51 Allen-Bradley/Rockwell, 26 conveyors, 21 VFDs, 18 packaging, 11 AS/RS, 8 palletizers, 7 pilers, 7 CR30.
 
-### 2. Automotive OBD-II (`obd_mcp_server.py`) — FIRST AUTOMOTIVE OBD MCP SERVER
+### 2. Automotive OBD-II (`obd_mcp_server.py`) — OBD MCP with Expert Diagnosis
 
 Vehicle diagnostics via OBD-II. Works in mock mode out of the box (no hardware needed) or real mode with any ELM327 adapter (serial or Bluetooth).
 
@@ -87,8 +87,8 @@ docker run -p 8300:8300 repairxpert-indauto
 
 ## Why This Matters
 
-- **Industrial MCP:** First industrial-automation MCP server with real Allen-Bradley/Rockwell fault coverage.
-- **Automotive OBD MCP:** First OBD-II MCP server ever built. AI agents can now read and diagnose vehicle trouble codes the same way they query databases. Mock mode means developers can build against it without owning an ELM327 adapter.
+- **Industrial MCP:** Real Allen-Bradley/Rockwell fault coverage that no general-purpose MCP server has.
+- **Automotive OBD MCP:** Unlike raw-PID OBD bridges, this one ships a curated expert database with probable causes and ranked fix steps so agents give actionable repair guidance, not just sensor numbers. Mock mode lets developers build against it without owning an ELM327 adapter.
 
 Built by a working field tech, not a vendor.
 
