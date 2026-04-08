@@ -421,6 +421,7 @@ def _send_recovery_email(email: str, plan: str, base_url: str):
         payload = json.dumps({
             "from": "RepairXpert <hello@repairxpertai.com>",
             "to": [email],
+            "reply_to": "ericwestmail@gmail.com",
             "subject": f"Complete your RepairXpert {plan_name} subscription",
             "html": html_body,
         }).encode()
@@ -512,6 +513,7 @@ async def capture_lead(request: Request):
             payload = json.dumps({
                 "from": "RepairXpert <hello@repairxpertai.com>",
                 "to": [email],
+                "reply_to": "ericwestmail@gmail.com",
                 "subject": "Welcome to RepairXpert — your free diagnosis is ready",
                 "html": html_body,
             }).encode()
@@ -1395,8 +1397,12 @@ async def connect_submit(
                 "https://api.resend.com/emails",
                 headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
                 json={
-                    "from": "IndAutomation <hello@indautomation.onrender.com>",
+                    # 2026-04-08 reply-inbox fix: indautomation.onrender.com
+                    # cannot receive. Use verified repairxpertai.com sender
+                    # with reply_to pointing to Eric's Gmail.
+                    "from": "IndAutomation <hello@repairxpertai.com>",
                     "to": ["ericwestmail@gmail.com"],
+                    "reply_to": "ericwestmail@gmail.com",
                     "subject": subject,
                     "html": body_html,
                 },
@@ -1473,6 +1479,7 @@ async def capture_lead(request: Request):
             payload = json.dumps({
                 "from": "RepairXpert <hello@repairxpertai.com>",
                 "to": [email],
+                "reply_to": "ericwestmail@gmail.com",
                 "subject": "Welcome to RepairXpert Industrial Automation",
                 "html": html_body,
             }).encode()
