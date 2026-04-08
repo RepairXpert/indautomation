@@ -166,6 +166,11 @@ async def blog_post(request: Request, slug: str):
         return HTMLResponse("<h1>Post not found</h1>", status_code=404)
 
 
+@app.get("/about", response_class=HTMLResponse)
+async def about_page(request: Request):
+    return templates.TemplateResponse("about.html", {"request": request})
+
+
 @app.get("/pricing", response_class=HTMLResponse)
 async def pricing_page(request: Request):
     return templates.TemplateResponse("pricing.html", {"request": request})
