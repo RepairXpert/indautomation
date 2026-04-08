@@ -697,6 +697,16 @@ async def robots(request: Request):
     return Response(content=txt, media_type="text/plain")
 
 
+# ── IndexNow verification key ──────────────────────────────────────────────────
+INDEXNOW_KEY = "fe1a967cb18a4679a754c625d57b7a6d"
+
+
+@app.get(f"/{INDEXNOW_KEY}.txt")
+async def indexnow_key_file():
+    from starlette.responses import Response
+    return Response(content=INDEXNOW_KEY, media_type="text/plain")
+
+
 @app.get("/api/health")
 async def health():
     fault_count = len(load_fault_db())
