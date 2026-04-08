@@ -606,6 +606,104 @@ async def fault_detail(request: Request, code: str):
     })
 
 
+# ── OBD-II Scanner ────────────────────────────────────────────────────────────
+_auto_dtc_cache = None
+
+def _load_auto_dtcs():
+    global _auto_dtc_cache
+    if _auto_dtc_cache is not None:
+        return _auto_dtc_cache
+    path = ROOT / "indauto" / "fault_db" / "automotive_dtcs.json"
+    if path.exists():
+        data = json.loads(path.read_text(encoding="utf-8"))
+        _auto_dtc_cache = data.get("faults", [])
+    else:
+        _auto_dtc_cache = []
+    return _auto_dtc_cache
+
+
+@app.get("/obd", response_class=HTMLResponse)
+async def obd_page(request: Request):
+    """OBD-II scanner page — vehicle diagnostics for field techs."""
+    return templates.TemplateResponse("obd.html", {"request": request})
+
+
+@app.post("/api/obd/scan")
+async def api_obd_scan(request: Request):
+    """Trigger OBD-II DTC scan (mock mode). Returns DTCs + live sensor snapshot."""
+    import random
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+
+    action = body.get("action", "scan")
+
+    if action == "clear":
+        return JSONResponse({"message": "DTCs cleared successfully. (Mock mode — no vehicle connected.)", "status": "ok"})
+
+    # Mock DTCs
+    mock_dtcs = [
+        {"code": "P0300", "description": "Random/Multiple Cylinder Misfire Detected", "status": "confirmed", "severity": "high"},
+        {"code": "P0171", "description": "System Too Lean (Bank 1)", "status": "confirmed", "severity": "medium"},
+        {"code": "P0420", "description": "Catalyst System Efficiency Below Threshold (Bank 1)", "status": "pending", "severity": "medium"},
+    ]
+    # Mock live data
+    live_data = {
+        "rpm": {"value": 780 + random.randint(-30, 30), "unit": "RPM", "description": "Engine RPM"},
+        "speed": {"value": 0, "unit": "mph", "description": "Vehicle Speed"},
+        "coolant_temp": {"value": 195 + random.randint(-3, 3), "unit": "F", "description": "Coolant Temp"},
+        "engine_load": {"value": round(28.6 + random.uniform(-2, 2), 1), "unit": "%", "description": "Engine Load"},
+        "throttle_pos": {"value": round(15.7 + random.uniform(-1, 1), 1), "unit": "%", "description": "Throttle Position"},
+        "maf": {"value": round(3.8 + random.uniform(-0.3, 0.3), 1), "unit": "g/s", "description": "Mass Air Flow"},
+        "short_fuel_trim_1": {"value": round(2.3 + random.uniform(-1, 1), 1), "unit": "%", "description": "STFT Bank 1"},
+        "long_fuel_trim_1": {"value": round(4.7 + random.uniform(-0.5, 0.5), 1), "unit": "%", "description": "LTFT Bank 1"},
+        "fuel_pressure": {"value": 58 + random.randint(-2, 2), "unit": "PSI", "description": "Fuel Pressure"},
+        "timing_advance": {"value": round(12.5 + random.uniform(-1, 1), 1), "unit": "deg", "description": "Timing Advance"},
+        "o2_voltage_b1s1": {"value": round(0.45 + random.uniform(-0.2, 0.2), 2), "unit": "V", "description": "O2 B1S1"},
+        "control_module_voltage": {"value": round(14.1 + random.uniform(-0.2, 0.2), 1), "unit": "V", "description": "System Voltage"},
+        "fuel_level": {"value": 62, "unit": "%", "description": "Fuel Level"},
+        "ambient_temp": {"value": 78 + random.randint(-2, 2), "unit": "F", "description": "Ambient Temp"},
+    }
+
+    if body.get("live_only"):
+        return JSONResponse({"live_data": live_data, "mode": "mock"})
+
+    return JSONResponse({"dtcs": mock_dtcs, "live_data": live_data, "mode": "mock"})
+
+
+@app.get("/api/obd/dtc/{code}")
+async def api_obd_dtc_lookup(code: str):
+    """Look up a single automotive DTC from the database."""
+    code_upper = code.strip().upper()
+    for entry in _load_auto_dtcs():
+        if entry.get("code", "").upper() == code_upper:
+            return JSONResponse(entry)
+    return JSONResponse({"error": f"DTC '{code_upper}' not found in database"}, status_code=404)
+
+
+@app.get("/api/obd/search")
+async def api_obd_search(q: str = ""):
+    """Search automotive DTCs by keyword."""
+    if not q or len(q) < 2:
+        return JSONResponse({"error": "Query must be at least 2 characters", "results": []}, status_code=400)
+    q_lower = q.lower()
+    results = []
+    seen_codes = set()
+    for entry in _load_auto_dtcs():
+        code = entry.get("code", "")
+        if code in seen_codes:
+            continue
+        searchable = f"{code} {entry.get('name', '')} {entry.get('equipment_type', '')} {' '.join(entry.get('probable_causes', []))} {' '.join(entry.get('tags', []))}".lower()
+        if q_lower in searchable:
+            results.append({"code": code, "name": entry["name"], "severity": entry.get("severity", "medium"), "equipment_type": entry.get("equipment_type", "engine")})
+            seen_codes.add(code)
+        if len(results) >= 25:
+            break
+    return JSONResponse({"query": q, "count": len(results), "results": results})
+
+
 @app.get("/vin", response_class=HTMLResponse)
 async def vin_page(request: Request):
     """VIN decoder page — free tool for field techs."""
@@ -671,6 +769,7 @@ async def sitemap(request: Request):
         f'<url><loc>{base}/faults</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>',
         f'<url><loc>{base}/pricing</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
         f'<url><loc>{base}/vin</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
+        f'<url><loc>{base}/obd</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>',
         f'<url><loc>{base}/compare</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
         f'<url><loc>{base}/compare/maintainx</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
         f'<url><loc>{base}/compare/servicetitan</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',

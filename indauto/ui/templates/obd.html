@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>OBD-II Scanner — Vehicle Diagnostics | RepairXpert</title>
+<meta name="description" content="Free OBD-II diagnostic scanner for field techs and mechanics. Read DTCs, view live sensor data, get expert diagnosis with fix steps. First automotive OBD MCP server.">
+<meta property="og:title" content="OBD-II Scanner — RepairXpert">
+<meta property="og:description" content="Read vehicle codes, get expert diagnosis, fix steps from real techs. Free OBD-II tool.">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://repairxpertai.com/obd">
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+.obd-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1rem; }
+@media (min-width: 640px) { .obd-grid { grid-template-columns: 1fr 1fr; } }
+
+.scan-btn {
+  display: block; width: 100%; padding: 1.25rem; font-size: 1.2rem; font-weight: 700;
+  background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff;
+  border: none; border-radius: 12px; cursor: pointer; text-transform: uppercase;
+  letter-spacing: 1px; transition: transform 0.15s, box-shadow 0.15s;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  min-height: 60px;
+}
+.scan-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.4); }
+.scan-btn:active { transform: translateY(0); }
+.scan-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.scan-btn.scanning { animation: pulse-scan 1.5s ease-in-out infinite; }
+@keyframes pulse-scan { 0%,100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); } 50% { box-shadow: 0 0 0 12px rgba(59,130,246,0); } }
+
+.clear-btn {
+  display: block; width: 100%; padding: 1rem; font-size: 1rem; font-weight: 700;
+  background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff;
+  border: none; border-radius: 12px; cursor: pointer; text-transform: uppercase;
+  letter-spacing: 1px; min-height: 52px; touch-action: manipulation;
+}
+.clear-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.dtc-item {
+  padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px;
+  margin-bottom: 0.5rem; cursor: pointer; transition: border-color 0.2s;
+}
+.dtc-item:hover { border-color: var(--blue); }
+.dtc-code { font-family: monospace; font-size: 1.1rem; font-weight: 700; color: var(--blue); }
+.dtc-desc { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
+.dtc-severity { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.sev-critical { background: #7f1d1d; color: #fca5a5; }
+.sev-high { background: #7c2d12; color: #fdba74; }
+.sev-medium { background: #713f12; color: #fde047; }
+.sev-low { background: #14532d; color: #86efac; }
+
+.gauge-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+@media (min-width: 640px) { .gauge-grid { grid-template-columns: repeat(3, 1fr); } }
+.gauge-box {
+  background: var(--surface, #12121a); border: 1px solid var(--border); border-radius: 8px;
+  padding: 0.6rem; text-align: center;
+}
+.gauge-val { font-size: 1.4rem; font-weight: 800; font-family: monospace; color: var(--green, #10b981); }
+.gauge-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.15rem; }
+.gauge-unit { font-size: 0.75rem; color: var(--dim, #7a7a8e); }
+
+.search-input {
+  width: 100%; padding: 0.75rem; font-size: 1rem; background: var(--surface, #12121a);
+  border: 1px solid var(--border); border-radius: 8px; color: var(--text);
+  font-family: monospace; text-transform: uppercase;
+}
+.search-input::placeholder { text-transform: none; font-family: inherit; }
+
+.diagnosis-box {
+  background: var(--surface, #12121a); border: 1px solid var(--border); border-radius: 8px;
+  padding: 1rem; margin-top: 0.75rem; display: none;
+}
+.diagnosis-box.active { display: block; }
+.diagnosis-box h3 { font-size: 0.95rem; color: var(--green, #10b981); margin-bottom: 0.5rem; }
+.diagnosis-box ol { padding-left: 1.25rem; font-size: 0.82rem; color: var(--text); line-height: 1.7; }
+.diagnosis-box .field-trick {
+  margin-top: 0.75rem; padding: 0.6rem; background: #1a1a28; border-left: 3px solid var(--gold, #f59e0b);
+  border-radius: 0 6px 6px 0; font-size: 0.8rem; color: var(--gold, #f59e0b); line-height: 1.5;
+}
+
+.status-badge {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px;
+  border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+}
+.status-mock { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+.status-connected { background: #052e16; color: #4ade80; border: 1px solid #166534; }
+
+#scanResults, #liveData { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-row">
+    <img src="/static/logo.svg" alt="RepairXpert Industrial Automation" height="48">
+  </div>
+  <nav>
+    <a href="/">Diagnose</a>
+    <a href="/chat">Chat</a>
+    <a href="/faults">Fault Codes</a>
+    <a href="/vin">VIN Decode</a>
+    <a href="/obd" class="active">OBD-II</a>
+    <a href="/history">History</a>
+    <a href="/pricing">Pricing</a>
+  </nav>
+</header>
+
+<div class="container">
+  <!-- Status Bar -->
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem; flex-wrap:wrap; gap:0.5rem">
+    <h1 style="font-size:1.1rem; margin:0">OBD-II Vehicle Scanner</h1>
+    <span class="status-badge status-mock" id="connectionStatus">MOCK MODE</span>
+  </div>
+  <p style="color:var(--muted); font-size:0.78rem; margin-bottom:1rem">Read diagnostic codes, view live data, get expert fix steps. Connect ELM327 for real vehicle data.</p>
+
+  <!-- Scan Vehicle -->
+  <div class="card">
+    <button class="scan-btn" id="scanBtn" onclick="scanVehicle()">SCAN VEHICLE</button>
+    <div style="display:flex; gap:0.5rem; margin-top:0.75rem">
+      <button class="clear-btn" id="clearBtn" onclick="clearCodes()" style="flex:1" disabled>CLEAR CODES</button>
+      <a href="/vin" class="clear-btn" style="flex:1; text-align:center; text-decoration:none; background:linear-gradient(135deg,#6366f1,#4f46e5); display:flex; align-items:center; justify-content:center">DECODE VIN</a>
+    </div>
+  </div>
+
+  <!-- DTC Results -->
+  <div id="scanResults" class="card" style="margin-top:1rem">
+    <h2 style="font-size:0.95rem; margin-bottom:0.75rem">Diagnostic Trouble Codes</h2>
+    <div id="dtcList"></div>
+    <div id="noCodes" style="display:none; text-align:center; padding:1rem; color:var(--green)">
+      <div style="font-size:2rem; margin-bottom:0.5rem">&#10003;</div>
+      <div style="font-size:0.9rem; font-weight:600">No Codes Found</div>
+      <div style="font-size:0.78rem; color:var(--muted)">Vehicle systems OK</div>
+    </div>
+  </div>
+
+  <!-- DTC Diagnosis Detail -->
+  <div class="diagnosis-box" id="diagnosisBox">
+    <h3 id="diagCode"></h3>
+    <div id="diagSeverity" style="margin-bottom:0.5rem"></div>
+    <h4 style="font-size:0.8rem; color:var(--muted); margin-bottom:0.25rem">Probable Causes</h4>
+    <ol id="diagCauses"></ol>
+    <h4 style="font-size:0.8rem; color:var(--muted); margin-top:0.75rem; margin-bottom:0.25rem">Fix Steps</h4>
+    <ol id="diagSteps"></ol>
+    <div id="diagTrick" class="field-trick" style="display:none"></div>
+  </div>
+
+  <!-- DTC Lookup -->
+  <div class="card" style="margin-top:1rem">
+    <h2 style="font-size:0.95rem; margin-bottom:0.5rem">Look Up Any DTC</h2>
+    <div style="display:flex; gap:0.5rem">
+      <input type="text" class="search-input" id="dtcSearchInput" placeholder="e.g. P0300" maxlength="6" style="flex:1">
+      <button class="scan-btn" onclick="lookupDTC()" style="width:auto; padding:0.75rem 1.5rem; font-size:0.9rem; min-height:auto">LOOK UP</button>
+    </div>
+    <p style="font-size:0.7rem; color:var(--muted); margin-top:0.5rem">
+      <a href="/api/obd/search?q=misfire" style="color:var(--blue)">Search by keyword</a> &mdash;
+      e.g. <em>misfire</em>, <em>lean</em>, <em>catalyst</em>, <em>transmission</em>
+    </p>
+  </div>
+
+  <!-- Live Data -->
+  <div id="liveData" class="card" style="margin-top:1rem">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem">
+      <h2 style="font-size:0.95rem; margin:0">Live Sensor Data</h2>
+      <button onclick="refreshLiveData()" style="background:var(--surface,#12121a); border:1px solid var(--border); color:var(--blue); padding:4px 12px; border-radius:6px; cursor:pointer; font-size:0.75rem">Refresh</button>
+    </div>
+    <div class="gauge-grid" id="gaugeGrid"></div>
+  </div>
+
+  <!-- About -->
+  <div class="card" style="margin-top:1rem">
+    <h2 style="font-size:0.85rem; margin-bottom:0.5rem">About OBD-II Scanner</h2>
+    <p style="font-size:0.78rem; color:var(--muted); line-height:1.6">
+      This tool reads OBD-II diagnostic data from any 1996+ vehicle. Currently running in demo mode
+      with realistic test data. Connect an ELM327 adapter via USB or Bluetooth for live vehicle data.
+    </p>
+    <p style="font-size:0.78rem; color:var(--muted); line-height:1.6; margin-top:0.5rem">
+      <strong>MCP Integration:</strong> This is the first automotive OBD-II MCP server. AI assistants
+      can read codes, pull live data, and get expert diagnosis through the MCP protocol. Add
+      <code>repairxpert-obd</code> to your MCP config to enable AI-powered vehicle diagnostics.
+    </p>
+    <p style="font-size:0.78rem; color:var(--muted); line-height:1.6; margin-top:0.5rem">
+      Pair with <a href="/vin" style="color:var(--blue)">VIN Decoder</a> for full vehicle identification,
+      or <a href="/" style="color:var(--blue)">AI Diagnosis</a> for industrial equipment faults.
+    </p>
+  </div>
+</div>
+
+<script>
+const SEV_CLASS = {critical:'sev-critical', high:'sev-high', medium:'sev-medium', low:'sev-low'};
+
+async function scanVehicle() {
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+  btn.classList.add('scanning');
+  btn.textContent = 'SCANNING...';
+
+  try {
+    const resp = await fetch('/api/obd/scan', {method:'POST'});
+    const data = await resp.json();
+
+    const resultsEl = document.getElementById('scanResults');
+    const listEl = document.getElementById('dtcList');
+    const noCodesEl = document.getElementById('noCodes');
+    const liveEl = document.getElementById('liveData');
+
+    resultsEl.style.display = 'block';
+    liveEl.style.display = 'block';
+    listEl.innerHTML = '';
+
+    if (data.dtcs && data.dtcs.length > 0) {
+      noCodesEl.style.display = 'none';
+      document.getElementById('clearBtn').disabled = false;
+
+      data.dtcs.forEach(function(dtc) {
+        const sevClass = SEV_CLASS[dtc.severity] || 'sev-medium';
+        const item = document.createElement('div');
+        item.className = 'dtc-item';
+        item.onclick = function(){ showDiagnosis(dtc.code); };
+        item.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<span class="dtc-code">' + dtc.code + '</span>' +
+          '<span class="dtc-severity ' + sevClass + '">' + (dtc.severity||'medium') + '</span>' +
+          '</div>' +
+          '<div class="dtc-desc">' + dtc.description + '</div>' +
+          (dtc.status === 'pending' ? '<div style="font-size:0.7rem;color:var(--gold);margin-top:0.25rem">PENDING</div>' : '');
+        listEl.appendChild(item);
+      });
+    } else {
+      noCodesEl.style.display = 'block';
+      document.getElementById('clearBtn').disabled = true;
+    }
+
+    // Load live data
+    if (data.live_data) {
+      renderGauges(data.live_data);
+    }
+  } catch(e) {
+    alert('Scan failed: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.classList.remove('scanning');
+  btn.textContent = 'SCAN VEHICLE';
+}
+
+function renderGauges(liveData) {
+  const grid = document.getElementById('gaugeGrid');
+  grid.innerHTML = '';
+  const priority = ['rpm','coolant_temp','speed','engine_load','throttle_pos','maf',
+                     'short_fuel_trim_1','long_fuel_trim_1','fuel_pressure','timing_advance',
+                     'o2_voltage_b1s1','control_module_voltage','fuel_level','ambient_temp'];
+  priority.forEach(function(key) {
+    const d = liveData[key];
+    if (!d) return;
+    const box = document.createElement('div');
+    box.className = 'gauge-box';
+    box.innerHTML = '<div class="gauge-val">' + d.value + ' <span class="gauge-unit">' + d.unit + '</span></div>' +
+                    '<div class="gauge-label">' + d.description + '</div>';
+    grid.appendChild(box);
+  });
+}
+
+async function refreshLiveData() {
+  try {
+    const resp = await fetch('/api/obd/scan', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({live_only:true})});
+    const data = await resp.json();
+    if (data.live_data) renderGauges(data.live_data);
+  } catch(e) { /* silent */ }
+}
+
+async function showDiagnosis(code) {
+  const box = document.getElementById('diagnosisBox');
+  try {
+    const resp = await fetch('/api/obd/dtc/' + encodeURIComponent(code));
+    const data = await resp.json();
+    if (data.error) {
+      box.classList.remove('active');
+      return;
+    }
+    document.getElementById('diagCode').textContent = data.code + ' \u2014 ' + data.name;
+    const sevClass = SEV_CLASS[data.severity] || 'sev-medium';
+    document.getElementById('diagSeverity').innerHTML = '<span class="dtc-severity ' + sevClass + '">' + data.severity + '</span>';
+
+    const causesEl = document.getElementById('diagCauses');
+    causesEl.innerHTML = '';
+    (data.probable_causes||[]).forEach(function(c){ const li=document.createElement('li'); li.textContent=c; causesEl.appendChild(li); });
+
+    const stepsEl = document.getElementById('diagSteps');
+    stepsEl.innerHTML = '';
+    (data.fix_steps||[]).forEach(function(s){ const li=document.createElement('li'); li.textContent=s; stepsEl.appendChild(li); });
+
+    const trickEl = document.getElementById('diagTrick');
+    if (data.field_tricks) {
+      trickEl.textContent = 'Field Trick: ' + data.field_tricks;
+      trickEl.style.display = 'block';
+    } else {
+      trickEl.style.display = 'none';
+    }
+
+    box.classList.add('active');
+    box.scrollIntoView({behavior:'smooth', block:'nearest'});
+  } catch(e) {
+    box.classList.remove('active');
+  }
+}
+
+async function lookupDTC() {
+  const input = document.getElementById('dtcSearchInput');
+  const code = input.value.trim().toUpperCase();
+  if (!code) return;
+  await showDiagnosis(code);
+}
+
+async function clearCodes() {
+  if (!confirm('Clear all DTCs and turn off Check Engine Light?\\n\\nThis resets readiness monitors which may affect emissions testing.')) return;
+  try {
+    const resp = await fetch('/api/obd/scan', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'clear'})});
+    const data = await resp.json();
+    alert(data.message || 'Codes cleared (mock mode)');
+    document.getElementById('dtcList').innerHTML = '';
+    document.getElementById('noCodes').style.display = 'block';
+    document.getElementById('clearBtn').disabled = true;
+    document.getElementById('diagnosisBox').classList.remove('active');
+  } catch(e) { alert('Failed: ' + e.message); }
+}
+
+document.getElementById('dtcSearchInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') lookupDTC();
+});
+document.getElementById('dtcSearchInput').addEventListener('input', function() {
+  this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+});
+</script>
+</body>
+</html>

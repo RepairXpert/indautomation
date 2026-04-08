@@ -1,0 +1,2225 @@
+{
+  "faults": [
+    {
+      "code": "P0010",
+      "name": "Intake Camshaft Position Actuator Circuit (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Failed camshaft position actuator solenoid",
+        "Open or short in wiring harness to cam actuator",
+        "Low oil pressure or sludge blocking oil control valve",
+        "Faulty ECM/PCM driver circuit"
+      ],
+      "fix_steps": [
+        "Check engine oil level and condition — sludge is the #1 cause",
+        "Inspect wiring and connector at the cam position actuator solenoid",
+        "Measure solenoid resistance — should be 6-13 ohms typically",
+        "Command solenoid on with scan tool and listen for click",
+        "Replace solenoid if no click or resistance out of range",
+        "If wiring OK and solenoid OK, suspect ECM driver"
+      ],
+      "field_tricks": "On GM trucks, try an oil change with a good flush first. 60% of the time the solenoid screen is just clogged with sludge. Pop the solenoid out and clean the screen with brake cleaner before condemning it."
+    },
+    {
+      "code": "P0011",
+      "name": "Intake Camshaft Position Timing Over-Advanced (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Engine oil too thick, too thin, or overdue for change",
+        "Camshaft phaser stuck in advanced position",
+        "Oil control valve (VVT solenoid) stuck open",
+        "Stretched timing chain",
+        "Low oil pressure"
+      ],
+      "fix_steps": [
+        "Verify correct oil viscosity and level — change oil if overdue",
+        "Monitor cam timing with scan tool — compare actual vs desired",
+        "Test VVT solenoid by commanding off — timing should return to base",
+        "Check oil pressure with mechanical gauge at operating temp",
+        "If timing chain has more than 3 degrees of slack at idle, replace chain and guides",
+        "Replace cam phaser if solenoid and oil are confirmed good"
+      ],
+      "field_tricks": "On Ford 5.4L 3V, this code plus a rattle at startup means the cam phaser is done. Don't waste time — phasers, chains, guides, and tensioners all go at once. It's a kit job."
+    },
+    {
+      "code": "P0012",
+      "name": "Intake Camshaft Position Timing Over-Retarded (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "VVT solenoid stuck closed or restricted",
+        "Low oil pressure at cam phaser",
+        "Clogged oil passages in cylinder head",
+        "Faulty cam phaser lockpin",
+        "ECM not commanding solenoid properly"
+      ],
+      "fix_steps": [
+        "Check oil level and condition first",
+        "Remove and inspect VVT solenoid screen for debris",
+        "Command solenoid with scan tool — watch cam timing change on live data",
+        "Verify oil pressure at cam phaser feed port",
+        "If phaser locked retarded, replace phaser assembly"
+      ],
+      "field_tricks": "Toyota 2GR-FE V6 loves to throw this after sitting for a while. Start with the oil change and let it idle 15 minutes. If code comes back after re-learning, then dig deeper."
+    },
+    {
+      "code": "P0016",
+      "name": "Crankshaft/Camshaft Position Correlation (Bank 1 Sensor A)",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Stretched or jumped timing chain",
+        "Failed timing chain tensioner",
+        "Worn timing chain guides",
+        "Faulty crank or cam sensor",
+        "VVT system stuck at wrong position"
+      ],
+      "fix_steps": [
+        "Capture crank and cam sensor waveforms with scope — check correlation",
+        "Check for excessive timing chain slack by removing valve cover and pressing on chain",
+        "Verify VVT system operation — command full advance and retard",
+        "If chain jumped one tooth: replace chain, guides, tensioners as a set",
+        "Check crank and cam reluctor wheels for damaged teeth"
+      ],
+      "field_tricks": "On GM 2.4L Ecotec, a rattle at startup + P0016 = timing chain stretch. Always replace the chain, guides, tensioner, and upper guide bolt (it strips). About a 4-hour job on those."
+    },
+    {
+      "code": "P0030",
+      "name": "HO2S Heater Control Circuit (Bank 1 Sensor 1)",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Failed O2 sensor heater element (open circuit)",
+        "Blown fuse for O2 heater circuit",
+        "Corroded connector at O2 sensor",
+        "Broken wire in harness — common from exhaust heat damage",
+        "ECM heater driver failure"
+      ],
+      "fix_steps": [
+        "Check O2 heater fuse first — replace if blown, check for short if it blows again",
+        "Measure heater element resistance at sensor connector — should be 2-30 ohms depending on make",
+        "Check for 12V battery voltage on heater supply wire with key on",
+        "Inspect connector for melted or corroded terminals",
+        "Replace O2 sensor if heater resistance is infinite (open)"
+      ],
+      "field_tricks": "Before throwing a new O2 sensor at it, unplug the connector and look for green corrosion. A little dielectric grease on the connector pins saves comeback headaches."
+    },
+    {
+      "code": "P0100",
+      "name": "Mass Air Flow (MAF) Circuit Malfunction",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Contaminated MAF sensor element (oil or dirt)",
+        "Air leak between MAF sensor and throttle body",
+        "Failed MAF sensor",
+        "Corroded or loose connector at MAF",
+        "Damaged wiring harness near MAF"
+      ],
+      "fix_steps": [
+        "Inspect MAF sensor for contamination — clean with MAF-specific cleaner only",
+        "Check for intake boot cracks or loose clamps between MAF and throttle body",
+        "Verify MAF signal with scan tool — should read 2-7 g/s at idle, 15-25 g/s at 2500 RPM (4-cyl)",
+        "Wiggle test wiring and connector while watching live data",
+        "If cleaning doesn't fix it, replace MAF sensor"
+      ],
+      "field_tricks": "Never touch the MAF element with anything — not your finger, not a brush. Only use CRC MAF cleaner spray. Let it air dry 10 minutes before reinstalling. On Fords with a screen on the air filter housing, remove it — it restricts flow and contaminates the MAF."
+    },
+    {
+      "code": "P0101",
+      "name": "Mass Air Flow Circuit Range/Performance",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Dirty or contaminated MAF sensor",
+        "Air leak after MAF sensor (cracked intake boot)",
+        "Clogged air filter",
+        "PCV system leak",
+        "Faulty MAF sensor"
+      ],
+      "fix_steps": [
+        "Clean MAF sensor with MAF cleaner spray",
+        "Check all intake boots and connections for leaks — spray brake cleaner around joints, listen for RPM change",
+        "Replace air filter if dirty",
+        "Check PCV valve and hoses for leaks or blockage",
+        "Compare MAF reading to calculated MAF — if off by more than 10%, replace sensor"
+      ],
+      "field_tricks": "Smoke test the intake. Seriously. Half the time this code is a cracked boot or loose clamp you can't see. A $30 smoke machine adapter pays for itself in one job."
+    },
+    {
+      "code": "P0102",
+      "name": "Mass Air Flow Circuit Low Input",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Open circuit in MAF signal wire",
+        "MAF sensor unplugged or loose connector",
+        "Severely restricted air filter",
+        "Failed MAF sensor — no signal output",
+        "ECM MAF input circuit problem"
+      ],
+      "fix_steps": [
+        "Verify MAF connector is fully seated",
+        "Check MAF signal voltage — should be 0.5-1.0V at idle (not near 0V)",
+        "Inspect wiring from MAF to ECM for open circuit",
+        "Check air filter for restriction",
+        "Swap with known-good MAF if available"
+      ],
+      "field_tricks": "On GM trucks, the MAF connector lock tab breaks all the time. Vibration backs it out just enough to lose signal intermittently. Zip-tie the connector if the lock is broken."
+    },
+    {
+      "code": "P0113",
+      "name": "Intake Air Temperature Circuit High Input",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Open circuit in IAT sensor wiring",
+        "Disconnected IAT sensor",
+        "Failed IAT sensor (open internally)",
+        "Corroded connector pins",
+        "ECM pull-up resistor issue (rare)"
+      ],
+      "fix_steps": [
+        "Check IAT connector — verify it's plugged in",
+        "Measure IAT resistance — should be 2-3k ohms at 70F ambient",
+        "Check for 5V reference and good ground at sensor connector",
+        "Inspect wires for breaks — especially where harness flexes",
+        "Replace sensor if resistance is infinite"
+      ],
+      "field_tricks": "IAT is often built into the MAF on newer cars. If you replace the MAF and this code is still there, you've got a wiring issue, not a sensor issue."
+    },
+    {
+      "code": "P0120",
+      "name": "Throttle Position Sensor Circuit Malfunction",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed TPS (worn carbon track)",
+        "Loose or corroded TPS connector",
+        "5V reference circuit problem",
+        "Signal wire open or shorted to ground",
+        "Electronic throttle body failure"
+      ],
+      "fix_steps": [
+        "Check TPS voltage at idle — should be 0.4-0.9V",
+        "Slowly open throttle while watching voltage — should increase smoothly to 4.5V",
+        "Any dropouts or jumps = bad TPS or carbon track",
+        "Verify 5V reference and ground at connector",
+        "On electronic throttle bodies, often the whole TB must be replaced"
+      ],
+      "field_tricks": "If the engine surges or won't hold idle, graph the TPS voltage. Even a tiny 50ms dropout will cause a stumble. The old volt meter won't catch it — you need live graphing."
+    },
+    {
+      "code": "P0121",
+      "name": "Throttle Position Sensor Range/Performance",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Worn TPS (dead spots in carbon track)",
+        "Carbon buildup on throttle plate affecting closure",
+        "Loose throttle body mounting bolts (vacuum leak)",
+        "Faulty APP (accelerator pedal position) sensor",
+        "Wiring issue between TPS and ECM"
+      ],
+      "fix_steps": [
+        "Clean throttle body plate and bore with TB cleaner",
+        "Check TPS voltage sweep — any flat spots or jumps need new TPS",
+        "Verify APP sensor tracks smoothly with pedal input",
+        "Check for vacuum leaks at throttle body gasket",
+        "Relearn idle after cleaning TB — key on 30 sec, start, idle 3 min"
+      ],
+      "field_tricks": "After cleaning a drive-by-wire throttle body, you MUST do a throttle relearn or the car will idle weird. Every manufacturer has a different procedure — look it up before you hand it back."
+    },
+    {
+      "code": "P0128",
+      "name": "Coolant Thermostat Below Regulating Temperature",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Thermostat stuck open",
+        "Missing thermostat (someone removed it)",
+        "Coolant temperature sensor reading incorrectly",
+        "Low coolant level causing slow warmup",
+        "Aftermarket thermostat with wrong temperature rating"
+      ],
+      "fix_steps": [
+        "Monitor coolant temp with scan tool — should reach 190-220F within 5-10 min of driving",
+        "If temp never reaches operating range, thermostat is stuck open — replace it",
+        "Verify ECT sensor reading matches actual temp (infrared thermometer on housing)",
+        "Check coolant level — air pockets cause false readings",
+        "Always install OEM-spec thermostat (correct temp rating)"
+      ],
+      "field_tricks": "This is a smog failure code in many states. Replace thermostat, clear code, drive it through a complete warm-up cycle. Make sure the upper radiator hose gets hot — if it's hot right away, thermostat is open."
+    },
+    {
+      "code": "P0131",
+      "name": "O2 Sensor Circuit Low Voltage (Bank 1 Sensor 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Exhaust leak before upstream O2 sensor",
+        "Vacuum leak causing lean condition",
+        "O2 sensor contaminated or lazy",
+        "O2 sensor heater not working (slow response)",
+        "Signal wire shorted to ground"
+      ],
+      "fix_steps": [
+        "Check for exhaust leaks at manifold gasket and upstream pipe",
+        "Monitor O2 sensor voltage — should toggle 0.1-0.9V at operating temp",
+        "If stuck below 0.3V, check for vacuum leaks first",
+        "Verify sensor heater is working (should reach operating temp in 30 seconds)",
+        "Replace O2 sensor if confirmed stuck lean with no vacuum leaks present"
+      ],
+      "field_tricks": "If both bank 1 and bank 2 O2 sensors are reading lean, it's NOT the sensors. It's a system lean condition — check fuel pressure, MAF, and vacuum leaks before replacing sensors."
+    },
+    {
+      "code": "P0133",
+      "name": "O2 Sensor Circuit Slow Response (Bank 1 Sensor 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Aged/contaminated O2 sensor (normal wear)",
+        "Exhaust leak near sensor causing false air readings",
+        "Fuel contamination (silicone sealant, excessive oil burning)",
+        "Coolant intrusion in exhaust (head gasket leak)",
+        "Marginal fuel injector causing inconsistent mixture"
+      ],
+      "fix_steps": [
+        "Graph O2 sensor switching rate — should cross 0.45V 6-8 times in 10 seconds",
+        "If switching rate is less than 4 times in 10 seconds, sensor is lazy",
+        "Check for exhaust leaks that could dilute exhaust gas",
+        "Inspect spark plugs for signs of coolant or oil contamination",
+        "Replace O2 sensor if confirmed slow — use OEM or Denso/Bosch"
+      ],
+      "field_tricks": "Never use RTV silicone sealant near an O2 sensor. The outgassing from silicone permanently coats the sensor element. Use OEM gaskets or sensor-safe sealant only."
+    },
+    {
+      "code": "P0135",
+      "name": "O2 Sensor Heater Circuit Malfunction (Bank 1 Sensor 1)",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Burned out O2 sensor heater element",
+        "Blown O2 heater fuse",
+        "Corroded connector — heat damage from exhaust",
+        "Open wire in heater circuit",
+        "ECM heater relay or driver failure"
+      ],
+      "fix_steps": [
+        "Check heater fuse",
+        "Measure heater resistance — typically 2-15 ohms (varies by make)",
+        "Verify battery voltage on heater power wire",
+        "Verify ECM provides ground for heater circuit",
+        "If heater element is open (infinite resistance), replace sensor"
+      ],
+      "field_tricks": "On Toyotas, the O2 heater fuse is labeled 'EFI' in the underhood fuse box — not labeled 'O2.' Wastes 20 minutes every time if you don't know that."
+    },
+    {
+      "code": "P0141",
+      "name": "O2 Sensor Heater Circuit Malfunction (Bank 1 Sensor 2)",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Failed downstream O2 sensor heater",
+        "Corroded connector from road splash and heat cycling",
+        "Heater circuit fuse blown",
+        "Wiring damage from road debris or undercar work"
+      ],
+      "fix_steps": [
+        "Check fuse for downstream O2 heater circuit",
+        "Measure heater resistance at sensor connector — should be 2-15 ohms",
+        "Inspect connector for corrosion (downstream sensors are exposed to road spray)",
+        "Check for 12V supply and ECM ground at connector",
+        "Replace sensor if heater is open circuit"
+      ],
+      "field_tricks": "Downstream O2 sensors live in a rough environment. When replacing, always coat the connector with dielectric grease and make sure the rubber boot is intact. Saves a comeback."
+    },
+    {
+      "code": "P0171",
+      "name": "System Too Lean (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Vacuum leak (intake manifold gasket, PCV hose, brake booster line)",
+        "Weak fuel pump or clogged fuel filter",
+        "Dirty or failed MAF sensor reading low",
+        "Leaking fuel injector O-rings",
+        "Cracked or disconnected vacuum hose"
+      ],
+      "fix_steps": [
+        "Check long-term fuel trim at idle and at 2500 RPM — if high at idle but normal at cruise, it's a vacuum leak",
+        "Smoke test intake for vacuum leaks",
+        "Clean MAF sensor with MAF cleaner",
+        "Check fuel pressure — should be 55-62 PSI on most port injection systems",
+        "Inspect PCV valve, brake booster hose, and all small vacuum lines",
+        "Check for cracked intake manifold (plastic manifolds crack with age)"
+      ],
+      "field_tricks": "If LTFT is +15% at idle but drops to +5% at 2500 RPM, that's a vacuum leak pattern. If LTFT is high at all RPMs, it's fuel delivery (pump, filter, or regulator). That one rule saves hours of guessing."
+    },
+    {
+      "code": "P0172",
+      "name": "System Too Rich (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Leaking fuel injector (stuck open or dripping)",
+        "Faulty fuel pressure regulator (too high pressure)",
+        "Saturated charcoal canister (purge valve stuck open)",
+        "MAF sensor reading high (contaminated)",
+        "Stuck-closed PCV valve causing crankcase pressure",
+        "Coolant temp sensor reading colder than actual (causes rich fueling)"
+      ],
+      "fix_steps": [
+        "Check fuel pressure — should not exceed spec by more than 5 PSI",
+        "Pinch off purge valve hose — if STFT drops toward 0%, purge system is leaking",
+        "Check MAF reading vs spec — clean if contaminated",
+        "Verify ECT sensor reads correct operating temperature",
+        "Perform injector leak-down test — pressure should hold after pump stops",
+        "Inspect spark plugs for black sooty deposits (rich running confirmation)"
+      ],
+      "field_tricks": "Pull dipstick at idle. If it smells like raw fuel, you've got a leaking injector or bad fuel pressure regulator. Gas-diluted oil kills bearings fast — change the oil after fixing the rich condition."
+    },
+    {
+      "code": "P0174",
+      "name": "System Too Lean (Bank 2)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Vacuum leak on bank 2 side of intake manifold",
+        "Cracked intake runner on bank 2",
+        "Bank 2 fuel injectors restricted or clogged",
+        "Lower intake manifold gasket leak (V-engines)",
+        "PCV valve or hose leak affecting bank 2"
+      ],
+      "fix_steps": [
+        "Compare LTFT bank 1 vs bank 2 — if only bank 2 is high, leak is on that side",
+        "Smoke test focusing on bank 2 intake runners and lower manifold",
+        "Check fuel injector flow rates — compare bank to bank",
+        "Inspect lower intake manifold gasket (common on GM 3.8L, Ford 4.6L)",
+        "Check for cracked plastic intake manifold"
+      ],
+      "field_tricks": "On GM 3.8L V6, the lower intake manifold gasket leaks coolant AND air. You'll see P0171 + P0174 together with coolant loss. Replace both upper and lower gaskets as a set — the Dorman updated gasket kit fixes the design flaw."
+    },
+    {
+      "code": "P0191",
+      "name": "Fuel Rail Pressure Sensor Circuit Range/Performance",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failing high-pressure fuel pump (GDI engines)",
+        "Fuel rail pressure sensor failure",
+        "Low fuel supply from tank pump",
+        "Restricted fuel filter (high-pressure side)",
+        "Leaking fuel rail or injector seals"
+      ],
+      "fix_steps": [
+        "Read fuel rail pressure on scan tool — compare desired vs actual",
+        "Check low-side fuel pressure first (tank pump output)",
+        "Verify high-pressure pump output reaches spec under load",
+        "Inspect fuel rail pressure sensor connector and wiring",
+        "Replace high-pressure pump if output cannot reach target under load"
+      ],
+      "field_tricks": "On GDI engines, always check the low-pressure side first. A weak tank pump makes the high-pressure pump look bad. Minimum 55 PSI on the low side or the HP pump can't build enough rail pressure."
+    },
+    {
+      "code": "P0200",
+      "name": "Injector Circuit Malfunction",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed fuel injector coil (open or shorted)",
+        "Wiring harness damage at injector connector",
+        "ECM injector driver failure",
+        "Corroded injector connector pins",
+        "Short between injector signal wires"
+      ],
+      "fix_steps": [
+        "Identify which cylinder(s) with cylinder-specific codes (P0201-P0208)",
+        "Measure injector resistance — typically 12-16 ohms for high impedance",
+        "Check for 12V supply at injector connector with key on",
+        "Verify ECM pulse signal with noid light or scope",
+        "Swap suspect injector with known good cylinder — see if code follows"
+      ],
+      "field_tricks": "Before condemning an injector, try the noid light test. If the light flashes, the ECM side is good and the injector itself is bad. If no flash, it's wiring or ECM — don't waste money on an injector."
+    },
+    {
+      "code": "P0217",
+      "name": "Engine Coolant Over Temperature",
+      "equipment_type": "engine",
+      "severity": "critical",
+      "probable_causes": [
+        "Low coolant level — check for leaks",
+        "Failed water pump (impeller eroded or bearing seized)",
+        "Thermostat stuck closed",
+        "Blocked radiator (external debris or internal scale)",
+        "Failed cooling fan or fan relay",
+        "Blown head gasket allowing compression into cooling system"
+      ],
+      "fix_steps": [
+        "STOP DRIVING — overheating causes warped heads and blown gaskets",
+        "Check coolant level when cool — top off and look for leaks",
+        "Verify cooling fans operate — command on with scan tool",
+        "Check thermostat — remove and test in boiling water, should open at rated temp",
+        "Pressure test cooling system — look for external and internal leaks",
+        "Block test exhaust gas in coolant — rules out head gasket"
+      ],
+      "field_tricks": "Squeeze the upper radiator hose when engine is hot and thermostat should be open. If it's hard and the engine is overheating, the radiator is blocked. If it's soft, the thermostat is closed or water pump is bad."
+    },
+    {
+      "code": "P0300",
+      "name": "Random/Multiple Cylinder Misfire Detected",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Worn spark plugs or incorrect gap",
+        "Bad ignition coil(s)",
+        "Vacuum leak at intake manifold or hoses",
+        "Low fuel pressure causing lean misfire",
+        "Compression loss on multiple cylinders",
+        "EGR valve stuck open diluting intake charge",
+        "Carbon buildup on intake valves (GDI engines)"
+      ],
+      "fix_steps": [
+        "Check for accompanying cylinder-specific codes (P0301-P0308)",
+        "Inspect spark plugs — check gap, wear, and color",
+        "Check fuel pressure under load — should hold steady during snap throttle",
+        "Smoke test intake for vacuum leaks",
+        "Check compression if plugs, fuel, and air are ruled out",
+        "On GDI engines, check for carbon buildup on intake valves with borescope",
+        "Verify EGR valve closes fully at idle"
+      ],
+      "field_tricks": "If P0300 shows up with a lean code (P0171/P0174), fix the lean condition first. Lean misfires cause P0300 and replacing plugs and coils won't fix it. Vacuum leak or fuel pressure — always check those before ignition parts."
+    },
+    {
+      "code": "P0301",
+      "name": "Cylinder 1 Misfire Detected",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed ignition coil on cylinder 1",
+        "Worn or fouled spark plug",
+        "Fuel injector 1 clogged or electrically failed",
+        "Low compression on cylinder 1 (valve, ring, or gasket issue)",
+        "Wiring issue to coil or injector"
+      ],
+      "fix_steps": [
+        "Swap coil from cyl 1 to another cylinder — see if misfire follows",
+        "If misfire follows coil, replace coil",
+        "If misfire stays on cyl 1, swap spark plug",
+        "If still misfiring, check injector — swap or test with noid light",
+        "If ignition and fuel are good, run compression test",
+        "Low compression: leak-down test to determine valves vs rings vs gasket"
+      ],
+      "field_tricks": "The coil swap test saves more time than any other trick. Move the suspect coil to a known-good cylinder. If the misfire moves, you found it. Takes 5 minutes and costs nothing."
+    },
+    {
+      "code": "P0302",
+      "name": "Cylinder 2 Misfire Detected",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed ignition coil on cylinder 2",
+        "Worn or fouled spark plug",
+        "Fuel injector 2 failure",
+        "Low compression cylinder 2",
+        "Wiring damage to coil or injector"
+      ],
+      "fix_steps": [
+        "Swap coil from cyl 2 to another cylinder",
+        "If misfire follows, replace coil",
+        "If misfire stays, swap spark plug",
+        "Check injector with noid light or swap test",
+        "Compression test if ignition and fuel are confirmed good"
+      ],
+      "field_tricks": "Same coil swap strategy as any single-cylinder misfire. Document which cylinder the misfire follows to — that's your definitive answer."
+    },
+    {
+      "code": "P0303",
+      "name": "Cylinder 3 Misfire Detected",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed ignition coil on cylinder 3",
+        "Worn or fouled spark plug",
+        "Fuel injector 3 failure",
+        "Low compression cylinder 3",
+        "Intake manifold gasket leak near cylinder 3 runner"
+      ],
+      "fix_steps": [
+        "Swap coil from cyl 3 to another cylinder",
+        "If misfire follows, replace coil",
+        "If misfire stays, swap spark plug",
+        "Check injector with noid light or swap test",
+        "Compression test if ignition and fuel confirmed good"
+      ],
+      "field_tricks": "On V-engines, cylinder 3 is often hard to reach. Use a universal joint on your socket extension to get the coil bolt and plug out without fighting the firewall."
+    },
+    {
+      "code": "P0304",
+      "name": "Cylinder 4 Misfire Detected",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed ignition coil on cylinder 4",
+        "Worn or fouled spark plug",
+        "Fuel injector 4 failure",
+        "Low compression cylinder 4",
+        "Intake valve carbon buildup (GDI engines)"
+      ],
+      "fix_steps": [
+        "Coil swap test to another cylinder",
+        "Spark plug inspection and swap",
+        "Injector test with noid light",
+        "Compression and leak-down test if others check out",
+        "On GDI engines, borescope intake valves for carbon"
+      ],
+      "field_tricks": "On 4-cylinder engines, cylinder 4 is closest to the firewall and tends to run the hottest. Plug wear on #4 is often worse than the others — always check plug gap on a single-misfire code."
+    },
+    {
+      "code": "P0325",
+      "name": "Knock Sensor 1 Circuit Malfunction (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Failed knock sensor (piezoelectric element degraded)",
+        "Corroded or damaged connector",
+        "Wiring harness damage — routed near exhaust or accessories",
+        "Knock sensor not torqued properly (must be exact spec)",
+        "ECM knock sensor input circuit failure"
+      ],
+      "fix_steps": [
+        "Verify knock sensor connector is clean and fully seated",
+        "Measure sensor resistance — typically 100k-500k ohms (varies by design)",
+        "Check wiring from sensor to ECM for damage or shorts",
+        "If replacing sensor, torque to exact spec (usually 15-20 ft-lbs)",
+        "Apply thread sealer if spec calls for it — some require dry install"
+      ],
+      "field_tricks": "Knock sensors MUST be torqued to spec. Too tight crushes the piezo element. Too loose and it can't sense vibration. Use a torque wrench, not an impact gun. On Toyotas, it's 29 ft-lbs — use a crowfoot."
+    },
+    {
+      "code": "P0335",
+      "name": "Crankshaft Position Sensor Circuit Malfunction",
+      "equipment_type": "engine",
+      "severity": "critical",
+      "probable_causes": [
+        "Failed crankshaft position sensor",
+        "Damaged reluctor wheel (cracked or missing teeth)",
+        "Wiring open or shorted in CKP circuit",
+        "Excessive air gap between sensor and reluctor",
+        "Oil or metal debris on sensor tip"
+      ],
+      "fix_steps": [
+        "Check for spark and injector pulse — no CKP signal means no start",
+        "Inspect CKP sensor connector and wiring",
+        "Measure sensor resistance (if Hall-effect: check for 5V ref and signal)",
+        "Check air gap between sensor and reluctor wheel",
+        "Inspect reluctor wheel for cracked or missing teeth (if accessible)",
+        "Replace sensor — often fixes intermittent no-start or stalling"
+      ],
+      "field_tricks": "Intermittent CKP failures often show up hot. Engine starts fine cold, stalls after warming up, won't restart for 20-30 minutes. Pour cold water on the sensor — if it starts, the sensor is heat-sensitive and needs replacing."
+    },
+    {
+      "code": "P0340",
+      "name": "Camshaft Position Sensor Circuit Malfunction (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed camshaft position sensor",
+        "Damaged cam sensor wiring or connector",
+        "Cam sensor air gap too large",
+        "Timing chain stretched causing inconsistent signal",
+        "5V reference circuit failure"
+      ],
+      "fix_steps": [
+        "Check cam sensor connector for damage or corrosion",
+        "Verify 5V reference, ground, and signal at connector",
+        "Scope cam sensor signal — should show clean square wave",
+        "Check sensor air gap and mounting",
+        "Replace sensor if signal is missing or erratic"
+      ],
+      "field_tricks": "On some engines, the cam sensor is behind the timing cover and requires significant disassembly. Before going there, check the wiring all the way to the ECM — a lot of time gets wasted pulling timing covers for a broken wire."
+    },
+    {
+      "code": "P0401",
+      "name": "Exhaust Gas Recirculation Flow Insufficient",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Clogged EGR passages in intake manifold",
+        "Stuck-closed EGR valve",
+        "Failed EGR vacuum solenoid or electronic actuator",
+        "Clogged EGR tube or pipe",
+        "DPFE sensor failure (Ford specific)"
+      ],
+      "fix_steps": [
+        "Remove EGR valve and inspect passages — clean carbon deposits",
+        "Command EGR valve open with scan tool — verify movement",
+        "Check vacuum supply to EGR valve (vacuum-operated systems)",
+        "On Ford, test DPFE sensor — voltage should change when EGR commanded open",
+        "Clean or replace EGR valve if stuck",
+        "Rod out EGR passages in intake manifold if clogged"
+      ],
+      "field_tricks": "On Ford trucks with DPFE sensor, the rubber hoses to the DPFE sensor crack and cause this code. Replace the $3 hoses before spending $200 on a new EGR valve. Takes 5 minutes."
+    },
+    {
+      "code": "P0420",
+      "name": "Catalyst System Efficiency Below Threshold (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Catalytic converter deteriorated (normal aging at 80-120K miles)",
+        "Engine misfire damaging catalyst with raw fuel",
+        "Exhaust leak before downstream O2 sensor",
+        "Downstream O2 sensor failure (mimics bad cat)",
+        "Oil or coolant contamination destroying catalyst"
+      ],
+      "fix_steps": [
+        "Verify no other codes present — fix misfires and lean/rich codes FIRST",
+        "Compare upstream vs downstream O2 sensor waveforms — downstream should be nearly flat",
+        "If downstream sensor mirrors upstream (switching), catalyst is failing",
+        "Check for exhaust leaks between sensors",
+        "Verify engine is not burning oil or coolant (destroys catalyst)",
+        "Replace catalytic converter if confirmed — use CARB-compliant in CA states"
+      ],
+      "field_tricks": "Before condemning a $1000 cat, check for an exhaust leak near the downstream O2 sensor. Even a pinhole leak at a weld seam makes the downstream sensor read wrong. Tighten the downstream sensor and check all flange connections first."
+    },
+    {
+      "code": "P0430",
+      "name": "Catalyst System Efficiency Below Threshold (Bank 2)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Bank 2 catalytic converter deteriorated",
+        "Engine running rich on bank 2 overloading catalyst",
+        "Downstream O2 sensor bank 2 failure",
+        "Exhaust leak near bank 2 downstream sensor"
+      ],
+      "fix_steps": [
+        "Same diagnostic approach as P0420 but on bank 2",
+        "Fix any rich condition on bank 2 first (P0172)",
+        "Compare upstream vs downstream O2 waveforms bank 2",
+        "Check for exhaust leaks on bank 2 side",
+        "Replace bank 2 catalytic converter if confirmed"
+      ],
+      "field_tricks": "If both P0420 and P0430 set together, the engine problem is likely upstream — misfires, rich running, or oil burning. Fix the root cause before replacing both cats."
+    },
+    {
+      "code": "P0440",
+      "name": "Evaporative Emission System Malfunction",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Loose or damaged fuel cap",
+        "Cracked or disconnected EVAP hose",
+        "Failed purge valve (stuck open or closed)",
+        "Failed vent valve",
+        "Cracked charcoal canister",
+        "Fuel tank pressure sensor malfunction"
+      ],
+      "fix_steps": [
+        "Check gas cap first — tighten or replace if damaged",
+        "Inspect all EVAP hoses for cracks, especially at the charcoal canister",
+        "Smoke test EVAP system to find leaks",
+        "Test purge solenoid — should hold vacuum when de-energized, open when powered",
+        "Test vent solenoid operation",
+        "Check fuel tank pressure sensor reading"
+      ],
+      "field_tricks": "80% of EVAP codes are the gas cap or a cracked hose at the canister. Always start there. The smoke test is king for EVAP diag — without it you're guessing."
+    },
+    {
+      "code": "P0441",
+      "name": "Evaporative Emission System Incorrect Purge Flow",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Purge valve stuck open or closed",
+        "Cracked or disconnected purge line",
+        "Charcoal canister saturated or restricted",
+        "Fuel tank not sealing properly"
+      ],
+      "fix_steps": [
+        "Apply vacuum to purge valve — should hold vacuum with no power",
+        "Apply 12V to purge valve — should release vacuum (valve opens)",
+        "Inspect purge line from valve to intake manifold",
+        "Check charcoal canister for saturation (remove and shake — liquid = saturated)",
+        "Smoke test entire EVAP system"
+      ],
+      "field_tricks": "A stuck-open purge valve on some Toyotas causes rough idle and rich running on cold start. If you have a rough cold start + EVAP code, test the purge valve first."
+    },
+    {
+      "code": "P0442",
+      "name": "Evaporative Emission System Small Leak Detected",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Loose or worn gas cap seal",
+        "Hairline crack in EVAP hose",
+        "Small leak at fuel filler neck",
+        "Fuel tank O-ring leak at sender",
+        "Vent valve not sealing completely"
+      ],
+      "fix_steps": [
+        "Replace gas cap with OEM (aftermarket caps are the #1 cause of EVAP comebacks)",
+        "Smoke test at 0.5 PSI — look for small wisps of smoke",
+        "Check fuel filler neck for rust or cracks",
+        "Inspect fuel tank sender O-ring — access from inside trunk/under rear seat",
+        "Check vent valve for debris preventing full seal"
+      ],
+      "field_tricks": "Small leak codes are THE most frustrating codes in automotive. Get a good smoke machine, drop the system to 0.5 PSI, and be patient. Use a mirror and flashlight under the car. Most small leaks are at rubber connections that hardened with age."
+    },
+    {
+      "code": "P0443",
+      "name": "Evaporative Emission System Purge Control Valve Circuit",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Failed purge control valve solenoid",
+        "Open or short in purge valve wiring",
+        "Corroded connector at purge valve",
+        "ECM purge driver failure"
+      ],
+      "fix_steps": [
+        "Measure purge valve solenoid resistance — typically 20-40 ohms",
+        "Check for power and ground at purge valve connector",
+        "Inspect wiring for damage",
+        "Replace purge valve if resistance is out of spec or wiring checks good"
+      ],
+      "field_tricks": "On Hondas, the purge valve is under the intake manifold and a pain to access. Buy the part first and have it ready — you don't want to pull the manifold twice."
+    },
+    {
+      "code": "P0446",
+      "name": "Evaporative Emission System Vent Control Circuit",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Failed EVAP vent solenoid",
+        "Clogged vent filter (at charcoal canister)",
+        "Wiring issue to vent solenoid",
+        "Spider webs or debris blocking canister vent port"
+      ],
+      "fix_steps": [
+        "Locate vent solenoid (usually near charcoal canister under vehicle)",
+        "Command vent closed with scan tool — should hear click and block airflow",
+        "Check vent filter for blockage",
+        "Measure solenoid resistance",
+        "Replace vent solenoid if stuck or no click"
+      ],
+      "field_tricks": "Spiders love to nest in the charcoal canister vent port. Before buying any parts, pull the vent hose off the canister and look inside. A spider web blocking the vent causes this code and costs nothing to fix."
+    },
+    {
+      "code": "P0449",
+      "name": "Evaporative Emission System Vent Valve/Solenoid Circuit",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Failed vent valve solenoid",
+        "Open or short in vent valve circuit wiring",
+        "Connector corrosion (valve is under vehicle)",
+        "ECM driver circuit failure"
+      ],
+      "fix_steps": [
+        "Locate vent valve solenoid — usually near charcoal canister at rear of vehicle",
+        "Check connector for corrosion from road spray",
+        "Measure solenoid resistance — typically 20-40 ohms",
+        "Verify power supply and ECM ground signal",
+        "Replace vent valve if resistance out of spec"
+      ],
+      "field_tricks": "On GM trucks, the vent solenoid is behind the rear wheel on the frame rail. Road salt and water destroy the connector every 5-7 years. Clean it up and apply dielectric grease — sometimes that's all it needs."
+    },
+    {
+      "code": "P0455",
+      "name": "Evaporative Emission System Large Leak Detected",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Gas cap missing, loose, or cross-threaded",
+        "EVAP hose disconnected",
+        "Purge valve stuck wide open",
+        "Charcoal canister cracked",
+        "Fuel tank leak at sender gasket"
+      ],
+      "fix_steps": [
+        "Check gas cap — retighten or replace",
+        "Visual inspection of all EVAP hoses — look for disconnected or broken lines",
+        "Smoke test at 1-2 PSI — large leaks are usually easy to find",
+        "Check purge valve — if stuck open, intake vacuum will pull through system",
+        "Inspect charcoal canister for cracks"
+      ],
+      "field_tricks": "Large leak is actually easier to find than small leak. Start with the gas cap. Then look at every hose and connection. Smoke test makes it a 5-minute job. Most common cause is someone left the gas cap off."
+    },
+    {
+      "code": "P0456",
+      "name": "Evaporative Emission System Very Small Leak Detected",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Gas cap seal slightly worn",
+        "Tiny crack in EVAP line (hairline)",
+        "Very small leak at fuel tank seal",
+        "EVAP system aging — multiple micro-leaks"
+      ],
+      "fix_steps": [
+        "Replace gas cap with OEM — first and cheapest fix",
+        "Low-pressure smoke test (0.5 PSI) with patience",
+        "Check all connections with soapy water if smoke machine unavailable",
+        "Inspect fuel tank top seals",
+        "May need to replace hardened hoses that pass smoke but leak under thermal cycling"
+      ],
+      "field_tricks": "Very small leak codes often come and go with temperature. The leak may only show when the system heats up and cools down. Try smoke testing with engine at operating temp — things expand and leak that looked fine cold."
+    },
+    {
+      "code": "P0500",
+      "name": "Vehicle Speed Sensor Malfunction",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Failed vehicle speed sensor (VSS)",
+        "Damaged VSS wiring or connector",
+        "Transmission output shaft speed sensor failure",
+        "Instrument cluster failure (if VSS signal routes through cluster)",
+        "Tone ring damage on output shaft"
+      ],
+      "fix_steps": [
+        "Check if speedometer works — if dead, confirms VSS issue",
+        "Locate VSS on transmission — clean connector, check wiring",
+        "Measure VSS output with scope while driving or spinning shaft",
+        "Check tone ring through sensor bore for damaged teeth",
+        "Replace VSS if signal is absent or erratic"
+      ],
+      "field_tricks": "On older Hondas, the VSS signal goes through the instrument cluster first. If the cluster has a bad solder joint, you get P0500 and the ECM thinks the car is stopped. Resolder the cluster before replacing the VSS."
+    },
+    {
+      "code": "P0505",
+      "name": "Idle Air Control System Malfunction",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Carbon buildup in IAC valve or throttle body bore",
+        "Failed IAC valve motor",
+        "Vacuum leak affecting idle control",
+        "Dirty throttle body (electronic throttle systems)",
+        "IAC wiring or connector issue"
+      ],
+      "fix_steps": [
+        "Clean throttle body and IAC passages with TB cleaner",
+        "Test IAC valve — should buzz or click when commanded",
+        "Check for vacuum leaks that would affect idle",
+        "Verify IAC wiring and connector integrity",
+        "Perform idle relearn procedure after cleaning",
+        "Replace IAC valve if cleaning doesn't restore proper operation"
+      ],
+      "field_tricks": "Before replacing an IAC valve, clean the throttle body. 9 times out of 10, the idle problem is carbon on the throttle plate, not the IAC. Save the customer $150."
+    },
+    {
+      "code": "P0507",
+      "name": "Idle Control System RPM Higher Than Expected",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Vacuum leak (most common cause of high idle)",
+        "Throttle body not closing fully (carbon buildup)",
+        "IAC valve stuck open",
+        "Fast idle thermo valve stuck (older vehicles)",
+        "Air leak after throttle body"
+      ],
+      "fix_steps": [
+        "Check for vacuum leaks with smoke test or brake cleaner spray",
+        "Clean throttle body — verify plate closes fully",
+        "Check IAC valve position — should close at warm idle",
+        "Verify no air leaks at intake manifold gasket",
+        "Reset idle after repairs — key on 10 sec, start, idle 3 min with AC off"
+      ],
+      "field_tricks": "High idle after a repair? Check if you left a vacuum hose off. It happens to everyone. Also check if the brake booster hose is cracked — that's a massive vacuum leak that causes high idle."
+    },
+    {
+      "code": "P0520",
+      "name": "Engine Oil Pressure Sensor/Switch Circuit",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed oil pressure sensor/switch",
+        "Low oil level or low oil pressure (dangerous)",
+        "Wiring issue to oil pressure sensor",
+        "Clogged oil pickup screen",
+        "Worn oil pump"
+      ],
+      "fix_steps": [
+        "CHECK OIL LEVEL FIRST — low oil kills engines",
+        "If oil level is good, install mechanical oil pressure gauge to verify actual pressure",
+        "Should read 25-65 PSI at operating temp, 10+ PSI at idle",
+        "If actual pressure is good, replace oil pressure sensor",
+        "If actual pressure is low, check oil pump and pickup screen"
+      ],
+      "field_tricks": "Never assume this is just a bad sensor. Verify with a real gauge. A $5 sensor replacement doesn't fix a $5000 engine failure. Low oil pressure + ticking noise = stop the engine immediately."
+    },
+    {
+      "code": "P0562",
+      "name": "System Voltage Low",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Failing alternator (low output)",
+        "Worn or loose serpentine belt",
+        "Bad battery or battery connections",
+        "Excessive parasitic drain",
+        "Corroded ground connections"
+      ],
+      "fix_steps": [
+        "Check battery voltage — should be 12.6V resting, 13.5-14.5V running",
+        "Load test battery — many auto parts stores do this free",
+        "Check alternator output with multimeter at battery while running",
+        "Inspect serpentine belt tension and condition",
+        "Clean and tighten battery terminals and chassis grounds"
+      ],
+      "field_tricks": "Most 'alternator failures' are actually bad battery connections. Clean both terminals with a wire brush, tighten to spec, and recheck before buying a new alternator. Saves $300."
+    },
+    {
+      "code": "P0600",
+      "name": "Serial Communication Link Malfunction",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "CAN bus communication failure",
+        "Damaged wiring in CAN bus network",
+        "Failed ECM/PCM",
+        "Terminated CAN bus (missing termination resistor)",
+        "Water intrusion in under-dash connectors"
+      ],
+      "fix_steps": [
+        "Check for multiple U-codes (communication loss) alongside P0600",
+        "Measure CAN bus resistance between CAN-H and CAN-L — should be 60 ohms",
+        "Inspect CAN bus wiring for damage, especially at connectors",
+        "Check for water intrusion under dash (common with leaking windshields)",
+        "If CAN bus resistance is wrong, isolate modules to find shorted unit"
+      ],
+      "field_tricks": "If you see P0600 with a bunch of U-codes, it's almost always a CAN bus wiring issue, not the ECM. Measure 60 ohms between CAN-H and CAN-L at the DLC. If you get 120 ohms, one terminator is missing. If you get 0 ohms, something is shorted."
+    },
+    {
+      "code": "P0601",
+      "name": "Internal Control Module Memory Check Sum Error",
+      "equipment_type": "engine",
+      "severity": "critical",
+      "probable_causes": [
+        "ECM/PCM internal memory failure",
+        "Power supply issue to ECM causing memory corruption",
+        "Failed ECM reprogramming attempt",
+        "Water damage to ECM",
+        "Aftermarket tuner corrupted ECM memory"
+      ],
+      "fix_steps": [
+        "Check ECM power and ground circuits first",
+        "Attempt ECM reflash/reprogram with factory software",
+        "Check for water damage at ECM location",
+        "If reflash fails, ECM replacement is needed",
+        "After ECM replacement, program VIN, mileage, and relearn all sensors"
+      ],
+      "field_tricks": "Before spending $800+ on an ECM, try disconnecting the battery for 30 minutes and reconnecting. Some memory errors are from voltage spikes and clear themselves. Also try a reflash at the dealer — it's cheaper than a new ECM."
+    },
+    {
+      "code": "P0700",
+      "name": "Transmission Control System Malfunction",
+      "equipment_type": "transmission",
+      "severity": "high",
+      "probable_causes": [
+        "TCM detected an internal fault — check for specific trans codes",
+        "CAN bus communication issue between ECM and TCM",
+        "Low transmission fluid level",
+        "Wiring harness damage between ECM and TCM",
+        "Failed TCM"
+      ],
+      "fix_steps": [
+        "P0700 is an informational code — check for accompanying specific transmission codes",
+        "Read TCM codes separately (some scan tools only read ECM by default)",
+        "Check transmission fluid level and condition",
+        "Verify CAN bus communication between modules",
+        "Address the specific transmission code that triggered P0700"
+      ],
+      "field_tricks": "P0700 alone tells you nothing. It just says the transmission module flagged something. You MUST pull the specific transmission code (P07xx, P08xx, or manufacturer-specific) to know what's actually wrong."
+    },
+    {
+      "code": "P0705",
+      "name": "Transmission Range Sensor Circuit Malfunction (PRNDL Input)",
+      "equipment_type": "transmission",
+      "severity": "medium",
+      "probable_causes": [
+        "Failed transmission range sensor (neutral safety switch)",
+        "Misadjusted range sensor on transmission",
+        "Corroded connector at range sensor",
+        "Damaged wiring between range sensor and TCM",
+        "Internal short in range sensor"
+      ],
+      "fix_steps": [
+        "Check if gear indicator on dash matches actual gear selection",
+        "Inspect range sensor connector for corrosion",
+        "Adjust range sensor if out of alignment (common after trans removal)",
+        "Measure sensor resistance in each gear position — compare to spec",
+        "Replace range sensor if adjustment doesn't resolve"
+      ],
+      "field_tricks": "After any transmission R&R, always check range sensor adjustment. If the car won't start in Park but starts in Neutral, the range sensor is off by one detent. Loosen, shift to Neutral, re-center, retighten."
+    },
+    {
+      "code": "P0715",
+      "name": "Input/Turbine Speed Sensor Circuit Malfunction",
+      "equipment_type": "transmission",
+      "severity": "high",
+      "probable_causes": [
+        "Failed input speed sensor inside transmission",
+        "Damaged sensor wiring or connector",
+        "Metal debris on sensor tip (magnetic pickup)",
+        "Damaged tone ring inside transmission",
+        "Low or contaminated transmission fluid"
+      ],
+      "fix_steps": [
+        "Check transmission fluid level and condition — burnt fluid = internal damage",
+        "Read input and output speed sensor data on scan tool",
+        "If input speed reads 0 while driving, sensor or wiring is bad",
+        "Inspect external wiring and connector first",
+        "If wiring OK, sensor is internal and requires pan drop or trans removal"
+      ],
+      "field_tricks": "On Chrysler transmissions (42RE, 45RFE), the input speed sensor is on the outside of the case — easy to replace without dropping the pan. On most others, it's internal. Check the service manual before quoting labor."
+    },
+    {
+      "code": "P0720",
+      "name": "Output Speed Sensor Circuit Malfunction",
+      "equipment_type": "transmission",
+      "severity": "high",
+      "probable_causes": [
+        "Failed output speed sensor",
+        "Damaged wiring or connector at sensor",
+        "Metal debris on magnetic sensor tip",
+        "Damaged tone ring on output shaft",
+        "TCM input circuit failure"
+      ],
+      "fix_steps": [
+        "Check if speedometer works — output speed sensor often feeds speedometer",
+        "Inspect sensor connector for damage or corrosion",
+        "Measure sensor resistance — compare to spec",
+        "Clean sensor tip of any metal debris",
+        "Replace sensor — usually externally accessible on trans case"
+      ],
+      "field_tricks": "If the speedometer is dead AND you have P0720, it's definitely the output speed sensor. If the speedo works fine, the issue may be in the circuit between the sensor and the TCM, not the sensor itself."
+    },
+    {
+      "code": "P0730",
+      "name": "Incorrect Gear Ratio",
+      "equipment_type": "transmission",
+      "severity": "high",
+      "probable_causes": [
+        "Worn clutch packs inside transmission",
+        "Slipping transmission bands",
+        "Low or degraded transmission fluid",
+        "Failed shift solenoid not engaging gear fully",
+        "Torque converter clutch slipping"
+      ],
+      "fix_steps": [
+        "Check transmission fluid level and condition",
+        "Monitor input vs output speed ratio in each gear with scan tool",
+        "Compare calculated gear ratio to spec — if off, clutch packs are slipping",
+        "Check shift solenoid operation",
+        "If gear ratio is consistently wrong, internal rebuild or replacement needed"
+      ],
+      "field_tricks": "Compare actual gear ratio to spec using input/output speed. If 1st gear should be 2.84:1 and you're seeing 2.20:1, the clutch pack is slipping. This is usually an internal repair — budget for a rebuild."
+    },
+    {
+      "code": "P0740",
+      "name": "Torque Converter Clutch Circuit Malfunction",
+      "equipment_type": "transmission",
+      "severity": "medium",
+      "probable_causes": [
+        "Failed TCC solenoid in transmission",
+        "Wiring issue in internal trans harness",
+        "Sticking TCC apply valve in valve body",
+        "TCM driver circuit failure",
+        "Contaminated transmission fluid clogging solenoid"
+      ],
+      "fix_steps": [
+        "Check for shudder at highway speed (TCC engagement)",
+        "Monitor TCC slip with scan tool — should be near 0 RPM when engaged",
+        "Check TCC solenoid resistance through external connector",
+        "Inspect trans fluid for debris or burnt smell",
+        "Drop pan and inspect valve body for stuck TCC apply valve"
+      ],
+      "field_tricks": "TCC shudder at 40-50 mph lockup is very common. Try a full fluid flush and replace with the correct OEM-spec fluid (not generic ATF). Some transmissions are extremely fluid-sensitive — wrong fluid causes shudder."
+    },
+    {
+      "code": "P0741",
+      "name": "Torque Converter Clutch Circuit Performance/Stuck Off",
+      "equipment_type": "transmission",
+      "severity": "medium",
+      "probable_causes": [
+        "TCC solenoid stuck off or weak",
+        "TCC apply circuit restricted in valve body",
+        "Worn torque converter clutch material",
+        "Internal transmission pressure problem",
+        "Wiring issue preventing TCC solenoid activation"
+      ],
+      "fix_steps": [
+        "Monitor TCC slip on scan tool — high slip when commanded on = not engaging",
+        "Command TCC on manually with scan tool — watch for engagement",
+        "Check TCC solenoid function",
+        "Inspect valve body for stuck TCC apply valve or clogged passages",
+        "If converter clutch material is worn, replace torque converter"
+      ],
+      "field_tricks": "Before pulling the transmission for a converter, try commanding the TCC on with a scan tool. If it engages when commanded but not automatically, the issue is in the TCM logic or a sensor — not the converter."
+    },
+    {
+      "code": "P0750",
+      "name": "Shift Solenoid A Malfunction",
+      "equipment_type": "transmission",
+      "severity": "high",
+      "probable_causes": [
+        "Failed shift solenoid A (stuck or electrically open)",
+        "Internal transmission wiring harness fault",
+        "Clogged solenoid from contaminated fluid",
+        "TCM driver circuit failure",
+        "Valve body issue preventing solenoid function"
+      ],
+      "fix_steps": [
+        "Check transmission fluid condition — burnt or dark = internal contamination",
+        "Measure solenoid resistance through external connector",
+        "Command solenoid on/off with scan tool — listen for click",
+        "Drop pan and inspect solenoid for debris",
+        "Replace solenoid pack if individual solenoid not serviceable",
+        "Flush and refill with correct spec fluid"
+      ],
+      "field_tricks": "On most modern transmissions, solenoids come as a pack (solenoid body). You can't replace just one. Budget for the full pack plus fluid. While you have the pan off, replace the filter too."
+    },
+    {
+      "code": "P0171",
+      "name": "System Too Lean (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Vacuum leak (intake manifold gasket, PCV hose, brake booster line)",
+        "Weak fuel pump or clogged fuel filter",
+        "Dirty or failed MAF sensor reading low",
+        "Leaking fuel injector O-rings",
+        "Cracked or disconnected vacuum hose"
+      ],
+      "fix_steps": [
+        "Check long-term fuel trim at idle and at 2500 RPM",
+        "Smoke test intake for vacuum leaks",
+        "Clean MAF sensor with MAF cleaner",
+        "Check fuel pressure",
+        "Inspect PCV valve, brake booster hose, and all small vacuum lines"
+      ],
+      "field_tricks": "LTFT high at idle but normal at cruise = vacuum leak. LTFT high everywhere = fuel delivery. That one rule saves hours."
+    },
+    {
+      "code": "P1131",
+      "name": "Lack of HO2S Switch — Sensor Indicates Lean (Ford)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Vacuum leak on bank 1 side",
+        "Failed upstream O2 sensor bank 1",
+        "Low fuel pressure",
+        "Exhaust leak before upstream O2 sensor",
+        "Intake manifold runner control stuck"
+      ],
+      "fix_steps": [
+        "Check long-term fuel trim bank 1 — high positive = lean",
+        "Smoke test for vacuum leaks around intake manifold",
+        "Monitor O2 sensor waveform — should toggle between rich and lean",
+        "Check fuel pressure — 35-45 PSI at idle on Ford EFI",
+        "Inspect intake manifold runner control for binding"
+      ],
+      "field_tricks": "Ford-specific code. On 4.6L and 5.4L, check the intake manifold runner flaps (IMRC). If they're stuck or the actuator is broken, bank 1 runs lean. The actuator rod end pops off the ball stud."
+    },
+    {
+      "code": "P1151",
+      "name": "Lack of HO2S Switch — Sensor Indicates Lean (Ford Bank 2)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Vacuum leak on bank 2 side",
+        "Failed upstream O2 sensor bank 2",
+        "Low fuel pressure",
+        "Exhaust leak before bank 2 upstream O2",
+        "PCV valve issue"
+      ],
+      "fix_steps": [
+        "Same approach as P1131 but on bank 2",
+        "Compare LTFT bank 1 vs bank 2",
+        "Smoke test bank 2 intake runners",
+        "Check fuel pressure under load",
+        "Replace O2 sensor only after confirming no lean condition"
+      ],
+      "field_tricks": "If both P1131 and P1151 set together on a Ford, it's a system-wide lean condition — fuel pressure, MAF, or a big vacuum leak. Don't replace O2 sensors until you find the root cause."
+    },
+    {
+      "code": "P1259",
+      "name": "VTEC System Malfunction (Honda)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Low oil pressure at VTEC solenoid",
+        "Failed VTEC solenoid valve",
+        "Clogged VTEC solenoid screen (oil sludge)",
+        "VTEC pressure switch failure",
+        "Low oil level"
+      ],
+      "fix_steps": [
+        "Check oil level and condition — change if overdue",
+        "Remove VTEC solenoid and inspect screen for sludge",
+        "Clean screen with brake cleaner or replace solenoid",
+        "Test VTEC solenoid valve — apply 12V, should click and pass oil",
+        "Check VTEC pressure switch operation"
+      ],
+      "field_tricks": "Honda VTEC code is almost always the solenoid screen clogged with sludge. Pull the solenoid off the head, pop out the little screen, clean it with brake cleaner, reinstall. 20-minute fix that most shops charge for a full solenoid replacement."
+    },
+    {
+      "code": "P1345",
+      "name": "Crankshaft/Camshaft Position Correlation (GM)",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Distributor out of position (older GM V8)",
+        "Cam sensor out of time with crank",
+        "Timing chain stretch",
+        "Distributor gear wear",
+        "Aftermarket distributor installed incorrectly"
+      ],
+      "fix_steps": [
+        "Set engine to TDC #1 compression stroke",
+        "Check distributor rotor position — should point to #1 terminal",
+        "Loosen distributor and adjust cam retard angle on scan tool to 0 degrees",
+        "If no distributor (LS engine), check timing chain stretch",
+        "Verify cam sensor correlation with crank sensor using scope"
+      ],
+      "field_tricks": "On GM 5.3L/5.7L/4.3L with distributor, this code means the distributor is one tooth off. Set #1 TDC, loosen distributor, watch cam retard on scan tool, set to 0 degrees, tighten. 10-minute fix."
+    },
+    {
+      "code": "P1399",
+      "name": "Random Misfire (Honda-Specific)",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Worn distributor cap and rotor (older Hondas)",
+        "Valve adjustment needed (Honda/Acura specific)",
+        "EGR valve stuck open or leaking",
+        "Ignition coil deterioration",
+        "Carbon buildup on intake valves"
+      ],
+      "fix_steps": [
+        "Check valve lash — Honda engines need periodic valve adjustment",
+        "Inspect distributor cap and rotor for carbon tracking",
+        "Test EGR valve — command closed, check for improvement",
+        "Inspect ignition components",
+        "If high mileage, perform intake valve cleaning"
+      ],
+      "field_tricks": "Honda's are the ONLY common passenger cars that still need valve adjustment. Tight intake valves cause misfire at idle and can burn valves. Check clearance every 60K miles on any Honda 4-cylinder."
+    },
+    {
+      "code": "P1516",
+      "name": "Throttle Actuator Control Module Throttle Actuator Position Performance (GM)",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Carbon buildup on electronic throttle body bore and plate",
+        "Failed throttle actuator motor",
+        "APP sensor correlation issue",
+        "Throttle body needs relearn after cleaning or replacement",
+        "Wiring issue to throttle body"
+      ],
+      "fix_steps": [
+        "Clean throttle body bore and plate with TB cleaner",
+        "Perform throttle body relearn: key on 10 seconds, start, idle 3 minutes, turn off, restart",
+        "Check APP sensor readings — both sensors should track smoothly",
+        "If cleaning and relearn don't fix it, replace throttle body assembly",
+        "Verify 5V reference and grounds at TB connector"
+      ],
+      "field_tricks": "On GM trucks and SUVs, this code with reduced power is almost always a dirty throttle body. Clean it, do the relearn, and it's fixed. Don't sell a throttle body until you've cleaned and relearned first."
+    },
+    {
+      "code": "P2096",
+      "name": "Post Catalyst Fuel Trim System Too Lean (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Exhaust leak between catalytic converter and downstream O2 sensor",
+        "Failing downstream O2 sensor",
+        "Catalytic converter inefficiency",
+        "Air injection system malfunction (if equipped)"
+      ],
+      "fix_steps": [
+        "Check for exhaust leaks at converter flange and downstream pipe",
+        "Monitor downstream O2 sensor — should be relatively flat around 0.5-0.7V",
+        "Compare upstream and downstream O2 signals",
+        "Check air injection system if equipped",
+        "Replace downstream O2 sensor if biased lean with no leaks present"
+      ],
+      "field_tricks": "This one is tricky. Check the downstream O2 sensor bung for being loose first. A loose sensor lets air in and reads lean without any actual exhaust leak. Retorque the sensor to 30-37 ft-lbs."
+    },
+    {
+      "code": "P2097",
+      "name": "Post Catalyst Fuel Trim System Too Rich (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Downstream O2 sensor contaminated or failing",
+        "Catalytic converter saturated from rich running",
+        "Oil burning past rings or valve seals contaminating converter",
+        "Leaking fuel injector downstream of converter"
+      ],
+      "fix_steps": [
+        "Check for engine oil consumption — blue smoke from exhaust",
+        "Monitor downstream O2 sensor voltage — stuck high indicates rich or contaminated sensor",
+        "Verify no active upstream rich condition (P0172)",
+        "Inspect catalyst for contamination",
+        "Replace downstream O2 sensor if contaminated"
+      ],
+      "field_tricks": "If the engine is burning oil and the downstream O2 reads rich, fixing the oil consumption fixes the code. Replacing the sensor is a waste if oil is still getting into the exhaust."
+    },
+    {
+      "code": "P2135",
+      "name": "Throttle/Pedal Position Sensor Voltage Correlation",
+      "equipment_type": "engine",
+      "severity": "critical",
+      "probable_causes": [
+        "Failed accelerator pedal position (APP) sensor",
+        "Failed throttle position sensor in throttle body",
+        "5V reference circuit shorted between TPS and APP",
+        "Wiring short or ground fault in throttle control circuit",
+        "Water intrusion in pedal assembly connector"
+      ],
+      "fix_steps": [
+        "Check both APP sensor voltages — should be within correlation spec at all positions",
+        "Check TPS sensor voltages in throttle body — two sensors must agree",
+        "Verify 5V reference is clean and stable (no noise or dropout)",
+        "Inspect wiring from APP to ECM and TPS to ECM for shorts",
+        "Replace APP sensor assembly if correlation error is at pedal side",
+        "Replace throttle body if correlation error is at TB side"
+      ],
+      "field_tricks": "This code causes limp mode (reduced engine power). The car limits to ~1500 RPM. Check the pedal connector first — water intrusion is common on driver's side floor. A wet connector causes intermittent correlation faults."
+    },
+    {
+      "code": "P2138",
+      "name": "Throttle/Pedal Position Sensor D/E Voltage Correlation",
+      "equipment_type": "engine",
+      "severity": "critical",
+      "probable_causes": [
+        "Failed APP sensor module",
+        "Wiring damage in APP sensor harness",
+        "Floor mat pressing on accelerator pedal causing abnormal range",
+        "Water damage to pedal sensor connector",
+        "ECM APP input circuit failure"
+      ],
+      "fix_steps": [
+        "Verify floor mats are not interfering with pedal movement",
+        "Check APP sensor D and E voltages — should track proportionally",
+        "Inspect pedal sensor connector for water, corrosion, or bent pins",
+        "Measure voltages while slowly pressing pedal — look for dropouts or jumps",
+        "Replace APP sensor assembly if voltages don't track correctly"
+      ],
+      "field_tricks": "Check the floor mat first. Seriously. An aftermarket floor mat that's too thick or not secured can press on the pedal and cause this code. Pull the mat, clear the code, and test drive before ordering parts."
+    },
+    {
+      "code": "P2270",
+      "name": "O2 Sensor Signal Stuck Lean (Bank 1 Sensor 2)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Downstream O2 sensor failure",
+        "Exhaust leak at downstream sensor location",
+        "Catalytic converter efficiency problem",
+        "Wiring issue — signal wire shorted to ground"
+      ],
+      "fix_steps": [
+        "Check for exhaust leaks at downstream sensor and converter flange",
+        "Monitor downstream O2 voltage — should read 0.5-0.8V on a healthy catalyst",
+        "If stuck below 0.2V, check wiring for short to ground",
+        "Replace downstream O2 sensor if confirmed stuck lean",
+        "Recheck after replacement — may also have catalyst issue"
+      ],
+      "field_tricks": "A downstream sensor stuck lean usually means either the sensor is dead or there's an exhaust leak. Check the sensor gasket or sealing washer — if it's missing, outside air gets in and reads lean."
+    },
+    {
+      "code": "P0087",
+      "name": "Fuel Rail Pressure Too Low",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failing high-pressure fuel pump (GDI engines)",
+        "Clogged fuel filter",
+        "Low-pressure fuel pump weak or failing",
+        "Fuel pressure regulator malfunction",
+        "Leaking fuel injector or fuel rail seal"
+      ],
+      "fix_steps": [
+        "Check low-side fuel pressure first (tank pump) — should be 55+ PSI",
+        "Monitor high-side rail pressure on scan tool — compare desired vs actual",
+        "Check fuel filter if accessible (many modern cars have non-serviceable filters in tank)",
+        "Listen for high-pressure pump operation at crank — mechanical ticking",
+        "Replace high-pressure fuel pump if output is low under load"
+      ],
+      "field_tricks": "On GDI engines, the high-pressure pump is driven by a cam lobe. Check the cam lobe and pump follower for wear — a worn lobe causes low rail pressure at high RPM that you won't catch at idle."
+    },
+    {
+      "code": "P0088",
+      "name": "Fuel Rail Pressure Too High",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Fuel pressure regulator stuck closed",
+        "Restricted fuel return line",
+        "Faulty fuel rail pressure sensor reading low (causing over-compensation)",
+        "High-pressure pump control solenoid stuck active",
+        "ECM issue commanding too much fuel pressure"
+      ],
+      "fix_steps": [
+        "Monitor rail pressure on scan tool — if actual exceeds desired by 500+ PSI, regulator or control issue",
+        "Check fuel return line for restrictions or kinks",
+        "Verify fuel rail pressure sensor accuracy with known-good gauge",
+        "Check high-pressure pump control solenoid — should modulate, not be stuck on",
+        "Replace fuel pressure regulator if return line is clear and sensor is accurate"
+      ],
+      "field_tricks": "Over-pressure in a GDI fuel rail is dangerous — injectors can stick open and hydrolock the engine. If you see rail pressure over 2500 PSI (most systems target 1500-2200), stop the engine and fix it before running."
+    },
+    {
+      "code": "P0106",
+      "name": "Manifold Absolute Pressure Sensor Range/Performance",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Vacuum hose to MAP sensor cracked or disconnected",
+        "MAP sensor contaminated with oil or carbon",
+        "Failed MAP sensor",
+        "Intake manifold vacuum leak affecting MAP reading",
+        "Altitude change if code set during mountain driving"
+      ],
+      "fix_steps": [
+        "Inspect vacuum hose from MAP sensor to intake manifold",
+        "Read MAP sensor value at KOEO — should read barometric pressure (~100 kPa at sea level)",
+        "At idle, MAP should read 25-35 kPa (high vacuum)",
+        "Snap throttle — MAP should spike to near barometric then drop back",
+        "Replace MAP sensor if values don't change correctly"
+      ],
+      "field_tricks": "If the MAP reads barometric at idle (same as key on engine off), you have a massive vacuum leak or the hose fell off the sensor. If it reads 0 at idle, the sensor is shorted internally."
+    },
+    {
+      "code": "P0118",
+      "name": "Engine Coolant Temperature Circuit High Input",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Open circuit in ECT sensor wiring",
+        "ECT sensor connector unplugged",
+        "Failed ECT sensor (open internally)",
+        "Corroded or damaged connector pins"
+      ],
+      "fix_steps": [
+        "Check ECT sensor connector — make sure plugged in",
+        "Measure ECT resistance — should be 2-3k ohms at 70F, 200-300 ohms at 200F",
+        "Verify 5V reference at sensor connector",
+        "Check wiring for breaks or corrosion",
+        "Replace sensor if open circuit confirmed"
+      ],
+      "field_tricks": "ECT high input means the ECM sees extremely cold temp (below -40F). That's an open circuit signature. Check the connector first — they love to vibrate loose."
+    },
+    {
+      "code": "P0125",
+      "name": "Insufficient Coolant Temperature for Closed Loop Fuel Control",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Thermostat stuck open",
+        "ECT sensor reading too low",
+        "Low coolant level causing slow warmup",
+        "Short trips — engine never fully warms up"
+      ],
+      "fix_steps": [
+        "Monitor ECT on scan tool during warmup — should reach 190F+ within 5-8 minutes",
+        "If temp plateaus low, replace thermostat",
+        "Verify ECT sensor accuracy with infrared thermometer comparison",
+        "Check coolant level and bleed air from system"
+      ],
+      "field_tricks": "This often sets in cold climates when people only drive 5 minutes. The engine never reaches operating temp. A grill cover or winter front can help. But if it sets in summer, it's the thermostat for sure."
+    },
+    {
+      "code": "P0155",
+      "name": "O2 Sensor Heater Circuit Malfunction (Bank 2 Sensor 1)",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Failed upstream O2 sensor heater bank 2",
+        "Blown heater circuit fuse",
+        "Corroded connector from engine heat",
+        "Wiring damage in bank 2 O2 harness"
+      ],
+      "fix_steps": [
+        "Check O2 heater fuse",
+        "Measure bank 2 upstream O2 heater resistance — 2-15 ohms typical",
+        "Inspect connector for heat damage",
+        "Check for battery voltage supply to heater circuit",
+        "Replace O2 sensor if heater element is open"
+      ],
+      "field_tricks": "Bank 2 sensor 1 is usually the one on the passenger side (most transverse engines are opposite). Verify which bank is which before buying the sensor — putting the wrong one in costs you another trip."
+    },
+    {
+      "code": "P0305",
+      "name": "Cylinder 5 Misfire Detected",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed coil-on-plug on cylinder 5",
+        "Fouled or worn spark plug",
+        "Fuel injector 5 clogged or dead",
+        "Low compression cylinder 5",
+        "Intake manifold runner leak near cylinder 5"
+      ],
+      "fix_steps": [
+        "Coil swap test — move cyl 5 coil to another cylinder",
+        "If misfire follows, replace coil",
+        "Check spark plug gap and condition",
+        "Test injector with noid light",
+        "Compression test if ignition and fuel check out"
+      ],
+      "field_tricks": "On Ford 4.6L/5.4L, cylinder 5 is passenger side rear and hard to access. Use a ratcheting wrench for the coil bolt. Don't drop the bolt into the valley — use a magnetic pickup."
+    },
+    {
+      "code": "P0306",
+      "name": "Cylinder 6 Misfire Detected",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed ignition coil cylinder 6",
+        "Worn spark plug",
+        "Fuel injector 6 failure",
+        "Low compression",
+        "Valve train issue on cylinder 6"
+      ],
+      "fix_steps": [
+        "Coil swap test",
+        "Spark plug inspection and replacement",
+        "Injector noid light test",
+        "Compression test",
+        "Check valve train noise on cylinder 6 with stethoscope"
+      ],
+      "field_tricks": "On GM 3.6L V6, cylinder 6 misfires at high mileage are often a collapsed lifter. Listen with a mechanic's stethoscope on the valve cover — a rhythmic ticking is the giveaway."
+    },
+    {
+      "code": "P0307",
+      "name": "Cylinder 7 Misfire Detected",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed coil-on-plug cylinder 7",
+        "Worn spark plug (rear cylinder runs hotter)",
+        "Fuel injector 7 failure",
+        "Low compression cylinder 7"
+      ],
+      "fix_steps": [
+        "Coil swap test to adjacent cylinder",
+        "Check spark plug — rear cylinders often wear faster",
+        "Test injector operation",
+        "Compression and leak-down test if needed"
+      ],
+      "field_tricks": "Cylinder 7 on a V8 is usually driver side rear — right against the firewall. Plan your tool approach before you start. A swivel spark plug socket and a 12-inch extension save a lot of frustration."
+    },
+    {
+      "code": "P0308",
+      "name": "Cylinder 8 Misfire Detected",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed ignition coil cylinder 8",
+        "Worn spark plug",
+        "Fuel injector 8 failure",
+        "Low compression",
+        "Exhaust valve damage on cylinder 8"
+      ],
+      "fix_steps": [
+        "Coil swap test",
+        "Spark plug inspection",
+        "Injector test",
+        "Compression test if ignition and fuel are good",
+        "Leak-down test to identify valve vs ring failure"
+      ],
+      "field_tricks": "On Ford 5.4L 3-valve, cylinders 7 and 8 are notorious for spark plug blowout (the thread strips out of the aluminum head). If the plug is loose, you need a thread repair kit (Time-Sert). Don't force it."
+    },
+    {
+      "code": "P0341",
+      "name": "Camshaft Position Sensor Circuit Range/Performance",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Timing chain stretch causing signal deviation",
+        "Cam sensor air gap incorrect",
+        "Intermittent cam sensor failure",
+        "Cam reluctor wheel damaged",
+        "VVT system affecting cam position outside expected range"
+      ],
+      "fix_steps": [
+        "Compare cam sensor signal to crank sensor with scope",
+        "Check for timing chain slack",
+        "Verify cam sensor mounting and air gap",
+        "Test VVT solenoid operation",
+        "Replace cam sensor if signal is erratic"
+      ],
+      "field_tricks": "If this code comes with P0016 (crank/cam correlation), the timing chain has probably jumped. Don't replace just the sensor — check the chain and tensioner first."
+    },
+    {
+      "code": "P0411",
+      "name": "Secondary Air Injection System Incorrect Flow Detected",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Failed secondary air pump (AIR pump)",
+        "Check valve stuck closed preventing air flow",
+        "Clogged air injection passages in cylinder head",
+        "Failed air pump relay",
+        "Carbon buildup blocking air injection ports"
+      ],
+      "fix_steps": [
+        "Listen for air pump operation on cold start — should run for 1-2 minutes",
+        "Check air pump fuse and relay",
+        "Verify check valve allows air flow in one direction only",
+        "Inspect air injection passages in exhaust ports for carbon blockage",
+        "Replace air pump if motor doesn't spin"
+      ],
+      "field_tricks": "On Subaru boxers, the air injection ports in the heads clog with carbon. You can rod them out with a coat hanger through the check valve port. Saves removing the heads."
+    },
+    {
+      "code": "P0420",
+      "name": "Catalyst System Efficiency Below Threshold (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Catalytic converter degraded from age/mileage",
+        "Engine misfire damaging catalyst",
+        "Exhaust leak before downstream sensor",
+        "Downstream O2 sensor failure",
+        "Oil or coolant contamination of catalyst"
+      ],
+      "fix_steps": [
+        "Fix any other codes first — misfires and lean/rich destroy cats",
+        "Compare upstream vs downstream O2 waveforms",
+        "Check for exhaust leaks",
+        "Verify no oil or coolant consumption",
+        "Replace cat if confirmed failed — CARB-compliant in CA"
+      ],
+      "field_tricks": "Before condemning a $1000 cat, check downstream O2 bung for being loose. Even a pinhole leak at a weld makes the sensor read wrong. Tighten sensor and check flanges first."
+    },
+    {
+      "code": "P0496",
+      "name": "Evaporative Emission System High Purge Flow",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Purge valve stuck open",
+        "Purge valve leaking through when closed",
+        "Wiring issue holding purge valve open",
+        "ECM purge driver stuck on"
+      ],
+      "fix_steps": [
+        "Remove purge valve vacuum line — cap the intake port",
+        "If idle quality improves with purge blocked, valve is leaking through",
+        "Apply vacuum to purge valve with no power — should hold vacuum",
+        "If it doesn't hold vacuum, valve is leaking and needs replacement",
+        "Check wiring — shorted signal wire can hold valve open"
+      ],
+      "field_tricks": "A stuck-open purge valve floods the engine with fuel vapor. Symptoms: rich idle, stalling when warm, gas smell. Pinch the purge line — if idle gets better, that's your problem. $25 part."
+    },
+    {
+      "code": "P0521",
+      "name": "Engine Oil Pressure Sensor Range/Performance",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Faulty oil pressure sensor (most common)",
+        "Wiring issue to oil pressure sensor",
+        "Actual oil pressure fluctuation (intermittent pump issue)",
+        "Wrong oil viscosity installed",
+        "Oil pressure relief valve sticking"
+      ],
+      "fix_steps": [
+        "Install mechanical gauge to verify actual oil pressure",
+        "Compare scan tool oil pressure reading to mechanical gauge",
+        "If mechanical pressure is good, replace sensor",
+        "If mechanical pressure fluctuates, check oil pump and relief valve",
+        "Verify correct oil viscosity for engine"
+      ],
+      "field_tricks": "Most of the time this is the sensor, especially on GM trucks with the sensor on the back of the engine near the firewall. It's a pain to access but a $20 sensor fixes it 90% of the time."
+    },
+    {
+      "code": "P0606",
+      "name": "ECM/PCM Processor Fault",
+      "equipment_type": "engine",
+      "severity": "critical",
+      "probable_causes": [
+        "Internal ECM/PCM failure",
+        "Voltage spike damage to ECM",
+        "Water intrusion in ECM housing",
+        "Poor ground connection to ECM",
+        "Software corruption"
+      ],
+      "fix_steps": [
+        "Check ECM power supply and ground circuits — measure voltage at ECM connectors",
+        "Inspect ECM for water damage or corrosion",
+        "Attempt ECM reflash/reprogram with factory tool",
+        "Check for aftermarket devices on CAN bus that could cause interference",
+        "Replace ECM if reflash fails — program VIN, mileage, immobilizer"
+      ],
+      "field_tricks": "Before buying a $1000 ECM, check ALL ground connections. A bad ECM ground causes processor faults, communication errors, and all kinds of phantom codes. Clean and tighten every ground you can find."
+    },
+    {
+      "code": "P0741",
+      "name": "Torque Converter Clutch Performance or Stuck Off",
+      "equipment_type": "transmission",
+      "severity": "medium",
+      "probable_causes": [
+        "TCC solenoid weak or stuck off",
+        "Worn torque converter clutch material",
+        "TCC apply circuit restricted",
+        "Low transmission fluid",
+        "Internal pressure issue"
+      ],
+      "fix_steps": [
+        "Check transmission fluid level and condition",
+        "Monitor TCC slip on scan tool — should be near 0 when engaged",
+        "Command TCC on with scan tool and watch for engagement",
+        "If no engagement, check solenoid and valve body",
+        "Replace torque converter if clutch material worn"
+      ],
+      "field_tricks": "Try a full fluid change with correct OEM-spec fluid before condemning the converter. The wrong ATF fluid causes TCC shudder and engagement issues on many transmissions."
+    },
+    {
+      "code": "P0172",
+      "name": "System Too Rich (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Leaking fuel injector",
+        "High fuel pressure",
+        "Saturated charcoal canister",
+        "MAF sensor contaminated",
+        "ECT sensor reading cold"
+      ],
+      "fix_steps": [
+        "Check fuel pressure at spec",
+        "Test purge valve — block off and check STFT",
+        "Clean MAF sensor",
+        "Verify ECT reads correct operating temp",
+        "Injector leak-down test"
+      ],
+      "field_tricks": "Pull dipstick. If it smells like gas, you've got a leaking injector or bad pressure regulator. Change the oil after fixing it — gas-diluted oil kills bearings."
+    },
+    {
+      "code": "P1000",
+      "name": "OBD System Readiness Test Not Complete (Ford)",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Battery recently disconnected or replaced",
+        "Codes recently cleared",
+        "Not enough drive cycles completed since reset",
+        "Monitor enable conditions not met"
+      ],
+      "fix_steps": [
+        "This is not a fault — it means readiness monitors need to run",
+        "Complete a drive cycle: cold start, idle 2 min, accelerate to 55 mph, cruise 5 min, decel without braking, idle",
+        "Check which monitors are incomplete with scan tool",
+        "Some monitors require specific conditions (fuel level 15-85%, ambient temp above 40F)",
+        "May take 2-3 drive cycles to set all monitors"
+      ],
+      "field_tricks": "For emissions testing: you need all monitors complete (or at most 1 incomplete on older vehicles). Ford's drive cycle is picky — fuel level must be between 15-85% and the car has to be cold-started. Tell the customer NOT to top off the tank before the smog test."
+    },
+    {
+      "code": "P1101",
+      "name": "MAF Sensor Out of Self Test Range (Ford/GM)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Dirty MAF sensor",
+        "Vacuum leak downstream of MAF",
+        "Intake boot cracked or disconnected",
+        "MAF sensor failure"
+      ],
+      "fix_steps": [
+        "Clean MAF sensor with MAF cleaner",
+        "Inspect intake boot for cracks — especially accordion section",
+        "Smoke test from MAF to throttle body for leaks",
+        "Compare MAF reading to spec at idle and snap throttle",
+        "Replace MAF if cleaning doesn't resolve"
+      ],
+      "field_tricks": "On GM, P1101 usually means the MAF and MAP disagree. Clean the MAF first. If that doesn't fix it, look for a vacuum leak between the MAF and the intake manifold — that's where the readings diverge."
+    },
+    {
+      "code": "P2195",
+      "name": "O2 Sensor Signal Stuck Lean (Bank 1 Sensor 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Large vacuum leak on bank 1",
+        "Failed upstream O2 sensor stuck lean",
+        "Low fuel pressure",
+        "MAF sensor reading low (under-reporting airflow)",
+        "Exhaust leak before O2 sensor"
+      ],
+      "fix_steps": [
+        "Check fuel trims — if high positive, system is genuinely lean",
+        "Smoke test for vacuum leaks",
+        "Check fuel pressure under load",
+        "Clean or replace MAF sensor",
+        "Replace O2 sensor only after confirming no lean condition exists"
+      ],
+      "field_tricks": "Stuck lean means the ECM has maxed out its fuel correction trying to compensate. Fix the lean condition first — replacing the O2 sensor won't help if the engine is actually running lean."
+    },
+    {
+      "code": "P2196",
+      "name": "O2 Sensor Signal Stuck Rich (Bank 1 Sensor 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Leaking fuel injector flooding bank 1",
+        "Failed O2 sensor stuck high",
+        "High fuel pressure",
+        "EVAP purge valve stuck open",
+        "Coolant temperature sensor reading falsely cold"
+      ],
+      "fix_steps": [
+        "Check fuel trims — if high negative, system is genuinely rich",
+        "Test purge valve — block off purge line",
+        "Check fuel pressure against spec",
+        "Verify ECT sensor accuracy",
+        "Replace O2 sensor only after confirming no rich condition"
+      ],
+      "field_tricks": "If the O2 sensor reads above 0.9V continuously, try unplugging the sensor. If the code changes from 'stuck rich' to 'low voltage,' the sensor was the problem. If it stays rich, the engine is actually over-fueling."
+    },
+    {
+      "code": "P0463",
+      "name": "Fuel Level Sensor Circuit High Input",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Failed fuel level sender unit",
+        "Wiring issue — short to voltage or open ground",
+        "Fuel pump module connector corroded",
+        "Instrument cluster issue"
+      ],
+      "fix_steps": [
+        "Check fuel gauge reading — stuck on full suggests high input",
+        "Measure fuel level sensor resistance at fuel pump connector",
+        "Most senders: empty = 230 ohms, full = 33 ohms (varies by make)",
+        "If resistance is stuck low, sender float arm may be stuck or sender failed",
+        "Replace fuel level sender — usually requires dropping tank or accessing through trunk"
+      ],
+      "field_tricks": "Before dropping the tank, check the connector at the fuel pump module first. A lot of trucks have an access panel under the rear seat or bed. GM trucks have it under the bed — cut a hole in the bed liner to save dropping the tank."
+    },
+    {
+      "code": "P0108",
+      "name": "Manifold Absolute Pressure Sensor Circuit High Input",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "MAP sensor vacuum hose disconnected or cracked",
+        "MAP sensor shorted internally",
+        "5V reference circuit shorted high",
+        "Large vacuum leak making MAP read high"
+      ],
+      "fix_steps": [
+        "Check MAP vacuum hose — reconnect if disconnected",
+        "Read MAP sensor value — should be 95-100 kPa at KOEO, 25-35 kPa at idle",
+        "If reading stays at 100+ kPa at idle, vacuum hose is off or sensor is bad",
+        "Check 5V reference for overvoltage",
+        "Replace MAP sensor if hose is good and reading is stuck high"
+      ],
+      "field_tricks": "MAP high input = the ECM thinks there's no vacuum. Most of the time the hose just fell off or cracked. Look at the sensor on the intake manifold and check the little rubber hose. 30-second fix."
+    },
+    {
+      "code": "P0341",
+      "name": "Camshaft Position Sensor Range/Performance (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Timing chain stretch causing signal deviation",
+        "Cam sensor intermittent failure",
+        "Reluctor wheel damage",
+        "VVT system issue",
+        "Air gap too large"
+      ],
+      "fix_steps": [
+        "Compare cam signal to crank signal with scope",
+        "Check timing chain for excess slack",
+        "Verify VVT solenoid operation",
+        "Check sensor mounting and gap",
+        "Replace sensor if signal is erratic with good chain"
+      ],
+      "field_tricks": "If this code accompanies P0016, suspect timing chain stretch first. On high-mileage engines, the chain and sensor fail at the same time."
+    },
+    {
+      "code": "P0351",
+      "name": "Ignition Coil A Primary/Secondary Circuit",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed ignition coil A (cylinder 1 on most engines)",
+        "Coil connector damaged or corroded",
+        "Coil driver circuit in ECM failed",
+        "Wiring open or short in coil primary circuit",
+        "Spark plug gap too wide overloading coil"
+      ],
+      "fix_steps": [
+        "Measure coil primary resistance — typically 0.3-1.0 ohms",
+        "Measure secondary resistance — typically 5,000-15,000 ohms",
+        "Check for power supply at coil connector (battery voltage)",
+        "Verify ECM trigger signal with scope or test light",
+        "Swap coil with known good — if code moves, coil is bad"
+      ],
+      "field_tricks": "COP (coil-on-plug) coils fail from heat cycling and spark plug gap wear. When replacing a coil, always replace the spark plug at the same time. A worn plug with wide gap kills the new coil fast."
+    },
+    {
+      "code": "P0014",
+      "name": "Exhaust Camshaft Position Timing Over-Advanced (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Exhaust cam phaser stuck advanced",
+        "Exhaust VVT solenoid stuck open",
+        "Low oil pressure to exhaust cam phaser",
+        "Sludge in oil passages to exhaust phaser",
+        "Stretched timing chain affecting exhaust cam timing"
+      ],
+      "fix_steps": [
+        "Check oil level and condition — change if needed",
+        "Monitor exhaust cam timing on scan tool",
+        "Command exhaust VVT solenoid off — timing should return to base",
+        "Remove and inspect exhaust VVT solenoid screen for debris",
+        "Replace exhaust cam phaser if solenoid and oil confirmed good"
+      ],
+      "field_tricks": "Same root cause as P0011 but on the exhaust side. Oil maintenance is everything on these VVT engines. Run full synthetic, change at 5000 miles, and these codes go away."
+    },
+    {
+      "code": "P0404",
+      "name": "Exhaust Gas Recirculation Circuit Range/Performance",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Carbon buildup in EGR valve preventing full range of motion",
+        "EGR position sensor failure",
+        "EGR valve actuator motor failure",
+        "Wiring issue to EGR valve",
+        "EGR cooler clogged (diesel)"
+      ],
+      "fix_steps": [
+        "Remove EGR valve and inspect for carbon buildup",
+        "Clean EGR valve thoroughly with carbon cleaner",
+        "Command EGR valve through full range with scan tool",
+        "Check position sensor feedback — should track command smoothly",
+        "Replace EGR valve if cleaning doesn't restore full range"
+      ],
+      "field_tricks": "Soak the EGR valve in carbon cleaner overnight. Most of the time the motor works fine once the carbon is removed. A $3 can of carbon cleaner saves a $200 EGR valve."
+    },
+    {
+      "code": "P0457",
+      "name": "Evaporative Emission System Leak Detected (Fuel Cap Loose/Off)",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Gas cap loose, missing, or cross-threaded",
+        "Gas cap seal damaged or deteriorated",
+        "Aftermarket gas cap not sealing properly",
+        "Fuel filler neck damaged or corroded"
+      ],
+      "fix_steps": [
+        "Remove and reinstall gas cap — make sure it clicks 3+ times",
+        "Inspect gas cap seal for cracks or deformation",
+        "Replace with OEM gas cap if seal is damaged",
+        "Check filler neck for rust or dents (trucks especially)",
+        "Clear code and drive 2 cycles — monitor for return"
+      ],
+      "field_tricks": "Chrysler/Dodge/Jeep set this code specifically when they detect a fuel cap issue. Replace the cap with OEM Mopar — the aftermarket caps from the parts store have a 50% comeback rate."
+    },
+    {
+      "code": "P0507",
+      "name": "Idle Speed Higher Than Expected",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Vacuum leak",
+        "Dirty throttle body not closing fully",
+        "IAC valve stuck partially open",
+        "PCV valve stuck open",
+        "AC compressor cycling issue affecting idle"
+      ],
+      "fix_steps": [
+        "Smoke test for vacuum leaks",
+        "Clean throttle body plate and bore",
+        "Check IAC valve operation",
+        "Check PCV valve — replace if stuck open",
+        "Perform idle relearn after repairs"
+      ],
+      "field_tricks": "After cleaning a drive-by-wire throttle body, the idle WILL be high until you do a relearn. Every car is different — some need a scan tool, some just need key-on-engine-off for 30 seconds then idle for 3 minutes."
+    },
+    {
+      "code": "P0171",
+      "name": "Fuel System Too Lean (Bank 1)",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Vacuum leak at intake manifold or vacuum lines",
+        "Low fuel pressure from weak pump or clogged filter",
+        "Dirty MAF sensor underreporting airflow",
+        "Leaking PCV valve or crankcase ventilation hose",
+        "Cracked or aged intake manifold (plastic designs)"
+      ],
+      "fix_steps": [
+        "Compare LTFT at idle vs 2500 RPM — idle-only lean = vacuum leak, all-RPM lean = fuel system",
+        "Smoke test intake for leaks",
+        "Clean MAF with MAF cleaner only",
+        "Check fuel pressure — 55-62 PSI typical for port injection",
+        "Inspect plastic intake manifolds for cracks"
+      ],
+      "field_tricks": "The LTFT idle vs cruise comparison is the single most valuable diagnostic technique for lean codes. Learn it, use it every time."
+    },
+    {
+      "code": "P1450",
+      "name": "Unable to Bleed Up Fuel Tank Vacuum (Ford)",
+      "equipment_type": "engine",
+      "severity": "low",
+      "probable_causes": [
+        "Stuck closed canister vent solenoid",
+        "Pinched or kinked EVAP hose between vent and tank",
+        "Fuel tank deformation from excess vacuum",
+        "Canister vent solenoid wiring issue"
+      ],
+      "fix_steps": [
+        "Listen for fuel tank being under vacuum when opening gas cap (loud 'whoosh')",
+        "Locate canister vent solenoid — usually on charcoal canister near rear of vehicle",
+        "Command vent solenoid open with scan tool — listen for click",
+        "Measure solenoid resistance — compare to spec",
+        "Replace vent solenoid if stuck closed"
+      ],
+      "field_tricks": "If you hear a loud rush of air when opening the gas cap on a Ford, that's the symptom. The fuel tank is collapsing under vacuum because the vent can't open. Common on Ford trucks — the vent solenoid is on the charcoal canister mounted to the frame."
+    },
+    {
+      "code": "P2101",
+      "name": "Throttle Actuator Control Motor Circuit Range/Performance",
+      "equipment_type": "engine",
+      "severity": "critical",
+      "probable_causes": [
+        "Electronic throttle body motor failure",
+        "Carbon binding throttle plate",
+        "Wiring issue to throttle body motor",
+        "ECM throttle actuator driver failure",
+        "5V reference circuit shared with other sensors dropping out"
+      ],
+      "fix_steps": [
+        "Clean throttle body — carbon binding is cause #1",
+        "Check throttle body motor connector for corrosion",
+        "Verify 5V reference is stable at throttle body connector",
+        "Command throttle open/close with scan tool — watch for binding or skipping",
+        "Replace throttle body assembly if motor is weak or binding persists after cleaning"
+      ],
+      "field_tricks": "This code triggers limp mode on most vehicles. Cleaning the throttle body resolves it 70% of the time. Do the relearn procedure after cleaning or it won't idle right."
+    },
+    {
+      "code": "P0480",
+      "name": "Cooling Fan 1 Control Circuit",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Failed cooling fan relay",
+        "Burned out cooling fan motor",
+        "Wiring issue in fan circuit",
+        "ECM fan driver circuit failure",
+        "Blown fan fuse"
+      ],
+      "fix_steps": [
+        "Check cooling fan fuse and relay first",
+        "Command fan on with scan tool — listen for operation",
+        "Apply 12V directly to fan motor to test (bypass relay)",
+        "Check wiring from relay to fan motor",
+        "Replace relay or fan motor as needed"
+      ],
+      "field_tricks": "Swap the fan relay with another identical relay in the fuse box (horn relay is usually the same). If the fan runs with the swapped relay, you found a $10 fix."
+    },
+    {
+      "code": "P0299",
+      "name": "Under Boost Condition",
+      "equipment_type": "engine",
+      "severity": "high",
+      "probable_causes": [
+        "Boost leak in intercooler piping or hoses",
+        "Wastegate stuck open",
+        "Turbocharger shaft play or bearing failure",
+        "Boost pressure sensor fault",
+        "Intake restriction (clogged air filter)"
+      ],
+      "fix_steps": [
+        "Check all intercooler piping and hose clamps for boost leaks",
+        "Pressure test intake system to 15 PSI — listen for leaks",
+        "Check wastegate actuator — apply vacuum/pressure, verify movement",
+        "Inspect turbo shaft for radial and axial play",
+        "Verify boost pressure sensor reading at atmosphere = barometric"
+      ],
+      "field_tricks": "Boost leaks are the #1 cause of underboost. The silicone couplers at the intercooler blow off under load and pop back on — you won't see it at idle. Pressure test the system or have someone watch the pipes while you hit boost."
+    },
+    {
+      "code": "P0234",
+      "name": "Turbocharger/Supercharger Overboost Condition",
+      "equipment_type": "engine",
+      "severity": "critical",
+      "probable_causes": [
+        "Wastegate stuck closed or disconnected",
+        "Boost control solenoid stuck open (overriding wastegate)",
+        "Wastegate actuator rod disconnected or broken",
+        "Boost pressure sensor reading low (PCM overcompensates)",
+        "Aftermarket tune with boost too high"
+      ],
+      "fix_steps": [
+        "CHECK IMMEDIATELY — overboost can damage engine internals",
+        "Inspect wastegate actuator and rod — should move freely",
+        "Check boost control solenoid — disconnect and test wastegate without it",
+        "Verify boost pressure sensor accuracy",
+        "If aftermarket tune, revert to stock and retest"
+      ],
+      "field_tricks": "Overboost is dangerous. If the wastegate rod end popped off the ball stud, boost is uncontrolled. Pull over and check before driving further. Zip-tie the rod end as a temporary fix to get home."
+    },
+    {
+      "code": "P0401",
+      "name": "EGR Flow Insufficient",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Carbon clogged EGR passages",
+        "EGR valve stuck closed",
+        "Failed EGR vacuum solenoid or actuator",
+        "Clogged EGR tube",
+        "DPFE sensor failure (Ford)"
+      ],
+      "fix_steps": [
+        "Remove and clean EGR valve and passages",
+        "Command EGR open with scan tool",
+        "Check vacuum to EGR on vacuum systems",
+        "Test DPFE sensor (Ford) — hoses crack",
+        "Replace if stuck after cleaning"
+      ],
+      "field_tricks": "Ford DPFE hoses crack every 5 years. Replace the $3 rubber hoses before spending $200 on an EGR valve."
+    },
+    {
+      "code": "P0171",
+      "name": "System Lean Bank 1",
+      "equipment_type": "engine",
+      "severity": "medium",
+      "probable_causes": [
+        "Vacuum leak",
+        "Weak fuel pump",
+        "Dirty MAF",
+        "Leaking injector O-rings",
+        "Cracked vacuum hose"
+      ],
+      "fix_steps": [
+        "Check LTFT at idle vs 2500 RPM",
+        "Smoke test intake",
+        "Clean MAF",
+        "Check fuel pressure",
+        "Inspect all vacuum lines"
+      ],
+      "field_tricks": "LTFT high at idle but normal at cruise = vacuum leak. LTFT high everywhere = fuel delivery."
+    }
+  ]
+}
