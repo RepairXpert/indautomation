@@ -456,6 +456,80 @@ def _log_stripe_event(event_type: str, data: dict):
         pass
 
 
+@app.post("/api/lead")
+async def capture_lead(request: Request):
+    """Capture a lead: validate email+name, create Stripe customer, send welcome email, log for follow-up."""
+    body = await request.json()
+    email = (body.get("email") or "").strip().lower()
+    name = (body.get("name") or "").strip()
+
+    if not email or "@" not in email:
+        return JSONResponse({"error": "Valid email required"}, status_code=400)
+    if not name:
+        return JSONResponse({"error": "Name required"}, status_code=400)
+
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Create Stripe customer
+    stripe_customer_id = None
+    if _stripe_available:
+        try:
+            customer = stripe.Customer.create(
+                email=email,
+                name=name,
+                metadata={"source": "lead_capture", "captured_at": now},
+            )
+            stripe_customer_id = customer.id
+        except Exception as e:
+            _log_stripe_event("lead_stripe_error", {"email": email, "error": str(e)})
+
+    # Log lead to SQLite for follow-up sequence
+    try:
+        db = get_db()
+        db.execute(
+            "INSERT INTO checkout_leads (created_at, email, plan, stripe_session_id, status) VALUES (?,?,?,?,?)",
+            (now, email, "lead", stripe_customer_id, "lead_captured"),
+        )
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+
+    # Send welcome email via Resend
+    if RESEND_API_KEY:
+        base_url = os.environ.get("RENDER_EXTERNAL_URL", "https://indautomation.onrender.com")
+        html_body = f"""<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;color:#e6edf3;background:#161b22;padding:2rem;border-radius:8px">
+<h2 style="color:#f78166;margin-bottom:1rem">Welcome to RepairXpert, {name}</h2>
+<p>You're on the list. We help industrial field techs diagnose faults faster with AI-powered fault codes, wiring diagrams, and parts recommendations.</p>
+<p style="margin:1.5rem 0">Ready to try it?</p>
+<a href="{base_url}/diagnose" style="display:inline-block;background:#f78166;color:#fff;padding:0.75rem 2rem;border-radius:6px;text-decoration:none;font-weight:600">Run a Free Diagnosis</a>
+<p style="margin-top:1.5rem;color:#8b949e;font-size:0.85rem">313+ fault codes. Allen-Bradley, Siemens, Fanuc and more. No contracts.</p>
+<hr style="border:1px solid #30363d;margin:1.5rem 0">
+<p style="color:#8b949e;font-size:0.78rem">RepairXpert Industrial Automation — AI-powered fault diagnosis for field technicians</p>
+</div>"""
+        try:
+            import urllib.request as _ureq
+            payload = json.dumps({
+                "from": "RepairXpert <hello@repairxpertai.com>",
+                "to": [email],
+                "subject": "Welcome to RepairXpert — your free diagnosis is ready",
+                "html": html_body,
+            }).encode()
+            req = _ureq.Request(
+                "https://api.resend.com/emails",
+                data=payload,
+                headers={"Content-Type": "application/json", "Authorization": f"Bearer {RESEND_API_KEY}"},
+            )
+            with _ureq.urlopen(req, timeout=10):
+                pass
+            _log_stripe_event("lead_welcome_sent", {"email": email})
+        except Exception as e:
+            _log_stripe_event("lead_welcome_failed", {"email": email, "error": str(e)})
+
+    _log_stripe_event("lead_captured", {"email": email, "plan": "lead", "id": stripe_customer_id or ""})
+    return JSONResponse({"status": "ok", "message": "Lead captured", "stripe_customer_id": stripe_customer_id})
+
+
 @app.post("/diagnose", response_class=HTMLResponse)
 async def diagnose_form(
     request: Request,
@@ -1248,6 +1322,172 @@ def _log_diagnosis_outcome(timestamp: str, equipment_type: str, fault_code: str,
             f.write(entry + "\n")
     except Exception:
         pass  # Never block diagnosis on logging failure
+
+
+# ── Matchmaker /connect ───────────────────────────────────────────────────────
+CONNECT_DB_PATH = ROOT / "data" / "matchmaker_leads.jsonl"
+
+
+@app.get("/connect", response_class=HTMLResponse)
+async def connect_page(request: Request):
+    return templates.TemplateResponse("connect.html", {"request": request})
+
+
+@app.post("/connect", response_class=HTMLResponse)
+async def connect_submit(
+    request: Request,
+    name: str = Form(...),
+    email: str = Form(...),
+    role: str = Form(...),
+    company: str = Form(""),
+    message: str = Form(""),
+):
+    email = email.strip().lower()
+    name = name.strip()
+    role = role.strip()
+
+    if not email or "@" not in email:
+        return templates.TemplateResponse(
+            "connect.html", {"request": request, "error": "Valid email required."}
+        )
+    if role not in ("tech", "plant_manager", "vendor", "builder"):
+        return templates.TemplateResponse(
+            "connect.html", {"request": request, "error": "Please select a valid role."}
+        )
+
+    now = datetime.now(timezone.utc).isoformat()
+    entry = {
+        "ts": now,
+        "name": name,
+        "email": email,
+        "role": role,
+        "company": company.strip(),
+        "message": message.strip()[:500],
+    }
+
+    # Persist lead
+    try:
+        with open(CONNECT_DB_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception:
+        pass
+
+    # Notify via Resend
+    if RESEND_API_KEY:
+        try:
+            import httpx
+            role_labels = {
+                "tech": "Field Tech / Maintenance",
+                "plant_manager": "Plant Manager",
+                "vendor": "Vendor / Supplier",
+                "builder": "Product Builder",
+            }
+            subject = f"[Matchmaker] New {role_labels.get(role, role)} — {name}"
+            body_html = (
+                f"<h2>New /connect submission</h2>"
+                f"<p><b>Name:</b> {name}<br>"
+                f"<b>Email:</b> {email}<br>"
+                f"<b>Role:</b> {role_labels.get(role, role)}<br>"
+                f"<b>Company:</b> {company or '—'}<br>"
+                f"<b>Message:</b> {message or '—'}</p>"
+            )
+            httpx.post(
+                "https://api.resend.com/emails",
+                headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
+                json={
+                    "from": "IndAutomation <hello@indautomation.onrender.com>",
+                    "to": ["ericwestmail@gmail.com"],
+                    "subject": subject,
+                    "html": body_html,
+                },
+                timeout=8,
+            )
+        except Exception:
+            pass
+
+    return templates.TemplateResponse("connect_success.html", {"request": request, "role": role, "name": name})
+
+
+@app.post("/api/lead")
+async def capture_lead(request: Request):
+    """Lead capture: create Stripe customer + send welcome email.
+
+    Body (JSON): {"email": "...", "name": "...", "plan": "pro"|"enterprise"|"free"}
+    Returns: {"ok": true, "stripe_customer_id": "...", "email_sent": true}
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "Invalid JSON"})
+
+    email = (body.get("email") or "").strip().lower()
+    name = (body.get("name") or "").strip()
+    plan = (body.get("plan") or "free").strip()
+
+    if not email or "@" not in email:
+        return JSONResponse(status_code=400, content={"ok": False, "error": "Valid email required"})
+
+    now = datetime.now(timezone.utc).isoformat()
+    stripe_customer_id = None
+    email_sent = False
+
+    # 1. Create Stripe customer
+    if _stripe_available:
+        try:
+            customer = stripe.Customer.create(
+                email=email,
+                name=name or None,
+                metadata={"plan": plan, "source": "api_lead"},
+            )
+            stripe_customer_id = customer.id
+        except Exception as e:
+            _log_stripe_event("lead_stripe_error", {"email": email, "error": str(e)})
+
+    # 2. Log lead to SQLite
+    try:
+        db = get_db()
+        db.execute(
+            "INSERT INTO checkout_leads (created_at, email, plan, stripe_session_id, status) VALUES (?,?,?,?,?)",
+            (now, email, plan, stripe_customer_id or "", "lead_captured"),
+        )
+        db.commit()
+        db.close()
+    except Exception as e:
+        _log_stripe_event("lead_db_error", {"email": email, "error": str(e)})
+
+    # 3. Send welcome email via Resend
+    if RESEND_API_KEY:
+        plan_label = {"pro": "Pro ($19.99/mo)", "enterprise": "Enterprise ($49.99/mo)"}.get(plan, "Free")
+        greeting = f"Hi {name}," if name else "Hi there,"
+        html_body = f"""<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;color:#e6edf3;background:#161b22;padding:2rem;border-radius:8px">
+<h2 style="color:#f78166;margin-bottom:1rem">Welcome to RepairXpert Industrial Automation</h2>
+<p>{greeting}</p>
+<p>You're now on our radar for the <strong>{plan_label}</strong> plan. We help field technicians diagnose faults faster with AI — 313+ fault codes, parts recommendations, and direct chat with our diagnostic engine.</p>
+<p style="margin:1.5rem 0"><a href="https://indautomation.onrender.com/pricing" style="display:inline-block;background:#f78166;color:#fff;padding:0.75rem 2rem;border-radius:6px;text-decoration:none;font-weight:600">View Plans &amp; Pricing</a></p>
+<p style="color:#8b949e;font-size:0.85rem">Questions? Reply to this email or visit indautomation.onrender.com. Cancel anytime — no contracts.</p>
+<hr style="border:1px solid #30363d;margin:1.5rem 0">
+<p style="color:#8b949e;font-size:0.78rem">RepairXpert Industrial Automation — AI-powered fault diagnosis for field technicians</p>
+</div>"""
+        try:
+            import urllib.request as _urlreq
+            payload = json.dumps({
+                "from": "RepairXpert <hello@repairxpertai.com>",
+                "to": [email],
+                "subject": "Welcome to RepairXpert Industrial Automation",
+                "html": html_body,
+            }).encode()
+            req = _urlreq.Request(
+                "https://api.resend.com/emails",
+                data=payload,
+                headers={"Content-Type": "application/json", "Authorization": f"Bearer {RESEND_API_KEY}"},
+            )
+            with _urlreq.urlopen(req, timeout=10):
+                email_sent = True
+        except Exception as e:
+            _log_stripe_event("lead_email_failed", {"email": email, "error": str(e)})
+
+    _log_stripe_event("lead_captured", {"email": email, "plan": plan})
+    return JSONResponse(content={"ok": True, "stripe_customer_id": stripe_customer_id, "email_sent": email_sent})
 
 
 if __name__ == "__main__":

@@ -49,8 +49,13 @@ async def compare_prices(part_number: str, quantity: int = 1):
     part = db.get_part(part_number)
     if not part:
         return {"error": "Part not found", "part_number": part_number}
-    pricing = db.get_pricing(part_number)
-    return {"part_number": part_number, "quantity": quantity, "suppliers": pricing}
+    prices = db.get_prices(part_number)
+    # Normalize to list format
+    suppliers = [
+        {"supplier": sup, **data}
+        for sup, data in prices.items()
+    ]
+    return {"part_number": part_number, "quantity": quantity, "suppliers": suppliers}
 
 @procurement_router.get("/parts/{part_number}/best-price")
 async def best_price(part_number: str, quantity: int = 1):
@@ -58,24 +63,29 @@ async def best_price(part_number: str, quantity: int = 1):
     part = db.get_part(part_number)
     if not part:
         return {"error": "Part not found", "part_number": part_number}
-    pricing = db.get_pricing(part_number)
-    if not pricing:
+    prices = db.get_prices(part_number)
+    if not prices:
         return {"error": "No pricing available", "part_number": part_number}
 
-    best = min(pricing, key=lambda p: p.get('price', float('inf')))
-    alternatives = sorted(pricing, key=lambda p: p.get('price', float('inf')))
-    second_best = alternatives[1]['price'] if len(alternatives) > 1 else best['price']
+    # prices is a dict: {supplier: {unit_price, quantity_available, lead_time_days, ...}}
+    suppliers = [
+        {"supplier": sup, **data}
+        for sup, data in prices.items()
+    ]
+    sorted_suppliers = sorted(suppliers, key=lambda p: p.get('unit_price', float('inf')))
+    best = sorted_suppliers[0]
+    second_price = sorted_suppliers[1]['unit_price'] if len(sorted_suppliers) > 1 else best['unit_price']
 
     return {
         "part_number": part_number,
-        "best_supplier": best.get('supplier', 'unknown'),
-        "unit_price": best.get('price', 0),
-        "total_cost": best.get('price', 0) * quantity,
+        "best_supplier": best['supplier'],
+        "unit_price": best['unit_price'],
+        "total_cost": round(best['unit_price'] * quantity, 2),
         "shipping": 0,
         "lead_time_days": best.get('lead_time_days', 3),
         "in_stock": best.get('quantity_available', 0) > 0,
-        "cost_savings": round(second_best - best['price'], 2) if second_best > best['price'] else 0,
-        "alternatives": alternatives,
+        "cost_savings": round(second_price - best['unit_price'], 2) if second_price > best['unit_price'] else 0,
+        "alternatives": sorted_suppliers[1:],
         "quantity": quantity
     }
 
