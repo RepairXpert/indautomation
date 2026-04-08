@@ -543,6 +543,16 @@ async def fault_index(request: Request):
     })
 
 
+@app.get("/api/faults-data")
+async def faults_data():
+    """Raw fault database as JSON — cached by service worker for offline use."""
+    faults = load_fault_db()
+    return JSONResponse(
+        content={"faults": faults, "total": len(faults)},
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
 @app.get("/fault/{code}", response_class=HTMLResponse)
 async def fault_detail(request: Request, code: str):
     """SEO-optimized detail page for a single fault code."""
