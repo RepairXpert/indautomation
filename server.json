@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.repairxpert/indautomation",
+  "title": "RepairXpert Equipment Diagnostics (Industrial + Automotive OBD-II)",
+  "description": "Two MCP servers in one repo: (1) industrial fault diagnosis with 313 codes across Allen-Bradley PLCs, VFDs, conveyors, AS/RS, packaging, pilers, palletizers, and CR30 relays; (2) the first automotive OBD-II MCP server — read/clear DTCs, live PIDs, freeze frames, and expert diagnosis for 106 automotive trouble codes. OBD works in mock mode (no hardware) or real mode via ELM327 adapter.",
+  "repository": {
+    "url": "https://github.com/RepairXpert/indautomation",
+    "source": "github"
+  },
+  "version": "1.1.0",
+  "packages": [
+    {
+      "registryType": "github",
+      "identifier": "RepairXpert/indautomation",
+      "version": "1.1.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
