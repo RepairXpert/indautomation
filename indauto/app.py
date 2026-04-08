@@ -199,6 +199,10 @@ COMPARE_PAGES = {
         "template": "compare/limble.html",
         "title": "RepairXpert vs Limble CMMS",
     },
+    "plcai": {
+        "template": "compare/plcai.html",
+        "title": "RepairXpert vs PLC AI",
+    },
 }
 
 
