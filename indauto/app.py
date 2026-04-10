@@ -1330,6 +1330,89 @@ def _log_diagnosis_outcome(timestamp: str, equipment_type: str, fault_code: str,
 CONNECT_DB_PATH = ROOT / "data" / "matchmaker_leads.jsonl"
 
 
+@app.get("/funnel", response_class=HTMLResponse)
+async def funnel_dashboard(request: Request):
+    """Conversion funnel dashboard — chat → diagnosis → checkout → payment."""
+    import json as _json
+    from datetime import datetime as _dt
+
+    logs = ROOT / "logs"
+    db_path = ROOT / "data" / "diagnosis_log.db"
+
+    def _count_jsonl(path, filter_fn=None):
+        if not path.exists():
+            return 0
+        c = 0
+        for ln in path.read_text(encoding="utf-8").splitlines():
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                r = _json.loads(ln)
+                if filter_fn is None or filter_fn(r):
+                    c += 1
+            except Exception:
+                pass
+        return c
+
+    chat_sessions = _count_jsonl(logs / "chat_log.jsonl")
+    diagnoses_total = _count_jsonl(logs / "diagnosis_outcomes.jsonl")
+    diagnoses_high = _count_jsonl(logs / "diagnosis_outcomes.jsonl",
+                                  lambda r: r.get("confidence", 0) >= 0.8)
+    checkout_leads = 0
+    if db_path.exists():
+        try:
+            _db = sqlite3.connect(str(db_path))
+            row = _db.execute("SELECT COUNT(*) FROM checkout_leads").fetchone()
+            checkout_leads = row[0] if row else 0
+            _db.close()
+        except Exception:
+            pass
+    stripe_payments = _count_jsonl(logs / "stripe_events.jsonl",
+                                   lambda r: r.get("event") == "checkout.session.completed")
+
+    funnel = [
+        {"stage": "Chat Sessions",    "count": chat_sessions,    "icon": "\U0001f4ac"},
+        {"stage": "Diagnoses Run",    "count": diagnoses_total,  "icon": "\U0001f50d"},
+        {"stage": "High Confidence",  "count": diagnoses_high,   "icon": "\u2705"},
+        {"stage": "Checkout Leads",   "count": checkout_leads,   "icon": "\U0001f6d2"},
+        {"stage": "Payments",         "count": stripe_payments,  "icon": "\U0001f4b3"},
+    ]
+
+    conversion_rates: dict = {}
+    for i in range(1, len(funnel)):
+        prev = funnel[i - 1]["count"]
+        curr = funnel[i]["count"]
+        rate = round(curr / prev * 100, 1) if prev > 0 else 0.0
+        key = f"{funnel[i-1]['stage']} \u2192 {funnel[i]['stage']}"
+        conversion_rates[key] = rate
+
+    # Top equipment breakdown
+    eq_counts: dict = {}
+    diag_path = logs / "diagnosis_outcomes.jsonl"
+    if diag_path.exists():
+        for ln in diag_path.read_text(encoding="utf-8").splitlines():
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                r = _json.loads(ln)
+                eq = r.get("equipment_type", "unknown") or "unknown"
+                eq_counts[eq] = eq_counts.get(eq, 0) + 1
+            except Exception:
+                pass
+    top_equipment = [{"type": k, "count": v}
+                     for k, v in sorted(eq_counts.items(), key=lambda x: x[1], reverse=True)[:5]]
+
+    return templates.TemplateResponse("funnel_dashboard.html", {
+        "request": request,
+        "funnel": funnel,
+        "conversion_rates": conversion_rates,
+        "top_equipment": top_equipment,
+        "generated_at": _dt.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+    })
+
+
 @app.get("/connect", response_class=HTMLResponse)
 async def connect_page(request: Request):
     return templates.TemplateResponse("connect.html", {"request": request})

@@ -1,0 +1,57 @@
+{
+  "funnel": [
+    {
+      "stage": "Chat Sessions",
+      "count": 2,
+      "icon": "\ud83d\udcac"
+    },
+    {
+      "stage": "Diagnoses Run",
+      "count": 22,
+      "icon": "\ud83d\udd0d"
+    },
+    {
+      "stage": "High Confidence",
+      "count": 20,
+      "icon": "\u2705"
+    },
+    {
+      "stage": "Checkout Leads",
+      "count": 1,
+      "icon": "\ud83d\uded2"
+    },
+    {
+      "stage": "Payments",
+      "count": 0,
+      "icon": "\ud83d\udcb3"
+    }
+  ],
+  "top_equipment": [
+    {
+      "type": "PowerFlex VFD",
+      "count": 5
+    },
+    {
+      "type": "VFD",
+      "count": 4
+    },
+    {
+      "type": "conveyor",
+      "count": 3
+    },
+    {
+      "type": "piler",
+      "count": 3
+    },
+    {
+      "type": "sensor",
+      "count": 3
+    }
+  ],
+  "conversion_rates": {
+    "Chat Sessions \u2192 Diagnoses Run": 1100.0,
+    "Diagnoses Run \u2192 High Confidence": 90.9,
+    "High Confidence \u2192 Checkout Leads": 5.0,
+    "Checkout Leads \u2192 Payments": 0.0
+  }
+}

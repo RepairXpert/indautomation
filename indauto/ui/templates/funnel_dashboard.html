@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conversion Funnel — RepairXpert IndAutomation</title>
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .funnel-wrap { display: flex; flex-direction: column; gap: 0.5rem; max-width: 540px; margin: 0 auto; }
+  .funnel-stage {
+    display: flex; align-items: center; gap: 1rem;
+    background: var(--surface, #1a1a2e); border: 1px solid var(--border, #2a2a4a);
+    border-radius: 8px; padding: 0.9rem 1.2rem;
+    position: relative; overflow: hidden;
+  }
+  .funnel-bar {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: rgba(99,102,241,0.15); transition: width 0.4s ease;
+  }
+  .funnel-icon { font-size: 1.5rem; z-index: 1; }
+  .funnel-label { flex: 1; font-weight: 600; font-size: 0.95rem; z-index: 1; }
+  .funnel-count { font-size: 1.6rem; font-weight: 800; color: var(--accent, #818cf8); z-index: 1; }
+  .funnel-arrow { text-align: center; color: var(--muted, #6b7280); font-size: 0.8rem; padding: 0.1rem 0; }
+  .rate-badge {
+    display: inline-block; font-size: 0.7rem; padding: 0.2rem 0.5rem;
+    border-radius: 12px; margin-left: 0.5rem; font-weight: 700;
+  }
+  .rate-good { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .rate-mid  { background: rgba(234,179,8,0.15); color: #facc15; }
+  .rate-low  { background: rgba(239,68,68,0.15); color: #f87171; }
+
+  .eq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 0.7rem; margin-top: 1rem; }
+  .eq-card {
+    background: var(--surface, #1a1a2e); border: 1px solid var(--border, #2a2a4a);
+    border-radius: 8px; padding: 0.8rem; text-align: center;
+  }
+  .eq-count { font-size: 1.8rem; font-weight: 800; color: var(--accent, #818cf8); }
+  .eq-label { font-size: 0.78rem; color: var(--muted, #6b7280); margin-top: 0.2rem; }
+
+  .refresh-note { font-size: 0.75rem; color: var(--muted, #6b7280); text-align: right; margin-top: 0.5rem; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-row">
+    <img src="/static/logo.svg" alt="RepairXpert Industrial Automation" height="48">
+  </div>
+  <nav>
+    <a href="/">Diagnose</a>
+    <a href="/chat">Chat</a>
+    <a href="/faults">Fault Codes</a>
+    <a href="/history">History</a>
+    <a href="/pricing">Pricing</a>
+  </nav>
+</header>
+
+<div class="container">
+  <div class="card">
+    <h2>Conversion Funnel</h2>
+    <p style="color:var(--muted,#6b7280); font-size:0.9rem; margin-top:0.2rem;">
+      Live view: chat → diagnosis → checkout → payment
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="funnel-wrap">
+      {% set max_count = funnel[0].count if funnel[0].count > 0 else 1 %}
+      {% for stage in funnel %}
+        {% set pct = [stage.count / max_count * 100, 100]|min %}
+        <div class="funnel-stage">
+          <div class="funnel-bar" style="width:{{ pct|int }}%"></div>
+          <span class="funnel-icon">{{ stage.icon }}</span>
+          <span class="funnel-label">{{ stage.stage }}</span>
+          <span class="funnel-count">{{ stage.count }}</span>
+        </div>
+        {% if not loop.last %}
+          {% set rate_key = stage.stage ~ " → " ~ funnel[loop.index].stage %}
+          {% set rate = conversion_rates.get(rate_key, 0) %}
+          <div class="funnel-arrow">
+            ↓
+            {% if rate >= 50 %}
+              <span class="rate-badge rate-good">{{ rate }}%</span>
+            {% elif rate >= 15 %}
+              <span class="rate-badge rate-mid">{{ rate }}%</span>
+            {% else %}
+              <span class="rate-badge rate-low">{{ rate }}%</span>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <p class="refresh-note">Updated: {{ generated_at }}</p>
+  </div>
+
+  {% if top_equipment %}
+  <div class="card">
+    <h3>Top Equipment Types</h3>
+    <div class="eq-grid">
+      {% for item in top_equipment %}
+      <div class="eq-card">
+        <div class="eq-count">{{ item.count }}</div>
+        <div class="eq-label">{{ item.type }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card" style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; text-align:center;">
+    <div>
+      <div style="font-size:1.8rem; font-weight:800; color:var(--accent,#818cf8)">
+        {{ conversion_rates.get("High Confidence → Checkout Leads", 0) }}%
+      </div>
+      <div style="font-size:0.8rem; color:var(--muted,#6b7280)">High-conf → Checkout</div>
+    </div>
+    <div>
+      <div style="font-size:1.8rem; font-weight:800; color:var(--accent,#818cf8)">
+        {{ conversion_rates.get("Checkout Leads → Payments", 0) }}%
+      </div>
+      <div style="font-size:0.8rem; color:var(--muted,#6b7280)">Checkout → Payment</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
