@@ -13,13 +13,20 @@ from indauto.parts.catalog import get_parts_for_category
 
 FAULT_DB_PATH = Path(__file__).resolve().parent.parent / "fault_db" / "codes.json"
 
+_FAULT_DB: list[dict] | None = None
+
 
 def load_fault_db() -> list[dict]:
-    """Load fault database, return list of fault entries."""
-    if FAULT_DB_PATH.exists():
-        data = json.loads(FAULT_DB_PATH.read_text(encoding="utf-8"))
-        return data.get("faults", [])
-    return []
+    """Load fault database with module-level lazy cache to avoid re-reading 580KB on every call."""
+    global _FAULT_DB
+    if _FAULT_DB is None:
+        if FAULT_DB_PATH.exists():
+            with open(FAULT_DB_PATH, encoding="utf-8") as f:
+                data = json.load(f)
+            _FAULT_DB = data.get("faults", [])
+        else:
+            _FAULT_DB = []
+    return _FAULT_DB
 
 
 def _normalize(text: str) -> str:
