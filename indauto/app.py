@@ -176,6 +176,11 @@ async def pricing_page(request: Request):
     return templates.TemplateResponse("pricing.html", {"request": request})
 
 
+@app.get("/store", response_class=HTMLResponse)
+async def store_page(request: Request):
+    return templates.TemplateResponse("store.html", {"request": request})
+
+
 # ── Comparison pages (SEO) ─────────────────────────────────────────────────
 
 COMPARE_PAGES = {
