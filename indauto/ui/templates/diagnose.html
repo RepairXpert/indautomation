@@ -116,5 +116,6 @@ document.getElementById('diagForm').addEventListener('submit', function() {
   document.getElementById('spinner').style.display = 'block';
 });
 </script>
+<script>fetch('/api/analytics/hit?p='+encodeURIComponent(location.pathname)+'&r='+encodeURIComponent(document.referrer),{method:'GET'})</script>
 </body>
 </html>

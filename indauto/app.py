@@ -176,6 +176,25 @@ async def pricing_page(request: Request):
     return templates.TemplateResponse("pricing.html", {"request": request})
 
 
+@app.get("/api/analytics/hit")
+async def analytics_hit(request: Request, p: str = "/", r: str = ""):
+    """Self-hosted analytics pixel. Logs page view to local JSONL."""
+    try:
+        log_path = LOGS_PATH / "analytics.jsonl"
+        entry = json.dumps({
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "page": p[:200],
+            "referrer": r[:500],
+            "ip": request.client.host if request.client else "",
+            "ua": (request.headers.get("user-agent") or "")[:200],
+        })
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(entry + "\n")
+    except Exception:
+        pass
+    return JSONResponse({"ok": True}, status_code=204)
+
+
 @app.get("/store", response_class=HTMLResponse)
 async def store_page(request: Request):
     return templates.TemplateResponse("store.html", {"request": request})

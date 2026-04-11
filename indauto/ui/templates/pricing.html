@@ -306,5 +306,6 @@ async function submitEmail(e) {
   }
 }
 </script>
+<script>fetch('/api/analytics/hit?p='+encodeURIComponent(location.pathname)+'&r='+encodeURIComponent(document.referrer),{method:'GET'})</script>
 </body>
 </html>

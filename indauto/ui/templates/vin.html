@@ -127,5 +127,6 @@ document.getElementById('vinInput').addEventListener('input', function() {
   this.value = this.value.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '');
 });
 </script>
+<script>fetch('/api/analytics/hit?p='+encodeURIComponent(location.pathname)+'&r='+encodeURIComponent(document.referrer),{method:'GET'})</script>
 </body>
 </html>
