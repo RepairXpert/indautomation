@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>PLC Error Code Lookup — Industrial PLC Fault Diagnosis | RepairXpert</title>
+<meta name="description" content="Free PLC error code lookup tool. Covers Allen-Bradley, Siemens, Mitsubishi, and Omron PLCs. AI-powered root cause analysis with step-by-step fix procedures for ControlLogix, CompactLogix, and S7 controllers.">
+<meta name="keywords" content="PLC error code lookup, PLC fault codes, ControlLogix error codes, PLC troubleshooting, industrial PLC faults, PLC diagnostic tool, programmable logic controller errors, PLC communication fault, PLC major fault, PLC program fault">
+<link rel="canonical" href="https://indautomation.onrender.com/faults/plc-errors">
+
+<meta property="og:title" content="PLC Error Code Lookup — Free AI Diagnosis | RepairXpert">
+<meta property="og:description" content="Free PLC error code lookup. Allen-Bradley, Siemens, Mitsubishi PLCs. Get root causes, fix steps, and parts links instantly.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://indautomation.onrender.com/faults/plc-errors">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I look up a PLC error code?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "To look up a PLC error code: 1) Note the exact error code from the PLC's HMI display, programming software, or fault log. 2) Enter the code into RepairXpert's free diagnostic tool. 3) Get ranked root causes, step-by-step fix procedures, and replacement parts recommendations. RepairXpert covers 313+ fault codes across Allen-Bradley, general industrial, VFD, conveyor, packaging, AS/RS, and palletizer equipment."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the main types of PLC faults?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "PLC faults fall into several categories: 1) Major Faults — halt the controller entirely (power-up errors, watchdog timeouts, memory corruption). 2) Minor Faults — log warnings but the PLC keeps running (battery low, communication warnings). 3) I/O Faults — modules can't communicate with the backplane. 4) Communication Faults — network timeouts, CIP errors, Modbus failures. 5) Program Faults — math errors, array overruns, instruction exceptions. 6) Motion Faults — servo axis errors, position faults, drive faults."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does 'PLC Major Fault Type 4 Code 16' mean?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In Allen-Bradley ControlLogix, Major Fault Type 4, Code 16 is a Watchdog fault — a task took longer to execute than its configured watchdog time. This usually means: 1) A program loop is running too many iterations. 2) A task has too much code for its scan rate. 3) An instruction is waiting on a resource (message instruction timeout). Fix: increase the watchdog timer, optimize the routine, or split the task into smaller segments."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I troubleshoot PLC communication faults?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "PLC communication fault troubleshooting: 1) Check physical layer — cables, connectors, switch ports, fiber links. Look for link/activity LEDs. 2) Verify IP addresses — no duplicates, correct subnet mask, gateway. 3) Check network load — use managed switch port statistics to look for CRC errors, collisions, or excessive broadcast traffic. 4) Verify timeout settings — RPI (Requested Packet Interval) for EtherNet/IP, station timeout for Modbus. 5) Use the PLC's built-in diagnostics — message instruction error codes, connection status tags."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is RepairXpert a free PLC error code lookup tool?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. RepairXpert's free tier includes instant fault code lookups, photo-based diagnostics (snap a photo of the HMI or fault display), and parts search with real-time pricing. No login or signup required. Pro ($19/mo) adds unlimited queries and diagnostic history. Enterprise ($49/mo) adds custom fault codes, API access, and MCP server integration for AI assistants."
+      }
+    }
+  ]
+}
+</script>
+
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .seo-hero {
+    text-align: center;
+    padding: 2rem 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+  .seo-hero h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+  }
+  .seo-hero p {
+    font-size: 0.92rem;
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .seo-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .seo-stat {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    text-align: center;
+    flex: 1;
+    min-width: 90px;
+  }
+  .seo-stat .num {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+  }
+  .seo-stat .label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .subsection { margin-bottom: 2rem; }
+  .subsection h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--accent);
+  }
+  .subsection p, .subsection li {
+    font-size: 0.88rem;
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .subsection ul, .subsection ol {
+    padding-left: 1.2rem;
+    margin-bottom: 0.75rem;
+  }
+  .subsection li { margin-bottom: 0.3rem; }
+  .fault-type-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin: 1rem 0;
+  }
+  .fault-type-table th, .fault-type-table td {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border);
+    text-align: left;
+  }
+  .fault-type-table th {
+    background: var(--surface2);
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .fault-type-table td { color: var(--text); }
+  .fault-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+  .fault-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .fault-row:hover {
+    border-color: var(--blue);
+    transform: translateX(3px);
+    text-decoration: none;
+  }
+  .fault-row-code {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(88,166,255,0.12);
+    color: var(--blue);
+    white-space: nowrap;
+    min-width: 70px;
+    text-align: center;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  }
+  .fault-row-name {
+    font-size: 0.88rem;
+    font-weight: 500;
+    flex: 1;
+  }
+  .fault-row-severity {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .fault-row-severity.critical { background: rgba(248,81,73,0.15); color: var(--red); }
+  .fault-row-severity.high { background: rgba(247,129,102,0.15); color: var(--accent); }
+  .fault-row-severity.medium { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .fault-row-severity.low { background: rgba(63,185,80,0.15); color: var(--green); }
+  .faq-section { margin-top: 2rem; }
+  .faq-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.75rem;
+  }
+  .faq-item h3 {
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+  .faq-item p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .cta-box {
+    background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(16,185,129,0.1));
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    margin: 2rem 0;
+  }
+  .cta-box h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .cta-box p { font-size: 0.88rem; color: var(--muted); margin-bottom: 1rem; }
+  @media (max-width: 480px) {
+    .seo-hero h1 { font-size: 1.2rem; }
+    .seo-stats { gap: 0.5rem; }
+    .fault-row { flex-wrap: wrap; gap: 0.4rem; }
+    .fault-type-table { font-size: 0.75rem; }
+  }
+</style>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('/static/sw.js')</script>
+</head>
+<body>
+<header>
+  <div class="logo-row">
+    <img src="/static/logo.svg" alt="RepairXpert Industrial Automation" height="48">
+  </div>
+  <nav>
+    <a href="/">Diagnose</a>
+    <a href="/faults" class="active">Fault Codes</a>
+    <a href="/history">History</a>
+    <a href="/pricing">Pricing</a>
+  </nav>
+</header>
+
+<div class="container">
+
+  <div class="seo-hero">
+    <h1>PLC Error Code Lookup — Free Industrial PLC Fault Diagnosis</h1>
+    <p>{{ plc_count }} PLC fault codes with AI-powered root cause analysis. Covers Allen-Bradley ControlLogix, CompactLogix, GuardLogix, and general industrial controllers. Enter any error code for instant diagnosis.</p>
+  </div>
+
+  <div class="seo-stats">
+    <div class="seo-stat">
+      <span class="num">{{ plc_count }}</span>
+      <span class="label">PLC Codes</span>
+    </div>
+    <div class="seo-stat">
+      <span class="num">{{ total }}</span>
+      <span class="label">Total DB</span>
+    </div>
+    <div class="seo-stat">
+      <span class="num">7</span>
+      <span class="label">Equipment Types</span>
+    </div>
+    <div class="seo-stat">
+      <span class="num">8</span>
+      <span class="label">MCP Tools</span>
+    </div>
+  </div>
+
+  <div class="card subsection">
+    <h2>PLC Fault Types — Quick Reference</h2>
+    <p>Understanding PLC fault categories helps you triage faster. Here's a breakdown of the major fault types you'll encounter in industrial automation:</p>
+    <table class="fault-type-table">
+      <thead>
+        <tr><th>Fault Type</th><th>Severity</th><th>Controller Behavior</th><th>Common Causes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Major Fault</strong></td>
+          <td>Critical</td>
+          <td>Controller halts, outputs go to fault state</td>
+          <td>Watchdog timeout, memory corruption, power-up without project</td>
+        </tr>
+        <tr>
+          <td><strong>Minor Fault</strong></td>
+          <td>Warning</td>
+          <td>Controller keeps running, logs warning</td>
+          <td>Battery low, serial port error, redundancy warning</td>
+        </tr>
+        <tr>
+          <td><strong>I/O Fault</strong></td>
+          <td>High</td>
+          <td>Affected module goes offline</td>
+          <td>Module removed, backplane error, RPI timeout</td>
+        </tr>
+        <tr>
+          <td><strong>Communication</strong></td>
+          <td>High</td>
+          <td>Remote I/O or peer controller lost</td>
+          <td>Network cable, IP conflict, switch failure, RPI too fast</td>
+        </tr>
+        <tr>
+          <td><strong>Program Fault</strong></td>
+          <td>Major</td>
+          <td>Controller faults on instruction error</td>
+          <td>Divide by zero, array overrun, invalid tag reference</td>
+        </tr>
+        <tr>
+          <td><strong>Motion Fault</strong></td>
+          <td>High</td>
+          <td>Axis faulted, motion stops</td>
+          <td>Position error, overcurrent, drive fault, encoder failure</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card subsection">
+    <h2>Allen-Bradley PLC Error Codes</h2>
+    <p>Allen-Bradley ControlLogix and CompactLogix controllers use a Type/Code system for faults. The fault type identifies the category, and the code gives the specific error. Common examples:</p>
+    <ul>
+      <li><strong>Type 1, Code 1 — Power-Up:</strong> Controller powered up or was restored without a user project. Download the project from Studio 5000.</li>
+      <li><strong>Type 4, Code 16 — Watchdog:</strong> Task exceeded its watchdog time. Optimize the routine or increase the watchdog timer.</li>
+      <li><strong>Type 4, Code 82 — No Connections:</strong> No I/O connections established. Check module configuration and network path.</li>
+      <li><strong>Type 6, Code 1 — Math Overflow:</strong> Instruction result exceeded the data type range. Add bounds checking to your logic.</li>
+      <li><strong>Type 11, Code 1 — Motion Axis Fault:</strong> A servo axis reported an error. Check the Kinetix drive fault log for details.</li>
+    </ul>
+  </div>
+
+  <div class="card subsection">
+    <h2>PLC Communication Fault Troubleshooting</h2>
+    <p>Communication faults are the second most common PLC issue after I/O faults. Follow this systematic approach:</p>
+    <ol>
+      <li><strong>Physical layer:</strong> Check cables, connectors, switch port LEDs. Look for link and activity indicators. Replace suspect cables with known-good ones.</li>
+      <li><strong>Network layer:</strong> Verify IP addresses (no duplicates), subnet masks, and gateways. Use ping to test reachability.</li>
+      <li><strong>Application layer:</strong> Check RPI settings (EtherNet/IP), station timeouts (Modbus), and connection parameters. Too-fast RPIs on congested networks cause intermittent faults.</li>
+      <li><strong>Switch diagnostics:</strong> On managed switches, check port statistics for CRC errors, collisions, and packet drops. Replace failing switch ports.</li>
+      <li><strong>PLC diagnostics:</strong> Use MSG instruction error codes, connection status tags, and the controller's diagnostic counters to identify the failing connection.</li>
+    </ol>
+  </div>
+
+  <div class="card subsection">
+    <h2>PLC Program Faults — Prevention Tips</h2>
+    <p>Program faults halt the controller when an instruction encounters an unrecoverable error. Prevent them with these practices:</p>
+    <ul>
+      <li><strong>Array bounds checking:</strong> Always verify array indices before using them. A common cause of Type 4 faults is indexing beyond array limits.</li>
+      <li><strong>Division guards:</strong> Check for zero before any DIV, MOD, or CPT instruction that includes division.</li>
+      <li><strong>Message timeouts:</strong> Set appropriate timeouts on MSG instructions. A hung message can trigger a watchdog fault.</li>
+      <li><strong>Task scheduling:</strong> Don't put heavy logic in a fast periodic task. Use event tasks or slower periodic tasks for non-time-critical code.</li>
+    </ul>
+  </div>
+
+  <!-- Fault code listing -->
+  <div class="card">
+    <h2 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem;">All PLC Error Codes in Database</h2>
+    {% for cat, cat_faults in plc_categories.items() | sort %}
+    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.4rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);">
+      {{ cat | replace('_', ' ') | title }} ({{ cat_faults | length }})
+    </div>
+    <div class="fault-grid">
+      {% for fault in cat_faults | sort(attribute='code') %}
+      <a href="/fault/{{ fault.code }}" class="fault-row">
+        <span class="fault-row-code">{{ fault.code }}</span>
+        <span class="fault-row-name">{{ fault.name }}</span>
+        {% if fault.severity %}
+        <span class="fault-row-severity {{ fault.severity }}">{{ fault.severity }}</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-box">
+    <h2>Look Up Any PLC Error Code Instantly</h2>
+    <p>Enter a fault code or upload a photo of your HMI screen. Get ranked root causes, step-by-step fix procedures, and replacement parts links. No signup required.</p>
+    <a href="/diagnose" class="btn" style="max-width: 360px; margin: 0 auto; display: inline-block;">Run Free PLC Diagnosis</a>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <h2 style="font-size: 1.1rem; text-align: center; margin-bottom: 1rem;">PLC Error Code FAQ</h2>
+    <div class="faq-item">
+      <h3>How do I look up a PLC error code?</h3>
+      <p>Enter the exact error code from your PLC's HMI display or programming software into RepairXpert's free diagnostic tool. Get ranked root causes, fix procedures, and parts recommendations instantly. Covers 313+ fault codes across all major equipment types.</p>
+    </div>
+    <div class="faq-item">
+      <h3>What are the main types of PLC faults?</h3>
+      <p>Major Faults (halt the controller), Minor Faults (warnings only), I/O Faults (module communication), Communication Faults (network errors), Program Faults (instruction exceptions), and Motion Faults (servo axis errors).</p>
+    </div>
+    <div class="faq-item">
+      <h3>What does PLC Major Fault Type 4 Code 16 mean?</h3>
+      <p>Type 4, Code 16 is a Watchdog fault in Allen-Bradley ControlLogix. A task took longer than its configured watchdog time. Optimize the routine, reduce iterations, or increase the watchdog timer in Task Properties.</p>
+    </div>
+    <div class="faq-item">
+      <h3>How do I troubleshoot PLC communication faults?</h3>
+      <p>Systematic approach: check physical layer (cables, LEDs), verify network settings (IP, subnet), review timeout parameters (RPI, station timeout), check switch port statistics, and use PLC diagnostic counters and MSG error codes.</p>
+    </div>
+    <div class="faq-item">
+      <h3>Is RepairXpert a free PLC error code lookup tool?</h3>
+      <p>Yes. The free tier includes instant lookups, photo-based diagnostics, and parts search. No login required. Pro ($19/mo) adds unlimited queries and history. Enterprise ($49/mo) adds custom codes, API access, and MCP integration.</p>
+    </div>
+  </div>
+
+  <div style="margin-top: 2rem; font-size: 0.8rem; color: var(--muted);">
+    <a href="/">Home</a> &rsaquo; <a href="/faults">Fault Codes</a> &rsaquo; PLC Error Codes
+  </div>
+
+</div>
+<script>fetch('/api/analytics/hit?p='+encodeURIComponent(location.pathname)+'&r='+encodeURIComponent(document.referrer),{method:'GET'})</script>
+</body>
+</html>

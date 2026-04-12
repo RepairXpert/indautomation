@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Allen-Bradley Fault Codes — ControlLogix, PowerFlex, GuardLogix | RepairXpert</title>
+<meta name="description" content="Complete Allen-Bradley fault code reference. 74 codes for ControlLogix, CompactLogix, GuardLogix, PowerFlex VFDs, GuardMaster safety relays, and EtherNet/IP. Free AI diagnosis.">
+<meta name="keywords" content="Allen-Bradley fault codes, ControlLogix fault codes, CompactLogix errors, GuardLogix faults, PowerFlex fault codes, Rockwell Automation troubleshooting, AB PLC error codes, EtherNet/IP faults, 1756 fault codes, Allen-Bradley PLC troubleshooting">
+<link rel="canonical" href="https://indautomation.onrender.com/faults/allen-bradley">
+
+<meta property="og:title" content="Allen-Bradley Fault Codes — 74 Codes with AI Diagnosis | RepairXpert">
+<meta property="og:description" content="Free Allen-Bradley fault code lookup. ControlLogix, PowerFlex, GuardLogix, EtherNet/IP. Get root causes and fix steps instantly.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://indautomation.onrender.com/faults/allen-bradley">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What are the most common Allen-Bradley ControlLogix fault codes?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The most common ControlLogix fault codes include: Major Fault Type 01 (Power-up default — controller powered up without a project), Major Fault Type 04 (Watchdog fault — task exceeded its watchdog time), Major Fault Type 06 (Instruction fault — math overflow or illegal instruction), and Major Fault Type 11 (Motion fault — servo axis error). RepairXpert covers 74 Allen-Bradley fault codes with step-by-step repair procedures."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I clear a major fault on an Allen-Bradley PLC?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "To clear a major fault: 1) Connect to the controller via RSLogix 5000 / Studio 5000. 2) Check the Controller Properties > Major Faults tab to identify the fault type and code. 3) Fix the underlying cause (bad program logic, hardware failure, etc). 4) Go online and click 'Clear Major Fault' in the Controller menu. 5) Switch the controller back to Run mode. For persistent faults, check the controller's fault log and verify all I/O modules are communicating."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does PowerFlex fault code F004 mean?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "PowerFlex F004 is an Undervoltage fault, indicating the DC bus voltage dropped below the minimum threshold. Common causes: incoming power sag or brownout, loose wiring at the drive input terminals, undersized power supply, or a failing DC bus capacitor bank. Fix: check incoming voltage with a meter, verify wire terminations, check for voltage dips during motor starting, and inspect DC bus capacitors for bulging."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I troubleshoot EtherNet/IP communication faults on Allen-Bradley?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "For EtherNet/IP communication faults: 1) Check physical connections — cable, port LEDs, switch. 2) Verify IP addresses — no duplicates, correct subnet. 3) Check RPI (Requested Packet Interval) — if too fast for the network, increase it. 4) Use RSLinx to confirm the module path is correct. 5) Check the 1756-EN2T or EN3TR module status LEDs. Green = OK, red = fault, flashing = no connection. 6) Run 'msg' diagnostics in the controller to see CIP error codes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What Allen-Bradley PLCs does RepairXpert support?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "RepairXpert supports Allen-Bradley ControlLogix (1756 series), CompactLogix (1769 series), GuardLogix (safety controllers), PowerFlex VFDs (40, 400, 525, 755), GuardMaster safety relays, CR30 contactors, and EtherNet/IP communication modules. Our database covers 74 Allen-Bradley specific fault codes with root cause analysis, field-tested fix steps, and replacement parts recommendations."
+      }
+    }
+  ]
+}
+</script>
+
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .seo-hero {
+    text-align: center;
+    padding: 2rem 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+  .seo-hero h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+  }
+  .seo-hero p {
+    font-size: 0.92rem;
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .seo-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .seo-stat {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    text-align: center;
+    flex: 1;
+    min-width: 90px;
+  }
+  .seo-stat .num {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+  }
+  .seo-stat .label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .subsection { margin-bottom: 2rem; }
+  .subsection h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--accent);
+  }
+  .subsection p, .subsection li {
+    font-size: 0.88rem;
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .subsection ul {
+    padding-left: 1.2rem;
+    margin-bottom: 0.75rem;
+  }
+  .subsection li { margin-bottom: 0.3rem; }
+  .fault-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+  .fault-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .fault-row:hover {
+    border-color: var(--blue);
+    transform: translateX(3px);
+    text-decoration: none;
+  }
+  .fault-row-code {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(88,166,255,0.12);
+    color: var(--blue);
+    white-space: nowrap;
+    min-width: 70px;
+    text-align: center;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  }
+  .fault-row-name {
+    font-size: 0.88rem;
+    font-weight: 500;
+    flex: 1;
+  }
+  .fault-row-severity {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .fault-row-severity.critical { background: rgba(248,81,73,0.15); color: var(--red); }
+  .fault-row-severity.high { background: rgba(247,129,102,0.15); color: var(--accent); }
+  .fault-row-severity.medium { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .fault-row-severity.low { background: rgba(63,185,80,0.15); color: var(--green); }
+  .faq-section { margin-top: 2rem; }
+  .faq-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.75rem;
+  }
+  .faq-item h3 {
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+  .faq-item p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .cta-box {
+    background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(16,185,129,0.1));
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    margin: 2rem 0;
+  }
+  .cta-box h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .cta-box p { font-size: 0.88rem; color: var(--muted); margin-bottom: 1rem; }
+  @media (max-width: 480px) {
+    .seo-hero h1 { font-size: 1.2rem; }
+    .seo-stats { gap: 0.5rem; }
+    .fault-row { flex-wrap: wrap; gap: 0.4rem; }
+  }
+</style>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('/static/sw.js')</script>
+</head>
+<body>
+<header>
+  <div class="logo-row">
+    <img src="/static/logo.svg" alt="RepairXpert Industrial Automation" height="48">
+  </div>
+  <nav>
+    <a href="/">Diagnose</a>
+    <a href="/faults" class="active">Fault Codes</a>
+    <a href="/history">History</a>
+    <a href="/pricing">Pricing</a>
+  </nav>
+</header>
+
+<div class="container">
+
+  <div class="seo-hero">
+    <h1>Allen-Bradley Fault Codes — Complete Troubleshooting Reference</h1>
+    <p>{{ ab_count }} fault codes for ControlLogix, CompactLogix, GuardLogix, PowerFlex VFDs, GuardMaster safety relays, and EtherNet/IP modules. Free AI-powered diagnosis with root causes and fix steps.</p>
+  </div>
+
+  <div class="seo-stats">
+    <div class="seo-stat">
+      <span class="num">{{ ab_count }}</span>
+      <span class="label">AB Codes</span>
+    </div>
+    <div class="seo-stat">
+      <span class="num">{{ ab_categories | length }}</span>
+      <span class="label">Subsystems</span>
+    </div>
+    <div class="seo-stat">
+      <span class="num">{{ total }}</span>
+      <span class="label">Total DB</span>
+    </div>
+    <div class="seo-stat">
+      <span class="num">8</span>
+      <span class="label">MCP Tools</span>
+    </div>
+  </div>
+
+  <!-- Content sections for SEO -->
+  <div class="card subsection">
+    <h2>Allen-Bradley ControlLogix Fault Codes</h2>
+    <p>ControlLogix (1756 series) is the workhorse of large-scale industrial automation. Major faults halt the controller and require intervention. Minor faults log warnings but keep running. Common ControlLogix fault types include:</p>
+    <ul>
+      <li><strong>Type 01 — Power-Up:</strong> Controller powered up without a project or with a corrupted program. Download the project from RSLogix 5000.</li>
+      <li><strong>Type 04 — Watchdog:</strong> A task exceeded its watchdog timer. Usually means a program loop or excessive processing. Increase the watchdog or optimize the routine.</li>
+      <li><strong>Type 06 — Instruction:</strong> Math overflow, divide by zero, or illegal instruction. Check the faulted routine in RSLogix.</li>
+      <li><strong>Type 11 — Motion:</strong> Servo axis faults — position error, overcurrent, or drive fault. Check the Kinetix drive status and axis properties.</li>
+    </ul>
+  </div>
+
+  <div class="card subsection">
+    <h2>PowerFlex VFD Fault Codes</h2>
+    <p>PowerFlex drives (40, 400, 525, 755) are Allen-Bradley's variable frequency drive line. Faults display on the drive HMI and propagate to the PLC via EtherNet/IP. Common PowerFlex faults:</p>
+    <ul>
+      <li><strong>F002 — Auxiliary Input:</strong> External fault input triggered. Check the wiring to the drive's digital inputs.</li>
+      <li><strong>F004 — Undervoltage:</strong> DC bus voltage dropped below threshold. Check incoming power, connections, and capacitor bank.</li>
+      <li><strong>F005 — Overvoltage:</strong> DC bus voltage exceeded limit during deceleration. Add a braking resistor or increase decel time.</li>
+      <li><strong>F007 — Motor Overload:</strong> Electronic overload tripped. Verify motor FLA, check for mechanical binding.</li>
+      <li><strong>F012 — HW Overcurrent:</strong> Instantaneous overcurrent detected. Check for output short circuits or ground faults.</li>
+    </ul>
+  </div>
+
+  <div class="card subsection">
+    <h2>GuardLogix Safety Fault Codes</h2>
+    <p>GuardLogix safety controllers require SIL 2/SIL 3 compliant fault handling. Safety faults lock out the safety task and require a deliberate reset. Key fault types:</p>
+    <ul>
+      <li><strong>Safety Partner Missing:</strong> The safety partner (1756-L7SP) lost communication with the primary controller. Check the backplane connection.</li>
+      <li><strong>Safety Task Fault:</strong> The safety routine faulted. Unlike standard tasks, safety faults cannot be auto-cleared. Review the safety routine logic.</li>
+      <li><strong>Guard I/O Fault:</strong> A POINT Guard I/O module lost its safety connection. Verify the safety connection parameters and CIP Safety timeout.</li>
+    </ul>
+  </div>
+
+  <!-- Fault code listing -->
+  <div class="card">
+    <h2 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem;">All Allen-Bradley Fault Codes</h2>
+    {% for cat, cat_faults in ab_categories.items() | sort %}
+    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.4rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border);">
+      {{ cat | replace('_', ' ') | title }} ({{ cat_faults | length }})
+    </div>
+    <div class="fault-grid">
+      {% for fault in cat_faults | sort(attribute='code') %}
+      <a href="/fault/{{ fault.code }}" class="fault-row">
+        <span class="fault-row-code">{{ fault.code }}</span>
+        <span class="fault-row-name">{{ fault.name }}</span>
+        {% if fault.severity %}
+        <span class="fault-row-severity {{ fault.severity }}">{{ fault.severity }}</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-box">
+    <h2>Diagnose Your Allen-Bradley Fault in 30 Seconds</h2>
+    <p>Enter a fault code or upload a photo of your HMI screen. Get ranked root causes, fix procedures, and parts links instantly. No signup required.</p>
+    <a href="/diagnose" class="btn" style="max-width: 360px; margin: 0 auto; display: inline-block;">Run Free Diagnosis</a>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <h2 style="font-size: 1.1rem; text-align: center; margin-bottom: 1rem;">Allen-Bradley Fault Code FAQ</h2>
+    <div class="faq-item">
+      <h3>What are the most common Allen-Bradley ControlLogix fault codes?</h3>
+      <p>The most common ControlLogix fault codes include: Major Fault Type 01 (Power-up default), Type 04 (Watchdog fault), Type 06 (Instruction fault), and Type 11 (Motion fault). RepairXpert covers 74 Allen-Bradley fault codes with step-by-step repair procedures.</p>
+    </div>
+    <div class="faq-item">
+      <h3>How do I clear a major fault on an Allen-Bradley PLC?</h3>
+      <p>Connect via RSLogix 5000 / Studio 5000. Check Controller Properties > Major Faults to identify the fault type. Fix the underlying cause, then click 'Clear Major Fault' in the Controller menu and switch back to Run mode.</p>
+    </div>
+    <div class="faq-item">
+      <h3>What does PowerFlex fault code F004 mean?</h3>
+      <p>F004 is an Undervoltage fault — the DC bus voltage dropped below the minimum threshold. Check incoming power, verify wire terminations, look for voltage dips during motor starting, and inspect DC bus capacitors for bulging.</p>
+    </div>
+    <div class="faq-item">
+      <h3>How do I troubleshoot EtherNet/IP communication faults?</h3>
+      <p>Check physical connections and LEDs. Verify IP addresses and subnets. Check RPI settings. Use RSLinx to confirm the module path. Review 1756-EN2T/EN3TR status LEDs: green = OK, red = fault, flashing = no connection.</p>
+    </div>
+    <div class="faq-item">
+      <h3>What Allen-Bradley PLCs does RepairXpert support?</h3>
+      <p>ControlLogix (1756), CompactLogix (1769), GuardLogix, PowerFlex VFDs (40, 400, 525, 755), GuardMaster safety relays, CR30 contactors, and EtherNet/IP communication modules. 74 fault codes with root cause analysis and parts recommendations.</p>
+    </div>
+  </div>
+
+  <!-- Breadcrumb nav -->
+  <div style="margin-top: 2rem; font-size: 0.8rem; color: var(--muted);">
+    <a href="/">Home</a> &rsaquo; <a href="/faults">Fault Codes</a> &rsaquo; Allen-Bradley
+  </div>
+
+</div>
+<script>fetch('/api/analytics/hit?p='+encodeURIComponent(location.pathname)+'&r='+encodeURIComponent(document.referrer),{method:'GET'})</script>
+</body>
+</html>

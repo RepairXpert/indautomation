@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>VFD Fault Codes — Variable Frequency Drive Troubleshooting | RepairXpert</title>
+<meta name="description" content="Complete VFD fault code reference. 39 codes for PowerFlex, ABB, Siemens, Yaskawa drives. Overcurrent, overvoltage, ground fault, overtemperature diagnostics. Free AI diagnosis.">
+<meta name="keywords" content="VFD fault codes, variable frequency drive faults, PowerFlex fault codes, ABB drive errors, Siemens VFD faults, Yaskawa drive codes, VFD overcurrent, VFD overvoltage, drive troubleshooting, motor drive error codes">
+<link rel="canonical" href="https://indautomation.onrender.com/faults/vfd">
+
+<meta property="og:title" content="VFD Fault Codes — 39 Drive Codes with AI Diagnosis | RepairXpert">
+<meta property="og:description" content="Free VFD fault code lookup. PowerFlex, ABB, Siemens, Yaskawa. Get root causes, fix steps, and parts links instantly.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://indautomation.onrender.com/faults/vfd">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What are the most common VFD fault codes?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The most common VFD faults across all manufacturers are: Overcurrent (OC/F012) — motor drawing too much current, check for mechanical binding or short circuits. Overvoltage (OV/F005) — DC bus voltage too high during deceleration, add braking resistor or increase decel time. Ground Fault (GF) — insulation breakdown in motor windings or cable, megger test the motor. Overtemperature (OT) — drive heatsink too hot, clean the fan and heatsink fins, check ambient temperature."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I reset a VFD fault?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most VFDs reset by: 1) Pressing the STOP/RESET button on the drive keypad. 2) Toggling a digital input configured as 'Fault Reset'. 3) Sending a reset command via the network (EtherNet/IP, Modbus, etc). 4) Power cycling the drive (last resort). Important: ALWAYS identify and fix the root cause before resetting. Repeatedly resetting without fixing the issue can damage the drive, motor, or connected equipment."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What causes a VFD overcurrent fault?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "VFD overcurrent faults are caused by: 1) Mechanical overload — jammed conveyor, seized bearing, product buildup. 2) Short circuit — damaged motor cable insulation, moisture in junction box. 3) Ground fault — deteriorated motor winding insulation. 4) Incorrect motor parameters — wrong FLA, voltage, or motor type setting in the drive. 5) Acceleration too fast — motor can't reach speed in the programmed accel time. Fix: check motor amps with a clamp meter, verify mechanical load, megger the motor, and review drive parameters."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I size a braking resistor for a VFD?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Braking resistor sizing depends on: 1) The kinetic energy of the load (heavier/faster = more braking energy). 2) The required deceleration time. 3) The drive's DC bus voltage rating. Formula: P_brake = (0.5 * J * omega^2) / t_decel. For most applications, use the drive manufacturer's braking resistor selection guide. Common rule of thumb: braking resistor wattage should be 10-20% of the drive's HP rating for moderate duty, 50-100% for high-inertia applications like centrifuges or flywheels."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What VFD brands does RepairXpert support?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "RepairXpert covers fault codes for Allen-Bradley PowerFlex (40, 400, 525, 755), ABB ACS series, Siemens SINAMICS, Yaskawa GA/GA700, and generic VFD fault patterns. Our database includes 39 VFD-specific fault codes covering overcurrent, overvoltage, ground fault, overtemperature, communication loss, and parameter errors with field-tested repair procedures."
+      }
+    }
+  ]
+}
+</script>
+
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .seo-hero {
+    text-align: center;
+    padding: 2rem 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+  .seo-hero h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+  }
+  .seo-hero p {
+    font-size: 0.92rem;
+    color: var(--muted);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .seo-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .seo-stat {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    text-align: center;
+    flex: 1;
+    min-width: 90px;
+  }
+  .seo-stat .num {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+  }
+  .seo-stat .label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .subsection { margin-bottom: 2rem; }
+  .subsection h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: var(--accent);
+  }
+  .subsection p, .subsection li {
+    font-size: 0.88rem;
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .subsection ul {
+    padding-left: 1.2rem;
+    margin-bottom: 0.75rem;
+  }
+  .subsection li { margin-bottom: 0.3rem; }
+  .fault-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+  .fault-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .fault-row:hover {
+    border-color: var(--blue);
+    transform: translateX(3px);
+    text-decoration: none;
+  }
+  .fault-row-code {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(88,166,255,0.12);
+    color: var(--blue);
+    white-space: nowrap;
+    min-width: 70px;
+    text-align: center;
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  }
+  .fault-row-name {
+    font-size: 0.88rem;
+    font-weight: 500;
+    flex: 1;
+  }
+  .fault-row-severity {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .fault-row-severity.critical { background: rgba(248,81,73,0.15); color: var(--red); }
+  .fault-row-severity.high { background: rgba(247,129,102,0.15); color: var(--accent); }
+  .fault-row-severity.medium { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .fault-row-severity.low { background: rgba(63,185,80,0.15); color: var(--green); }
+  .faq-section { margin-top: 2rem; }
+  .faq-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.75rem;
+  }
+  .faq-item h3 {
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text);
+  }
+  .faq-item p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .cta-box {
+    background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(16,185,129,0.1));
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    margin: 2rem 0;
+  }
+  .cta-box h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .cta-box p { font-size: 0.88rem; color: var(--muted); margin-bottom: 1rem; }
+  @media (max-width: 480px) {
+    .seo-hero h1 { font-size: 1.2rem; }
+    .seo-stats { gap: 0.5rem; }
+    .fault-row { flex-wrap: wrap; gap: 0.4rem; }
+  }
+</style>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('/static/sw.js')</script>
+</head>
+<body>
+<header>
+  <div class="logo-row">
+    <img src="/static/logo.svg" alt="RepairXpert Industrial Automation" height="48">
+  </div>
+  <nav>
+    <a href="/">Diagnose</a>
+    <a href="/faults" class="active">Fault Codes</a>
+    <a href="/history">History</a>
+    <a href="/pricing">Pricing</a>
+  </nav>
+</header>
+
+<div class="container">
+
+  <div class="seo-hero">
+    <h1>VFD Fault Codes — Variable Frequency Drive Troubleshooting Guide</h1>
+    <p>{{ vfd_count }} fault codes for PowerFlex, ABB, Siemens, and Yaskawa drives. Overcurrent, overvoltage, ground fault, overtemperature, and communication diagnostics with AI-powered root cause analysis.</p>
+  </div>
+
+  <div class="seo-stats">
+    <div class="seo-stat">
+      <span class="num">{{ vfd_count }}</span>
+      <span class="label">VFD Codes</span>
+    </div>
+    <div class="seo-stat">
+      <span class="num">4+</span>
+      <span class="label">Drive Brands</span>
+    </div>
+    <div class="seo-stat">
+      <span class="num">{{ total }}</span>
+      <span class="label">Total DB</span>
+    </div>
+    <div class="seo-stat">
+      <span class="num">8</span>
+      <span class="label">MCP Tools</span>
+    </div>
+  </div>
+
+  <div class="card subsection">
+    <h2>VFD Overcurrent Faults (OC / F012)</h2>
+    <p>Overcurrent is the most common VFD fault. The drive detects instantaneous current exceeding the hardware trip point. This protects the drive's IGBT transistors from destruction.</p>
+    <ul>
+      <li><strong>During acceleration:</strong> Motor can't reach speed fast enough. Increase accel time, check for mechanical binding, or verify motor FLA settings.</li>
+      <li><strong>At constant speed:</strong> Load increased suddenly (product jam, seized bearing). Check mechanical load and motor amps.</li>
+      <li><strong>At startup:</strong> Possible output short circuit or ground fault. Disconnect motor leads and megger test each phase to ground.</li>
+    </ul>
+  </div>
+
+  <div class="card subsection">
+    <h2>VFD Overvoltage Faults (OV / F005)</h2>
+    <p>Overvoltage faults occur when the DC bus voltage exceeds the drive's maximum rating. This happens when the motor acts as a generator during deceleration, pumping energy back into the drive.</p>
+    <ul>
+      <li><strong>During deceleration:</strong> High-inertia load feeding energy back. Install a braking resistor or increase decel time.</li>
+      <li><strong>At constant speed:</strong> Incoming power surge or regenerative load (elevator, crane). Check utility power quality.</li>
+      <li><strong>Overhauling loads:</strong> Gravity-fed conveyors or downhill applications. Use a regen drive or braking chopper.</li>
+    </ul>
+  </div>
+
+  <div class="card subsection">
+    <h2>VFD Ground Fault Diagnostics</h2>
+    <p>Ground faults indicate insulation breakdown between a motor phase and ground. Left unchecked, ground faults cause drive damage, safety hazards, and fire risk.</p>
+    <ul>
+      <li><strong>Step 1:</strong> Disconnect motor leads at the drive output terminals.</li>
+      <li><strong>Step 2:</strong> Megger test each motor phase to ground. Readings below 1 megohm indicate deteriorated insulation.</li>
+      <li><strong>Step 3:</strong> If motor passes, megger the cable. Check junction boxes for moisture.</li>
+      <li><strong>Step 4:</strong> If both pass, the drive's ground fault detection circuit may be faulty. Swap with a known-good drive to verify.</li>
+    </ul>
+  </div>
+
+  <div class="card subsection">
+    <h2>VFD Overtemperature Faults (OT)</h2>
+    <p>The drive's internal temperature sensor detects excessive heat. Drives typically fault at 85-100 degrees C heatsink temperature.</p>
+    <ul>
+      <li><strong>Fan failure:</strong> Check that the cooling fan is spinning. Replace if seized.</li>
+      <li><strong>Dirty heatsink:</strong> Blow out dust and debris from the heatsink fins with compressed air.</li>
+      <li><strong>High ambient:</strong> VFDs are rated for 40C (104F) ambient. In hot environments, derate or add enclosure cooling.</li>
+      <li><strong>Overloaded:</strong> Continuous current above the drive's rating. Verify motor FLA vs. drive FLA rating.</li>
+    </ul>
+  </div>
+
+  <!-- Fault code listing -->
+  <div class="card">
+    <h2 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem;">All VFD Fault Codes</h2>
+    <div class="fault-grid">
+      {% for fault in vfd_faults | sort(attribute='code') %}
+      <a href="/fault/{{ fault.code }}" class="fault-row">
+        <span class="fault-row-code">{{ fault.code }}</span>
+        <span class="fault-row-name">{{ fault.name }}</span>
+        {% if fault.severity %}
+        <span class="fault-row-severity {{ fault.severity }}">{{ fault.severity }}</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-box">
+    <h2>Diagnose Your VFD Fault in 30 Seconds</h2>
+    <p>Enter a fault code or upload a photo of your drive display. Get ranked root causes, fix procedures, and replacement parts links instantly. No signup required.</p>
+    <a href="/diagnose" class="btn" style="max-width: 360px; margin: 0 auto; display: inline-block;">Run Free Diagnosis</a>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <h2 style="font-size: 1.1rem; text-align: center; margin-bottom: 1rem;">VFD Fault Code FAQ</h2>
+    <div class="faq-item">
+      <h3>What are the most common VFD fault codes?</h3>
+      <p>Overcurrent (OC/F012), Overvoltage (OV/F005), Ground Fault (GF), and Overtemperature (OT). These four faults account for over 80% of all VFD trip events in industrial settings.</p>
+    </div>
+    <div class="faq-item">
+      <h3>How do I reset a VFD fault?</h3>
+      <p>Press STOP/RESET on the keypad, toggle a digital input configured as Fault Reset, send a network reset command, or power cycle. Always fix the root cause before resetting — repeated resets without fixing can damage the drive and motor.</p>
+    </div>
+    <div class="faq-item">
+      <h3>What causes a VFD overcurrent fault?</h3>
+      <p>Mechanical overload (jammed conveyor, seized bearing), output short circuit, ground fault in motor windings, incorrect motor parameters, or too-fast acceleration. Check amps with a clamp meter and verify mechanical load first.</p>
+    </div>
+    <div class="faq-item">
+      <h3>How do I size a braking resistor for a VFD?</h3>
+      <p>Braking resistor wattage should be 10-20% of drive HP for moderate duty, 50-100% for high-inertia loads like centrifuges. Use the manufacturer's selection guide or calculate from P = (0.5 * J * omega^2) / t_decel.</p>
+    </div>
+    <div class="faq-item">
+      <h3>What VFD brands does RepairXpert support?</h3>
+      <p>Allen-Bradley PowerFlex (40, 400, 525, 755), ABB ACS series, Siemens SINAMICS, Yaskawa GA/GA700, and generic VFD fault patterns. 39 VFD-specific codes with repair procedures and parts recommendations.</p>
+    </div>
+  </div>
+
+  <div style="margin-top: 2rem; font-size: 0.8rem; color: var(--muted);">
+    <a href="/">Home</a> &rsaquo; <a href="/faults">Fault Codes</a> &rsaquo; VFD Fault Codes
+  </div>
+
+</div>
+<script>fetch('/api/analytics/hit?p='+encodeURIComponent(location.pathname)+'&r='+encodeURIComponent(document.referrer),{method:'GET'})</script>
+</body>
+</html>
