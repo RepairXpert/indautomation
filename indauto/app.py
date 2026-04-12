@@ -3,7 +3,7 @@ import json
 import os
 import sys
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
@@ -133,6 +133,18 @@ def get_db():
         comment TEXT,
         created_at TEXT NOT NULL,
         FOREIGN KEY (diagnosis_id) REFERENCES diagnoses(id)
+    )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS recovery_queue (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL,
+        plan TEXT NOT NULL,
+        stage INTEGER NOT NULL DEFAULT 1,
+        send_at TEXT NOT NULL,
+        sent INTEGER DEFAULT 0,
+        sent_at TEXT,
+        stripe_session_id TEXT,
+        created_at TEXT NOT NULL,
+        unsubscribed INTEGER DEFAULT 0
     )""")
     db.commit()
     return db
@@ -366,87 +378,184 @@ async def recover_checkout(request: Request):
 
     # Send recovery email with fresh checkout link
     base_url = os.environ.get("RENDER_EXTERNAL_URL", "https://repairxpertai.com")
-    _send_recovery_email(email, plan, base_url)
+    _send_recovery_email(email, plan, base_url, stage=1)
 
     return JSONResponse({"status": "ok", "message": "We'll send you a link to complete your subscription."})
 
 
 def _handle_checkout_completed(session: dict):
-    """Mark lead as converted."""
+    """Mark lead as converted and cancel any pending recovery emails."""
     email = session.get("customer_email", "") or session.get("customer_details", {}).get("email", "")
     if email:
         try:
             db = get_db()
             db.execute("UPDATE checkout_leads SET status='converted' WHERE email=? AND status='pending'", (email,))
+            # Cancel any unsent recovery emails — they converted
+            db.execute(
+                "UPDATE recovery_queue SET sent=1, sent_at=? WHERE email=? AND sent=0",
+                (datetime.now(timezone.utc).isoformat(), email),
+            )
             db.commit()
             db.close()
+            _log_stripe_event("recovery_cancelled_converted", {"email": email})
         except Exception:
             pass
 
 
 def _handle_checkout_expired(session: dict):
-    """Send recovery email for expired checkout sessions."""
+    """Queue 3-email recovery sequence for expired checkout sessions."""
     email = session.get("customer_email", "")
     if not email:
         return
 
-    # Check if we already sent a recovery for this email recently
-    try:
-        db = get_db()
-        row = db.execute(
-            "SELECT recovery_sent_at FROM checkout_leads WHERE email=? ORDER BY id DESC LIMIT 1",
-            (email,),
-        ).fetchone()
-        if row and row["recovery_sent_at"]:
-            db.close()
-            return  # Already sent recovery
-        db.execute(
-            "UPDATE checkout_leads SET status='expired', recovery_sent_at=? WHERE email=? AND status='pending'",
-            (datetime.now(timezone.utc).isoformat(), email),
-        )
-        db.commit()
-        db.close()
-    except Exception:
-        pass
-
-    # Determine plan from session metadata
-    plan = "pro"
-    line_items = session.get("line_items", {}).get("data", [])
-    if line_items:
-        price_id = line_items[0].get("price", {}).get("id", "")
-        if price_id == STRIPE_PRICE_IDS.get("enterprise"):
-            plan = "enterprise"
-
-    base_url = os.environ.get("RENDER_EXTERNAL_URL", "https://repairxpertai.com")
-    _send_recovery_email(email, plan, base_url)
-
-
-def _send_recovery_email(email: str, plan: str, base_url: str):
-    """Send abandoned cart recovery email via Resend."""
-    if not RESEND_API_KEY:
-        _log_stripe_event("recovery_email_skipped", {"email": email, "reason": "no_resend_key"})
+    # Skip test accounts
+    if email.lower() in ("ericwestmail@gmail.com", "test@test.com"):
         return
 
-    plan_name = "Enterprise" if plan == "enterprise" else "Pro"
-    plan_price = "$49.99" if plan == "enterprise" else "$19.99"
+    now = datetime.now(timezone.utc)
 
-    html_body = f"""<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;color:#e6edf3;background:#161b22;padding:2rem;border-radius:8px">
-<h2 style="color:#f78166;margin-bottom:1rem">You were close to upgrading</h2>
-<p>You started checking out the <strong>{plan_name}</strong> plan ({plan_price}/mo) for RepairXpert Industrial Fault Diagnosis but didn't finish.</p>
-<p style="margin:1.5rem 0">Ready to pick up where you left off? Your diagnostic power-up is one click away:</p>
-<a href="{base_url}/pricing" style="display:inline-block;background:#f78166;color:#fff;padding:0.75rem 2rem;border-radius:6px;text-decoration:none;font-weight:600">Complete Your Subscription</a>
-<p style="margin-top:1.5rem;color:#8b949e;font-size:0.85rem">Cancel anytime. No contracts. 313+ fault codes, AI diagnosis, parts recommendations.</p>
+    try:
+        db = get_db()
+        # Check if we already have a recovery queue for this email in the last 7 days
+        recent = db.execute(
+            "SELECT id FROM recovery_queue WHERE email=? AND created_at > ? LIMIT 1",
+            (email, (now - timedelta(days=7)).isoformat()),
+        ).fetchone()
+        if recent:
+            db.close()
+            _log_stripe_event("recovery_skipped_duplicate", {"email": email})
+            return
+
+        # Check if unsubscribed
+        unsub = db.execute(
+            "SELECT id FROM recovery_queue WHERE email=? AND unsubscribed=1 LIMIT 1",
+            (email,),
+        ).fetchone()
+        if unsub:
+            db.close()
+            _log_stripe_event("recovery_skipped_unsubscribed", {"email": email})
+            return
+
+        # Mark lead as expired
+        db.execute(
+            "UPDATE checkout_leads SET status='expired', recovery_sent_at=? WHERE email=? AND status='pending'",
+            (now.isoformat(), email),
+        )
+
+        # Determine plan from amount or line items
+        plan = "pro"
+        amount_total = session.get("amount_total", 0)
+        if amount_total and amount_total >= 4900:
+            plan = "enterprise"
+        else:
+            line_items = session.get("line_items", {}).get("data", [])
+            if line_items:
+                price_id = line_items[0].get("price", {}).get("id", "")
+                if price_id == STRIPE_PRICE_IDS.get("enterprise"):
+                    plan = "enterprise"
+
+        stripe_session_id = session.get("id", "")
+
+        # Queue 3 emails: 1h, 24h, 72h
+        for stage, hours in [(1, 1), (2, 24), (3, 72)]:
+            send_at = (now + timedelta(hours=hours)).isoformat()
+            db.execute(
+                "INSERT INTO recovery_queue (email, plan, stage, send_at, stripe_session_id, created_at) VALUES (?,?,?,?,?,?)",
+                (email, plan, stage, send_at, stripe_session_id, now.isoformat()),
+            )
+
+        db.commit()
+        db.close()
+        _log_stripe_event("recovery_queued", {"email": email, "plan": plan, "stages": "1,2,3"})
+    except Exception as e:
+        _log_stripe_event("recovery_queue_error", {"email": email, "error": str(e)})
+
+
+def _send_recovery_email(email: str, plan: str, base_url: str, stage: int = 1):
+    """Send staged abandoned cart recovery email via Resend.
+
+    Stage 1 (1h):  "Still thinking about it?" — reminder, remove friction
+    Stage 2 (24h): "Your diagnostic tool is waiting" — value prop, use cases
+    Stage 3 (72h): "Last chance" — urgency, money-back guarantee
+    """
+    if not RESEND_API_KEY:
+        _log_stripe_event("recovery_email_skipped", {"email": email, "reason": "no_resend_key"})
+        return False
+
+    plan_name = "Enterprise" if plan == "enterprise" else "Pro"
+    plan_price = "$49" if plan == "enterprise" else "$19"
+    unsub_url = f"{base_url}/api/recovery/unsubscribe?email={email}"
+    pricing_url = f"{base_url}/pricing"
+
+    # ── Stage 1: "Still thinking about it?" (1 hour) ─────────────────────────
+    if stage == 1:
+        subject = f"Still thinking about the {plan_name} plan?"
+        html_body = f"""<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;color:#e6edf3;background:#161b22;padding:2rem;border-radius:8px">
+<h2 style="color:#f78166;margin-bottom:1rem">Still thinking about it?</h2>
+<p>You started checking out the <strong>{plan_name}</strong> plan ({plan_price}/mo) but didn't finish. No worries — your spot is still available.</p>
+<p style="margin:1.5rem 0">Quick reminder of what you get:</p>
+<ul style="color:#c9d1d9;line-height:1.8">
+<li>Unlimited AI fault diagnoses</li>
+<li>Photo analysis of equipment and panels</li>
+<li>313 fault codes across 7 equipment categories</li>
+<li>Parts recommendations with real-time pricing</li>
+{"<li>REST API access + team features</li>" if plan == "enterprise" else ""}
+</ul>
+<p style="margin:1.5rem 0">
+<a href="{pricing_url}" style="display:inline-block;background:#f78166;color:#fff;padding:0.75rem 2rem;border-radius:6px;text-decoration:none;font-weight:600">Complete Your Subscription</a>
+</p>
+<p style="color:#8b949e;font-size:0.85rem">If something went wrong during checkout, just reply to this email.</p>
 <hr style="border:1px solid #30363d;margin:1.5rem 0">
-<p style="color:#8b949e;font-size:0.78rem">RepairXpert Industrial Automation — AI-powered fault diagnosis for field technicians</p>
+<p style="color:#8b949e;font-size:0.78rem">RepairXpert Industrial Automation — AI-powered fault diagnosis for field technicians<br>
+<a href="{unsub_url}" style="color:#8b949e">Unsubscribe from recovery emails</a></p>
+</div>"""
+
+    # ── Stage 2: "Your diagnostic tool is waiting" (24 hours) ─────────────────
+    elif stage == 2:
+        subject = f"Your {plan_name} diagnostic tool is waiting"
+        html_body = f"""<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;color:#e6edf3;background:#161b22;padding:2rem;border-radius:8px">
+<h2 style="color:#f78166;margin-bottom:1rem">Your diagnostic tool is waiting</h2>
+<p>Yesterday you looked at the <strong>{plan_name}</strong> plan ({plan_price}/mo).</p>
+<p style="margin:1rem 0">Here's what field techs use it for:</p>
+<ul style="color:#c9d1d9;line-height:1.8">
+<li>Pull up a fault code mid-shift — get probable causes + fix steps in 30 seconds</li>
+<li>Snap a photo of a panel — AI identifies the issue</li>
+<li>Find the right replacement part with SKU and pricing</li>
+<li>Works on your phone, even on a ladder</li>
+</ul>
+<p style="margin:1.5rem 0">
+<a href="{pricing_url}" style="display:inline-block;background:#f78166;color:#fff;padding:0.75rem 2rem;border-radius:6px;text-decoration:none;font-weight:600">Pick Up Where You Left Off</a>
+</p>
+<p style="color:#8b949e;font-size:0.85rem">3 free diagnoses/day on the free tier if you want to test first. Cancel anytime. No contracts.</p>
+<hr style="border:1px solid #30363d;margin:1.5rem 0">
+<p style="color:#8b949e;font-size:0.78rem">RepairXpert Industrial Automation — AI-powered fault diagnosis for field technicians<br>
+<a href="{unsub_url}" style="color:#8b949e">Unsubscribe from recovery emails</a></p>
+</div>"""
+
+    # ── Stage 3: "Last chance" (72 hours) ─────────────────────────────────────
+    else:
+        subject = f"Last chance: {plan_name} plan — 7-day money-back guarantee"
+        html_body = f"""<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;color:#e6edf3;background:#161b22;padding:2rem;border-radius:8px">
+<h2 style="color:#f78166;margin-bottom:1rem">Last chance — then we'll stop emailing</h2>
+<p>This is the last email about this, promise.</p>
+<p style="margin:1rem 0">If the <strong>{plan_name}</strong> plan doesn't pay for itself in the first week, we'll refund you immediately. No forms, no hoops.</p>
+<p>That's <strong>{plan_price}/mo</strong> to save hours of manual troubleshooting per week.</p>
+<p style="margin:1.5rem 0">
+<a href="{pricing_url}" style="display:inline-block;background:#f78166;color:#fff;padding:0.75rem 2rem;border-radius:6px;text-decoration:none;font-weight:600">Start Your Subscription</a>
+</p>
+<p style="color:#8b949e;font-size:0.85rem">If it's not the right fit, no hard feelings. The free tier (3 diagnoses/day) is always there.</p>
+<hr style="border:1px solid #30363d;margin:1.5rem 0">
+<p style="color:#8b949e;font-size:0.78rem">RepairXpert Industrial Automation — AI-powered fault diagnosis for field technicians<br>
+<a href="{unsub_url}" style="color:#8b949e">Unsubscribe from recovery emails</a></p>
 </div>"""
 
     try:
         import urllib.request
         payload = json.dumps({
-            "from": "RepairXpert <hello@repairxpertai.com>",
+            "from": "RepairXpert AI <hello@repairxpertai.com>",
             "to": [email],
             "reply_to": "ericwestmail@gmail.com",
-            "subject": f"Complete your RepairXpert {plan_name} subscription",
+            "subject": subject,
             "html": html_body,
         }).encode()
 
@@ -459,26 +568,200 @@ def _send_recovery_email(email: str, plan: str, base_url: str):
             },
         )
         with urllib.request.urlopen(req, timeout=10) as res:
-            _log_stripe_event("recovery_email_sent", {"email": email, "plan": plan})
+            _log_stripe_event("recovery_email_sent", {"email": email, "plan": plan, "stage": stage})
+            return True
     except Exception as e:
-        _log_stripe_event("recovery_email_failed", {"email": email, "error": str(e)})
+        _log_stripe_event("recovery_email_failed", {"email": email, "stage": stage, "error": str(e)})
+        return False
 
 
 def _log_stripe_event(event_type: str, data: dict):
     """Append Stripe/recovery event to JSONL log."""
     try:
+        allowed = (
+            "id", "customer_email", "email", "plan", "status",
+            "amount_total", "currency", "reason", "error", "stage", "stages",
+        )
         log_entry = json.dumps({
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "event": event_type,
-            "data": {k: v for k, v in data.items() if k in (
-                "id", "customer_email", "email", "plan", "status",
-                "amount_total", "currency", "reason", "error",
-            )},
+            "data": {k: v for k, v in data.items() if k in allowed},
         })
         with open(LOGS_PATH / "stripe_events.jsonl", "a", encoding="utf-8") as f:
             f.write(log_entry + "\n")
     except Exception:
         pass
+
+
+# ── Cart Recovery Processing ─────────────────────────────────────────────────
+
+
+@app.post("/api/recovery/process")
+async def process_recovery_queue(request: Request):
+    """Process due recovery emails from the queue. Hit this hourly via UNO/cron.
+
+    Security: requires X-Recovery-Key header matching STRIPE_WEBHOOK_SECRET
+    to prevent unauthorized triggering.
+    """
+    auth_key = request.headers.get("x-recovery-key", "")
+    if not auth_key or auth_key != STRIPE_WEBHOOK_SECRET:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    now = datetime.now(timezone.utc)
+    base_url = os.environ.get("RENDER_EXTERNAL_URL", "https://indautomation.onrender.com")
+    sent_count = 0
+    skipped_count = 0
+    failed_count = 0
+
+    try:
+        db = get_db()
+
+        # Get all due, unsent, non-unsubscribed emails
+        rows = db.execute(
+            "SELECT id, email, plan, stage FROM recovery_queue "
+            "WHERE sent=0 AND unsubscribed=0 AND send_at <= ? "
+            "ORDER BY send_at ASC LIMIT 50",
+            (now.isoformat(),),
+        ).fetchall()
+
+        for row in rows:
+            email = row["email"]
+            plan = row["plan"]
+            stage = row["stage"]
+            queue_id = row["id"]
+
+            # Check if this email converted (completed checkout) since we queued
+            converted = db.execute(
+                "SELECT id FROM checkout_leads WHERE email=? AND status='converted' LIMIT 1",
+                (email,),
+            ).fetchone()
+            if converted:
+                # Mark remaining queue items as skipped
+                db.execute(
+                    "UPDATE recovery_queue SET sent=1, sent_at=? WHERE email=? AND sent=0",
+                    (now.isoformat(), email),
+                )
+                skipped_count += 1
+                _log_stripe_event("recovery_skipped_converted", {"email": email, "stage": stage})
+                continue
+
+            # Check if earlier stages for same email were unsubscribed
+            unsub = db.execute(
+                "SELECT id FROM recovery_queue WHERE email=? AND unsubscribed=1 LIMIT 1",
+                (email,),
+            ).fetchone()
+            if unsub:
+                db.execute(
+                    "UPDATE recovery_queue SET sent=1, sent_at=? WHERE email=? AND sent=0",
+                    (now.isoformat(), email),
+                )
+                skipped_count += 1
+                continue
+
+            # Send the email
+            success = _send_recovery_email(email, plan, base_url, stage=stage)
+            if success:
+                db.execute(
+                    "UPDATE recovery_queue SET sent=1, sent_at=? WHERE id=?",
+                    (now.isoformat(), queue_id),
+                )
+                sent_count += 1
+            else:
+                failed_count += 1
+
+        db.commit()
+        db.close()
+    except Exception as e:
+        _log_stripe_event("recovery_process_error", {"error": str(e)})
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+    return JSONResponse({
+        "status": "ok",
+        "processed_at": now.isoformat(),
+        "sent": sent_count,
+        "skipped": skipped_count,
+        "failed": failed_count,
+    })
+
+
+@app.get("/api/recovery/unsubscribe")
+async def recovery_unsubscribe(request: Request, email: str = ""):
+    """Unsubscribe an email from recovery sequence. Returns simple HTML confirmation."""
+    if not email or "@" not in email:
+        return HTMLResponse("<h1>Invalid email</h1>", status_code=400)
+
+    try:
+        db = get_db()
+        db.execute(
+            "UPDATE recovery_queue SET unsubscribed=1 WHERE email=?",
+            (email.strip().lower(),),
+        )
+        db.commit()
+        db.close()
+        _log_stripe_event("recovery_unsubscribed", {"email": email})
+    except Exception:
+        pass
+
+    return HTMLResponse(
+        '<div style="font-family:-apple-system,sans-serif;max-width:480px;margin:4rem auto;text-align:center;color:#c9d1d9;background:#0d1117;padding:2rem;border-radius:8px">'
+        '<h2 style="color:#f78166">Unsubscribed</h2>'
+        "<p>You won't receive any more recovery emails from RepairXpert.</p>"
+        '<p style="color:#8b949e;font-size:0.85rem;margin-top:1.5rem">'
+        'You can still use the <a href="https://indautomation.onrender.com/diagnose" style="color:#58a6ff">free diagnostic tool</a> anytime.</p>'
+        "</div>"
+    )
+
+
+@app.get("/api/recovery/stats")
+async def recovery_stats(request: Request):
+    """Return cart recovery funnel stats. Requires auth header."""
+    auth_key = request.headers.get("x-recovery-key", "")
+    if not auth_key or auth_key != STRIPE_WEBHOOK_SECRET:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        db = get_db()
+        total = db.execute("SELECT COUNT(*) as c FROM recovery_queue").fetchone()["c"]
+        sent = db.execute("SELECT COUNT(*) as c FROM recovery_queue WHERE sent=1 AND unsubscribed=0").fetchone()["c"]
+        pending = db.execute("SELECT COUNT(*) as c FROM recovery_queue WHERE sent=0 AND unsubscribed=0").fetchone()["c"]
+        unsubscribed = db.execute("SELECT COUNT(DISTINCT email) as c FROM recovery_queue WHERE unsubscribed=1").fetchone()["c"]
+
+        # Per-stage breakdown
+        stages = {}
+        for stage in [1, 2, 3]:
+            row = db.execute(
+                "SELECT COUNT(*) as total, SUM(CASE WHEN sent=1 THEN 1 ELSE 0 END) as sent_count "
+                "FROM recovery_queue WHERE stage=?",
+                (stage,),
+            ).fetchone()
+            stages[f"stage_{stage}"] = {
+                "total": row["total"],
+                "sent": row["sent_count"] or 0,
+            }
+
+        # Unique emails in recovery
+        unique_emails = db.execute("SELECT COUNT(DISTINCT email) as c FROM recovery_queue").fetchone()["c"]
+
+        # Converted after recovery
+        converted = db.execute(
+            "SELECT COUNT(DISTINCT rq.email) as c FROM recovery_queue rq "
+            "INNER JOIN checkout_leads cl ON rq.email = cl.email "
+            "WHERE cl.status = 'converted'",
+        ).fetchone()["c"]
+
+        db.close()
+        return JSONResponse({
+            "total_queued": total,
+            "sent": sent,
+            "pending": pending,
+            "unsubscribed": unsubscribed,
+            "unique_emails": unique_emails,
+            "converted_after_recovery": converted,
+            "recovery_rate": round(converted / unique_emails * 100, 1) if unique_emails > 0 else 0,
+            "stages": stages,
+        })
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 @app.post("/api/lead")
@@ -656,6 +939,79 @@ async def fault_index(request: Request):
         "request": request,
         "faults": faults,
         "grouped": grouped,
+        "total": len(faults),
+    })
+
+
+# ── SEO Fault Code Landing Pages ─────────────────────────────────────────────
+
+def _filter_faults_by_keywords(faults: list[dict], keywords: list[str]) -> list[dict]:
+    """Filter fault DB entries whose code or equipment_type matches any keyword."""
+    results = []
+    for f in faults:
+        code = f.get("code", "").lower()
+        eq = f.get("equipment_type", "").lower()
+        name = f.get("name", "").lower()
+        tags = " ".join(f.get("tags", [])).lower() if f.get("tags") else ""
+        searchable = f"{code} {eq} {name} {tags}"
+        if any(kw in searchable for kw in keywords):
+            results.append(f)
+    return results
+
+
+@app.get("/faults/allen-bradley", response_class=HTMLResponse)
+async def faults_allen_bradley(request: Request):
+    """SEO landing page: Allen-Bradley fault codes (2400 searches/mo)."""
+    faults = load_fault_db()
+    ab_keywords = ["allen-bradley", "allen_bradley", "ab-", "controllogix", "compactlogix",
+                    "guardlogix", "powerflex", "guardmaster", "cr30", "enet", "rockwell"]
+    ab_faults = _filter_faults_by_keywords(faults, ab_keywords)
+    # Sub-categorize by equipment_type
+    ab_categories: dict[str, list[dict]] = {}
+    for f in ab_faults:
+        eq = f.get("equipment_type", "general")
+        ab_categories.setdefault(eq, []).append(f)
+    return templates.TemplateResponse("faults/allen-bradley.html", {
+        "request": request,
+        "ab_faults": ab_faults,
+        "ab_categories": ab_categories,
+        "ab_count": len(ab_faults),
+        "total": len(faults),
+    })
+
+
+@app.get("/faults/vfd", response_class=HTMLResponse)
+async def faults_vfd(request: Request):
+    """SEO landing page: VFD fault codes (1600 searches/mo)."""
+    faults = load_fault_db()
+    vfd_keywords = ["vfd", "variable frequency", "powerflex", "drive", "overcurrent",
+                     "overvoltage", "ab-vfd", "vfd-"]
+    vfd_faults = _filter_faults_by_keywords(faults, vfd_keywords)
+    return templates.TemplateResponse("faults/vfd.html", {
+        "request": request,
+        "vfd_faults": vfd_faults,
+        "vfd_count": len(vfd_faults),
+        "total": len(faults),
+    })
+
+
+@app.get("/faults/plc-errors", response_class=HTMLResponse)
+async def faults_plc_errors(request: Request):
+    """SEO landing page: PLC error code lookup (1900 searches/mo)."""
+    faults = load_fault_db()
+    plc_keywords = ["plc", "controllogix", "compactlogix", "guardlogix", "ab-plc",
+                     "major fault", "minor fault", "watchdog", "program fault"]
+    plc_faults = _filter_faults_by_keywords(faults, plc_keywords)
+    # Sub-categorize
+    plc_categories: dict[str, list[dict]] = {}
+    for f in plc_faults:
+        eq = f.get("equipment_type", "general")
+        plc_categories.setdefault(eq, []).append(f)
+    return templates.TemplateResponse("faults/plc-errors.html", {
+        "request": request,
+        "plc_faults": plc_faults,
+        "plc_categories": plc_categories,
+        "plc_count": len(plc_faults),
         "total": len(faults),
     })
 
@@ -867,6 +1223,9 @@ async def sitemap(request: Request):
     urls = [
         f'<url><loc>{base}/</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>',
         f'<url><loc>{base}/faults</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>',
+        f'<url><loc>{base}/faults/allen-bradley</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>',
+        f'<url><loc>{base}/faults/vfd</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>',
+        f'<url><loc>{base}/faults/plc-errors</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>',
         f'<url><loc>{base}/pricing</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
         f'<url><loc>{base}/vin</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>',
         f'<url><loc>{base}/obd</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>',
@@ -1434,6 +1793,59 @@ async def funnel_dashboard(request: Request):
         "conversion_rates": conversion_rates,
         "top_equipment": top_equipment,
         "generated_at": _dt.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
+    })
+
+
+@app.get("/api/funnel")
+async def api_funnel():
+    """Return funnel + usage stats as JSON for Finance agent consumption."""
+    def _count_jsonl(path, predicate=None):
+        if not path.exists():
+            return 0
+        c = 0
+        for ln in path.read_text(encoding="utf-8").splitlines():
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                r = _json.loads(ln)
+                if predicate is None or predicate(r):
+                    c += 1
+            except Exception:
+                pass
+        return c
+
+    logs = Path(os.environ.get("LOGS_PATH", "/app/data/logs"))
+    db_path = DB_PATH
+
+    chat_sessions = _count_jsonl(logs / "chat_log.jsonl")
+    diagnoses_total = _count_jsonl(logs / "diagnosis_outcomes.jsonl")
+    diagnoses_high = _count_jsonl(logs / "diagnosis_outcomes.jsonl",
+                                  lambda r: r.get("confidence", 0) >= 0.8)
+    checkout_leads = 0
+    stripe_payments = 0
+    if db_path.exists():
+        try:
+            _db = sqlite3.connect(str(db_path))
+            row = _db.execute("SELECT COUNT(*) FROM checkout_leads").fetchone()
+            checkout_leads = row[0] if row else 0
+            _db.close()
+        except Exception:
+            pass
+    stripe_payments = _count_jsonl(logs / "stripe_events.jsonl",
+                                   lambda r: r.get("event") == "checkout.session.completed")
+
+    return JSONResponse({
+        "generated_at": _dt.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "chat_sessions": chat_sessions,
+        "diagnoses_total": diagnoses_total,
+        "diagnoses_high_confidence": diagnoses_high,
+        "checkout_leads": checkout_leads,
+        "stripe_payments": stripe_payments,
+        "conversion_rates": {
+            "diagnoses_to_checkout": round(checkout_leads / diagnoses_total * 100, 1) if diagnoses_total > 0 else 0.0,
+            "checkout_to_payment": round(stripe_payments / checkout_leads * 100, 1) if checkout_leads > 0 else 0.0,
+        },
     })
 
 
