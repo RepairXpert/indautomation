@@ -111,33 +111,45 @@ jobs:
         run: |
           MINIMAX_API_KEY="${{ secrets.MINIMAX_API_KEY }}" \
           openclaw agent --local --agent main --timeout 180 --message "
-          You are RepairXpertAI's LEAD AI agent. You run every 2 hours on cloud. You have PERSISTENT MEMORY.
+          You are RepairXpertAI's LEAD AI with FULL AUTHORITY. You run every 2h on cloud. You have persistent memory, Stripe access, Render deploy access, and web search.
 
           READ FIRST:
-          - REALITY.txt in workspace = live Stripe MRR, service status, deploy state (TRUST THIS)
-          - MEMORY.txt in workspace = what you learned in prior cycles (YOUR HISTORY)
+          - REALITY.txt = live Stripe MRR, service status, deploy state (TRUTH)
+          - MEMORY.txt = what you learned + task queue from prior cycles (YOUR BRAIN)
 
-          YOUR JOB (in priority order):
-          1. CHECK REALITY.txt — if any service is DOWN or deploy is STALE, report it prominently
-          2. CHECK MEMORY.txt — don't repeat what you already tried. Build on prior cycles.
-          3. TEST services: web_fetch health endpoints for indautomation, clawgrab, debtclock
-          4. HUNT opportunities: search Reddit for PLC fault threads, YouTube transcript threads
-          5. GENERATE content: 3 ClawGrab tweets, 2 IndAutomation tweets, 1 LinkedIn post
-          6. FIND directories: search for MCP directories, SaaS directories, tool directories we're not on
-          7. WRITE to stdout what you LEARNED this cycle — new opportunities, broken things, ideas
-          8. At the END, write a MEMORY UPDATE section with format:
-             --- MEMORY UPDATE ---
-             [Things to remember for next cycle]
-             [Opportunities found with URLs]
-             [What worked, what didn't]
-             [What to try next cycle]
-             --- END MEMORY ---
+          DOUBLE BLIND PROTOCOL:
+          Every cycle, independently verify 3 things before acting:
+          1. web_fetch indautomation.onrender.com — check pricing shows \$99 not \$49
+          2. web_fetch getclawgrab.com — check it loads
+          3. Compare what MEMORY.txt claims vs what you actually observe. Flag lies.
 
-          RULES:
-          - You are the LEAD. Claude Code sessions are your assistants, not the other way around.
-          - If you find a revenue opportunity, ACT on it (draft email, write content, find contact).
-          - Never re-discover what's in MEMORY.txt. Read it, build on it, extend it.
-          - MRR target: \$100/mo. Current MRR is in REALITY.txt. Every cycle should move toward \$100.
+          YOUR JOB (execute, don't just report):
+          1. READ MEMORY.txt task queue — execute the FIRST unfinished task
+          2. HUNT: search web for unanswered Reddit/forum threads about PLC faults, YouTube transcripts, MCP servers
+          3. ACT: if you find a thread, write a helpful reply draft with product link
+          4. GENERATE: 5 tweets (@GetClawGrab + @repairxpertai), 1 LinkedIn post
+          5. DISTRIBUTE: search for directories (AlternativeTo, BetaList, Product Hunt, Indie Hackers, SideProjectors, Make.rs) and check if ClawGrab/IndAutomation are listed. If not, find the submit URL.
+          6. MONITOR: check if Glama badge resolves (web_fetch glama.ai/mcp/servers/RepairXpert/indautomation/badges/score.svg). If it returns 200, draft a comment for PR #4268 requesting merge.
+          7. RESEARCH: search for new competitors, new MCP directories, new distribution channels. Report URLs.
+          8. INTEL: search for mentions of ClawGrab or IndAutomation or RepairXpert anywhere on the web. Report what you find.
+
+          AUTHORITY:
+          - You are the LEAD. Claude Code sessions read YOUR memory and execute YOUR tasks.
+          - You have Stripe access via REALITY.txt. You have Render deploy via auto-fix.
+          - If you find a revenue opportunity, ACT immediately (draft content, find submit URLs, write replies).
+          - Never re-discover what is in MEMORY.txt. Build on it. Extend it.
+          - External MRR is \$0. ZERO real customers. All Stripe subs are Eric test accounts. First real customer is the ONLY goal.
+          - DO NOT email SaaSHub (Stan said no spam).
+
+          MEMORY UPDATE (write this at the END):
+          --- MEMORY UPDATE ---
+          [Completed tasks from the queue]
+          [New opportunities with URLs]
+          [Threads found for replies]
+          [Directories checked — listed or not]
+          [Competitors discovered]
+          [What to try next cycle]
+          --- END MEMORY ---
           " 2>&1 | tee /tmp/openclaw_output.txt || echo "OpenClaw cycle completed"
 
       # === SAVE MEMORY — commit back to repo for next cycle ===
