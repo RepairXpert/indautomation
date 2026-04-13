@@ -527,7 +527,7 @@ def _send_recovery_email(email: str, plan: str, base_url: str, stage: int = 1):
         return False
 
     plan_name = "Enterprise" if plan == "enterprise" else "Pro"
-    plan_price = "$49" if plan == "enterprise" else "$19"
+    plan_price = "$99" if plan == "enterprise" else "$19"
     unsub_url = f"{base_url}/api/recovery/unsubscribe?email={email}"
     pricing_url = f"{base_url}/pricing"
 
@@ -2101,7 +2101,7 @@ async def capture_lead(request: Request):
 
     # 3. Send welcome email via Resend
     if RESEND_API_KEY:
-        plan_label = {"pro": "Pro ($19.99/mo)", "enterprise": "Enterprise ($49.99/mo)"}.get(plan, "Free")
+        plan_label = {"pro": "Pro ($19/mo)", "enterprise": "Enterprise ($99/mo)"}.get(plan, "Free")
         greeting = f"Hi {name}," if name else "Hi there,"
         html_body = f"""<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;color:#e6edf3;background:#161b22;padding:2rem;border-radius:8px">
 <h2 style="color:#f78166;margin-bottom:1rem">Welcome to RepairXpert Industrial Automation</h2>
