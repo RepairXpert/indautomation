@@ -248,11 +248,14 @@ def _attach_photo(result: dict, photo_analysis: dict | None) -> dict:
 
 
 def _llm_diagnose(equipment_type: str, fault_code: str, symptoms: str, config: dict) -> dict:
-    """Fall back to LM Studio Qwen for unknown fault codes."""
-    try:
-        import urllib.request
+    """AI diagnosis with cloud-first provider chain. Works 24/7 without local PC.
 
-        prompt = f"""You are an industrial automation repair expert. Diagnose this fault.
+    Provider chain: MiniMax M2.7 → Groq → LM Studio (local) → fallback
+    """
+    import os
+    import urllib.request
+
+    prompt = f"""You are an industrial automation repair expert. Diagnose this fault.
 
 Equipment type: {equipment_type or 'unknown'}
 Fault code: {fault_code or 'none provided'}
@@ -267,56 +270,99 @@ Respond in JSON with these exact keys:
 
 Be specific and practical. Include sensor checks, wiring checks, PLC input verification where relevant."""
 
-        base_url = config.get("lm_studio", {}).get("base_url", "http://127.0.0.1:1234/v1")
-        model = config.get("lm_studio", {}).get("text_model", "qwen3.5-9b")
-        timeout = config.get("lm_studio", {}).get("timeout", 60)
+    # Provider chain — cloud first, local last
+    providers = [
+        {
+            "name": "minimax",
+            "url": "https://api.minimaxi.chat/v1/chat/completions",
+            "model": "MiniMax-M2.7",
+            "key_env": "MINIMAX_API_KEY",
+            "timeout": 30,
+        },
+        {
+            "name": "groq",
+            "url": "https://api.groq.com/openai/v1/chat/completions",
+            "model": "llama-3.3-70b-versatile",
+            "key_env": "GROQ_API_KEY",
+            "timeout": 15,
+        },
+        {
+            "name": "lm_studio",
+            "url": config.get("lm_studio", {}).get("base_url", "http://127.0.0.1:1234/v1") + "/chat/completions",
+            "model": config.get("lm_studio", {}).get("text_model", "qwen3.5-9b"),
+            "key_env": None,
+            "timeout": 60,
+        },
+    ]
 
-        payload = json.dumps({
-            "model": model,
-            "messages": [{"role": "user", "content": prompt}],
-            "temperature": 0.3,
-            "max_tokens": 1000,
-            "response_format": {"type": "json_object"},
-        }).encode()
+    for provider in providers:
+        try:
+            api_key = os.environ.get(provider["key_env"], "") if provider["key_env"] else None
+            if provider["key_env"] and not api_key:
+                continue  # Skip if no key configured
 
-        req = urllib.request.Request(
-            f"{base_url}/chat/completions",
-            data=payload,
-            headers={"Content-Type": "application/json"},
-        )
-        with urllib.request.urlopen(req, timeout=timeout) as res:
-            data = json.loads(res.read())
-            content = data["choices"][0]["message"]["content"]
-            parsed = json.loads(content)
-            return {
-                "fault_code": fault_code or "UNKNOWN",
-                "fault_name": parsed.get("fault_name", "Unknown Fault"),
-                "equipment_type": equipment_type or "unknown",
-                "diagnosis": parsed.get("diagnosis", ["Unable to determine root cause"]),
-                "fix_steps": parsed.get("fix_steps", ["Inspect equipment manually"]),
-                "severity": parsed.get("severity", "medium"),
-                "confidence": parsed.get("confidence", 0.5),
-                "source": "llm_analysis",
-            }
-    except Exception as e:
-        return {
-            "fault_code": fault_code or "UNKNOWN",
-            "fault_name": "Diagnosis Unavailable",
-            "equipment_type": equipment_type or "unknown",
-            "diagnosis": [
-                "AI engine temporarily unavailable — showing general inspection steps",
-                "Manual inspection recommended — see steps below",
-            ],
-            "fix_steps": [
-                "Check sensor LEDs at fault location — identify which sensor is involved",
-                "Verify PLC input status for related signals — monitor live in PLC software",
-                "Check wiring continuity from sensor to PLC input card with multimeter",
-                "Toggle inhibit/reset switch and observe machine behavior",
-                "Check VFD display for fault codes if drives are involved",
-                "Contact equipment manufacturer with fault code for documentation",
-            ],
-            "severity": "medium",
-            "confidence": 0.25,
-            "source": "fallback",
-            "ai_note": "AI engine temporarily unavailable. Using generic troubleshooting steps.",
-        }
+            payload = json.dumps({
+                "model": provider["model"],
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.3,
+                "max_tokens": 1000,
+            }).encode()
+
+            headers = {"Content-Type": "application/json"}
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+
+            req = urllib.request.Request(provider["url"], data=payload, headers=headers)
+            with urllib.request.urlopen(req, timeout=provider["timeout"]) as res:
+                data = json.loads(res.read())
+                content = data["choices"][0]["message"]["content"]
+                # Strip thinking tags if present (MiniMax M2.7)
+                if "<think>" in content:
+                    content = content.split("</think>")[-1].strip()
+                # Try to parse as JSON
+                try:
+                    parsed = json.loads(content)
+                except json.JSONDecodeError:
+                    # Extract JSON from markdown code blocks
+                    import re as _re
+                    match = _re.search(r"\{[^{}]*\}", content, _re.DOTALL)
+                    if match:
+                        parsed = json.loads(match.group())
+                    else:
+                        continue
+
+                return {
+                    "fault_code": fault_code or "UNKNOWN",
+                    "fault_name": parsed.get("fault_name", "Unknown Fault"),
+                    "equipment_type": equipment_type or "unknown",
+                    "diagnosis": parsed.get("diagnosis", ["Unable to determine root cause"]),
+                    "fix_steps": parsed.get("fix_steps", ["Inspect equipment manually"]),
+                    "severity": parsed.get("severity", "medium"),
+                    "confidence": parsed.get("confidence", 0.5),
+                    "source": f"llm_{provider['name']}",
+                }
+        except Exception:
+            continue  # Try next provider
+
+    # All providers failed — return generic fallback
+    return {
+        "fault_code": fault_code or "UNKNOWN",
+        "fault_name": "Diagnosis Unavailable",
+        "equipment_type": equipment_type or "unknown",
+        "diagnosis": [
+            "AI engine temporarily unavailable — showing general inspection steps",
+            "Manual inspection recommended — see steps below",
+        ],
+        "fix_steps": [
+            "Check sensor LEDs at fault location — identify which sensor is involved",
+            "Verify PLC input status for related signals — monitor live in PLC software",
+            "Check wiring continuity from sensor to PLC input card with multimeter",
+            "Toggle inhibit/reset switch and observe machine behavior",
+            "Check VFD display for fault codes if drives are involved",
+            "Contact equipment manufacturer with fault code for documentation",
+        ],
+        "severity": "medium",
+        "confidence": 0.25,
+        "source": "fallback",
+        "ai_note": "All AI engines unavailable. Using generic troubleshooting steps.",
+    }
