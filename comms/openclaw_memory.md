@@ -1,7 +1,7 @@
 # OpenClaw Persistent Memory
 
 ## Cycle 2026-04-13 08:22 UTC (BOOTSTRAP — written by Claude Code session)
-- MRR: $24 from 2 ClawGrab Pro subs at $12/mo. IndAutomation: $0.
+- MRR: $0 EXTERNAL. The $24 from 2 ClawGrab Pro subs is Eric's OWN test accounts (all 5 Stripe customers are ericwestmail@gmail.com). ZERO real customers.
 - Enterprise pricing fixed: $49 ARCHIVED in Stripe, $99 is now default and live on Render
 - SaaSHub approved ClawGrab (Apr 13). Use SaaSHub Submit to blast to directories.
 - Glama approved IndAutomation (Apr 13). Server claimed. Badge still 404 — need Dockerfile for scoring.
@@ -17,4 +17,16 @@
 - Obsidian forum draft ready at comms/tasks/obsidian_reply_draft.md. Needs forum account.
 - OpenClaw found: Studio5000 T01:C60 Reddit thread (zero replies), Transcribr.io + Exactum.ai directories.
 - SaaSHub Stan said "No spam please" about ClawGrab emails. Do NOT email SaaSHub again.
-- UNO v2 DOWN locally. LM Studio DOWN. Ollama DOWN. All remote services UP.
+- UNO v2 DOWN locally. LM Studio NOT RUNNING (not eating RAM). 21 stale Python processes were the RAM hog — killed 19.
+- Influencer emails DRAFTED in Gmail: Theo (youtube@t3.gg), ThePrimeagen (michael.b.paulson@gmail.com). Need send approval.
+- 99 SaaSHub directories identified. Top free ones: AlternativeTo, Product Hunt, Indie Hackers, BetaList, r/SideProject.
+
+## TASKS FOR OPENCLAW TO EXECUTE (not Eric)
+- Submit ClawGrab to AlternativeTo, BetaList, SideProjectors, Make.rs (no CAPTCHA, free)
+- Submit IndAutomation to AlternativeTo, BetaList (same)
+- Search for and reply to Reddit PLC fault threads (via web search, draft answers)
+- Search for YouTube transcript complaint threads (Reddit, forums) and draft ClawGrab replies
+- Generate 5 tweets for @GetClawGrab and 3 for @repairxpertai every cycle
+- Check if Glama badge SVG resolves (glama.ai/mcp/servers/RepairXpert/indautomation/badges/score.svg)
+- Monitor Gmail for any human reply from industrial contacts
+- If awesome-mcp-servers badge shows a score, comment on PR #4268 requesting merge
