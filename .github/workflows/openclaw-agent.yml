@@ -80,15 +80,7 @@ jobs:
           LIVE_PRICES=$(curl -s "https://indautomation.onrender.com/" --max-time 15 2>/dev/null | grep -o '\$[0-9]*' | sort -u | tr '\n' ' ')
           echo "LIVE LANDING PRICES: $LIVE_PRICES" >> /tmp/reality.txt
           if echo "$LIVE_PRICES" | grep -q '\$49'; then
-            echo "!! DEPLOY STALE: \$49 on live page, should be \$99" >> /tmp/reality.txt
-            # Auto-fix: trigger redeploy
-            if [ -n "$RENDER_API_KEY" ]; then
-              curl -s -X POST "https://api.render.com/v1/services/srv-d785etmdqaus73cmum00/deploys" \
-                -H "Authorization: Bearer $RENDER_API_KEY" \
-                -H "Content-Type: application/json" \
-                -d '{"clearCache":"do_not_clear"}' > /dev/null 2>&1
-              echo "AUTO-FIX: Render redeploy triggered" >> /tmp/reality.txt
-            fi
+            echo "!! DEPLOY STALE: \$49 on live page, should be \$99. DO NOT auto-deploy — report only." >> /tmp/reality.txt
           fi
 
           cat /tmp/reality.txt
