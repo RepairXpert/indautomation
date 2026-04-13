@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tech Inbox | RepairXpert Dispatch</title>
+<meta name="description" content="Field tech inbox — claimed repair jobs, open jobs, and history. Mobile-first dispatch for industrial field service.">
+<link rel="canonical" href="https://indautomation.onrender.com/dispatch/inbox">
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+.inbox-hero{text-align:center;padding:40px 24px 20px;max-width:680px;margin:0 auto}
+.inbox-hero h1{font-size:1.8rem;font-weight:800;margin-bottom:.5rem}
+.inbox-hero h1 span{color:var(--accent,#7c6cf8)}
+.inbox-hero .sub{font-size:.9rem;color:var(--muted,#888);line-height:1.5;margin-bottom:1rem}
+.inbox-wrap{max-width:760px;margin:0 auto;padding:0 20px 80px}
+.card{background:var(--card-bg,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:12px;padding:20px;margin-bottom:1.2rem}
+.card h2{font-size:.95rem;font-weight:700;color:var(--accent,#7c6cf8);margin-bottom:1rem;letter-spacing:.3px;text-transform:uppercase}
+.email-form{display:flex;gap:8px;max-width:480px;margin:0 auto 1rem}
+.email-form input{flex:1;background:var(--bg,#0a0a12);border:1px solid var(--border,#1e1e2e);border-radius:8px;color:var(--text,#e8e8ed);padding:10px 12px;font-size:.92rem}
+.email-form input:focus{outline:none;border-color:var(--accent,#7c6cf8)}
+.email-form button{padding:10px 20px;background:var(--accent,#7c6cf8);color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;font-size:.9rem}
+.job{border-top:1px solid var(--border,#1e1e2e);padding:14px 0}
+.job:first-child{border-top:none;padding-top:0}
+.job-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+.job-id{font-size:.7rem;color:var(--muted,#888);font-weight:600;margin-right:4px}
+.job-company{font-size:.98rem;font-weight:700;color:var(--text,#e8e8ed)}
+.job-meta{font-size:.75rem;color:var(--muted,#888)}
+.job-desc{font-size:.85rem;color:var(--text-secondary,#b0b0c0);line-height:1.5;margin-top:4px}
+.pill{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-left:6px}
+.pill.low{background:#1a2a1a;color:#7bd67b}
+.pill.normal{background:#1a222a;color:#7bb0d6}
+.pill.urgent{background:#2a221a;color:#e8a65a}
+.pill.critical{background:#2a1015;color:#e74c3c}
+.pill.status-claimed{background:#1a222a;color:#7bb0d6;margin-left:0}
+.pill.status-closed{background:#1a1a1a;color:#888;margin-left:0}
+.job-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.job-actions form{display:flex;gap:6px;flex:1;min-width:240px}
+.job-actions input[type=email],.job-actions input[type=text]{flex:1;padding:8px 10px;font-size:.82rem;background:var(--bg,#0a0a12);border:1px solid var(--border,#1e1e2e);border-radius:6px;color:var(--text,#e8e8ed)}
+.btn-sm{padding:8px 14px;background:var(--accent,#7c6cf8);color:#fff;font-size:.78rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;white-space:nowrap}
+.btn-sm.close{background:#2a2a3a;color:#e8e8ed}
+.empty{text-align:center;padding:20px 0;color:var(--muted,#888);font-size:.85rem}
+</style>
+</head>
+<body>
+<nav style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border,#1e1e2e);gap:16px;flex-wrap:wrap">
+  <a href="/" style="font-weight:800;font-size:1rem;text-decoration:none;color:var(--text,#e8e8ed)">IndAutomation</a>
+  <a href="/diagnose" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Diagnose</a>
+  <a href="/chat" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">AI Chat</a>
+  <a href="/obd" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">OBD-II</a>
+  <a href="/vin" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">VIN</a>
+  <a href="/connect" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Connect</a>
+  <a href="/dispatch" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Dispatch Board</a>
+  <a href="/dispatch/inbox" style="font-size:.85rem;color:var(--accent,#7c6cf8);text-decoration:none;font-weight:700">Inbox</a>
+</nav>
+
+<div class="inbox-hero">
+  <h1>Tech <span>Inbox</span></h1>
+  <p class="sub">Enter your email to see jobs you've claimed, still-open jobs you can grab, and your history.</p>
+</div>
+
+<div class="inbox-wrap">
+  <div class="card">
+    <form method="GET" action="/dispatch/inbox" class="email-form">
+      <input type="email" name="email" placeholder="your@email.com" value="{{ email }}" required autocomplete="email">
+      <button type="submit">Load Inbox</button>
+    </form>
+    {% if email %}
+      <p style="text-align:center;font-size:.78rem;color:var(--muted,#888);margin:0">Showing jobs for <b style="color:var(--text,#e8e8ed)">{{ email }}</b></p>
+    {% endif %}
+  </div>
+
+  {% if email %}
+  <div class="card">
+    <h2>My Active Jobs ({{ my_jobs|length }})</h2>
+    {% if my_jobs %}
+      {% for d in my_jobs %}
+      <div class="job">
+        <div class="job-head">
+          <div>
+            <span class="job-id">#{{ d.id }}</span>
+            <span class="job-company">{{ d.company }}</span>
+            <span class="pill status-claimed">Claimed</span>
+            <span class="pill {{ d.urgency }}">{{ d.urgency }}</span>
+          </div>
+          <span class="job-meta">{{ d.claimed_at[:10] }}</span>
+        </div>
+        <div class="job-meta">
+          Contact: <a href="mailto:{{ d.contact_email }}" style="color:var(--accent,#7c6cf8);text-decoration:none">{{ d.contact_email }}</a>
+          {% if d.equipment %} &middot; {{ d.equipment }}{% endif %}
+          {% if d.fault_code %} &middot; <b>{{ d.fault_code }}</b>{% endif %}
+          {% if d.location %} &middot; {{ d.location }}{% endif %}
+        </div>
+        {% if d.description %}<div class="job-desc">{{ d.description }}</div>{% endif %}
+        <div class="job-actions">
+          <form method="POST" action="/dispatch/{{ d.id }}/close">
+            <input type="text" name="resolution" placeholder="Resolution notes (optional)">
+            <button type="submit" class="btn-sm close">Close Job</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">No active jobs claimed. Grab one below.</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2>Open Jobs ({{ open_jobs|length }})</h2>
+    {% if open_jobs %}
+      {% for d in open_jobs %}
+      <div class="job">
+        <div class="job-head">
+          <div>
+            <span class="job-id">#{{ d.id }}</span>
+            <span class="job-company">{{ d.company }}</span>
+            <span class="pill {{ d.urgency }}">{{ d.urgency }}</span>
+          </div>
+          <span class="job-meta">{{ d.created_at[:10] }}</span>
+        </div>
+        <div class="job-meta">
+          {% if d.equipment %}{{ d.equipment }}{% endif %}
+          {% if d.fault_code %} &middot; <b>{{ d.fault_code }}</b>{% endif %}
+          {% if d.location %} &middot; {{ d.location }}{% endif %}
+        </div>
+        {% if d.description %}<div class="job-desc">{{ d.description }}</div>{% endif %}
+        <div class="job-actions">
+          <form method="POST" action="/dispatch/{{ d.id }}/claim">
+            <input type="email" name="tech_email" placeholder="your@email.com" value="{{ email }}" required>
+            <button type="submit" class="btn-sm">Claim</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">No open dispatches right now.</div>
+    {% endif %}
+  </div>
+
+  {% if email and my_closed %}
+  <div class="card">
+    <h2>Recently Closed ({{ my_closed|length }})</h2>
+    {% for d in my_closed %}
+    <div class="job">
+      <div class="job-head">
+        <div>
+          <span class="job-id">#{{ d.id }}</span>
+          <span class="job-company">{{ d.company }}</span>
+          <span class="pill status-closed">Closed</span>
+        </div>
+        <span class="job-meta">{{ d.closed_at[:10] }}</span>
+      </div>
+      <div class="job-meta">
+        {% if d.equipment %}{{ d.equipment }}{% endif %}
+        {% if d.fault_code %} &middot; <b>{{ d.fault_code }}</b>{% endif %}
+      </div>
+      {% if d.resolution %}<div class="job-desc">Resolution: {{ d.resolution }}</div>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+<script>fetch('/api/analytics/hit?p='+encodeURIComponent(location.pathname)+'&r='+encodeURIComponent(document.referrer),{method:'GET'})</script>
+</body>
+</html>

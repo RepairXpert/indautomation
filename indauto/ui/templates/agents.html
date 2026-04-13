@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agents Report | RepairXpert IndAutomation</title>
+<meta name="description" content="Live status report of every background agent, AI model, and integration running in the RepairXpert stack — plus a one-tap Resume All AI control.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+.agents-hero{text-align:center;padding:36px 20px 16px;max-width:760px;margin:0 auto}
+.agents-hero h1{font-size:1.85rem;font-weight:800;line-height:1.15;letter-spacing:-0.5px;margin-bottom:.4rem}
+.agents-hero h1 span{color:var(--accent,#7c6cf8)}
+.agents-hero .sub{font-size:.9rem;color:var(--muted,#888);line-height:1.5}
+.agents-wrap{max-width:880px;margin:0 auto;padding:0 20px 80px}
+.summary-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:1rem 0 1.4rem}
+.summary-pill{display:flex;align-items:baseline;gap:6px;background:var(--card-bg,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:18px;padding:6px 14px;font-size:.78rem;color:var(--muted,#888)}
+.summary-pill b{font-size:1rem;color:var(--text,#e8e8ed);font-weight:800}
+.controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:1.4rem}
+.btn-primary{padding:12px 24px;background:linear-gradient(135deg,#7c6cf8,#5b4cf3);color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;font-size:.92rem;text-decoration:none}
+.btn-primary:hover{opacity:.9}
+.btn-secondary{padding:12px 24px;background:var(--card-bg,#12121a);color:var(--text,#e8e8ed);font-weight:700;border:1px solid var(--border,#1e1e2e);border-radius:8px;cursor:pointer;font-size:.92rem;text-decoration:none}
+.btn-secondary:hover{border-color:var(--accent,#7c6cf8)}
+.agent-card{background:var(--card-bg,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:10px;padding:14px 16px;margin-bottom:.7rem}
+.agent-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:.3rem}
+.agent-name{font-size:.98rem;font-weight:700;color:var(--text,#e8e8ed)}
+.agent-kind{font-size:.7rem;color:var(--muted,#888);text-transform:uppercase;letter-spacing:.5px;margin-left:6px;font-weight:600}
+.agent-meta{font-size:.78rem;color:var(--muted,#888);margin-top:2px;line-height:1.5}
+.agent-meta code{font-family:monospace;color:var(--accent,#7c6cf8);font-size:.72rem}
+.status{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.s-running,.s-connected,.s-configured,.s-available,.s-passing{background:#0f2a1a;color:#2ecc71}
+.s-stopped,.s-disabled,.s-missing,.s-unavailable,.s-down{background:#1a1a1a;color:#888}
+.s-error{background:#2a1015;color:#e74c3c}
+.s-unknown,.s-local{background:#1a222a;color:#7bb0d6}
+.s-timeout{background:#2a221a;color:#e8a65a}
+.fleet-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.fleet-table th{text-align:left;padding:8px 10px;color:var(--muted,#888);font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border,#1e1e2e);font-weight:700}
+.fleet-table td{padding:10px;border-bottom:1px solid var(--border,#1e1e2e);vertical-align:top}
+.fleet-table tr:last-child td{border-bottom:none}
+.fleet-table .num{color:var(--muted,#888);font-family:monospace;width:24px}
+.fleet-table .vname{font-weight:700;color:var(--text,#e8e8ed)}
+.fleet-table .vname a{color:var(--text,#e8e8ed);text-decoration:none}
+.fleet-table .vname a:hover{color:var(--accent,#7c6cf8)}
+.fleet-table .vpurpose{color:var(--muted,#888);font-size:.74rem;margin-top:2px;line-height:1.4}
+.fleet-table .vprice{color:var(--accent,#7c6cf8);font-family:monospace;font-size:.72rem;white-space:nowrap}
+.fleet-table .vlatency{font-family:monospace;font-size:.72rem;color:var(--muted,#888)}
+.fleet-rollup{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:1rem;padding:14px;background:var(--card-bg,#12121a);border:1px solid var(--accent,#7c6cf8);border-radius:10px}
+.fleet-rollup .pill{padding:6px 14px;background:var(--bg,#0a0a12);border-radius:18px;font-size:.78rem;color:var(--muted,#888)}
+.fleet-rollup .pill b{color:var(--text,#e8e8ed);font-size:1rem;font-weight:800}
+.fleet-rollup .pill.passing b{color:#2ecc71}
+.fleet-rollup .pill.down b{color:#e74c3c}
+.fleet-rollup .pill.local b{color:#7bb0d6}
+.section-h{font-size:.78rem;color:var(--muted,#888);text-transform:uppercase;letter-spacing:.5px;margin:1.4rem 0 .6rem 0;font-weight:700}
+#resumeMsg{margin:0 0 1rem 0;padding:12px 16px;border-radius:8px;font-size:.85rem;display:none}
+#resumeMsg.ok{background:#0f2a1a;border:1px solid #27ae60;color:#2ecc71;display:block}
+#resumeMsg.err{background:#2a1015;border:1px solid #c0392b;color:#e74c3c;display:block}
+.action-list{margin:.4rem 0 0 0;padding:0;list-style:none;font-size:.78rem;color:var(--muted,#888)}
+.action-list li{padding:2px 0;font-family:monospace}
+.action-list li.ok::before{content:"✓ ";color:#2ecc71}
+.action-list li.fail::before{content:"✗ ";color:#e74c3c}
+</style>
+</head>
+<body>
+<nav style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border,#1e1e2e);gap:16px;flex-wrap:wrap">
+  <a href="/" style="font-weight:800;font-size:1rem;text-decoration:none;color:var(--text,#e8e8ed)">IndAutomation</a>
+  <a href="/diagnose" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Diagnose</a>
+  <a href="/chat" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">AI Chat</a>
+  <a href="/parts" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Parts</a>
+  <a href="/dispatch" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Dispatch</a>
+  <a href="/agents" style="font-size:.85rem;color:var(--accent,#7c6cf8);text-decoration:none;font-weight:700">Agents</a>
+  <a href="/command-center" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Command Center</a>
+</nav>
+
+<div class="agents-hero">
+  <h1>All <span>Agents</span></h1>
+  <p class="sub">Every background loop, AI model, and integration this stack runs &mdash; plus a one-tap control to wake everything that's stopped or cold.</p>
+</div>
+
+<div class="agents-wrap">
+  <div class="summary-row">
+    <span class="summary-pill">Total <b>{{ report.count }}</b></span>
+    {% for status, n in report.by_status.items() %}
+    <span class="summary-pill">{{ status }} <b>{{ n }}</b></span>
+    {% endfor %}
+    <span class="summary-pill">Updated <b>{{ report.generated_at[11:19] }} UTC</b></span>
+  </div>
+
+  <div class="controls">
+    <button id="resumeBtn" class="btn-primary" type="button" onclick="resumeAll()">&#9889; Resume All AI</button>
+    <a class="btn-secondary" href="/agents">&#10227; Refresh</a>
+    <a class="btn-secondary" href="/api/agents" target="_blank" rel="noopener">JSON</a>
+  </div>
+
+  <div id="resumeMsg"></div>
+
+  {% set venture_agents = report.agents | selectattr('kind', 'equalto', 'cloud_venture') | list %}
+  {% set local_agents = report.agents | selectattr('kind', 'equalto', 'local_service') | list %}
+  {% set ai_agents = report.agents | selectattr('kind', 'equalto', 'ai_model') | list %}
+  {% set thread_agents = report.agents | selectattr('kind', 'equalto', 'background_thread') | list %}
+  {% set service_agents = report.agents | selectattr('kind', 'equalto', 'external_service') | list %}
+  {% set router_agents = report.agents | selectattr('kind', 'equalto', 'router') | list %}
+  {% set mcp_agents = report.agents | selectattr('kind', 'equalto', 'mcp_server') | list %}
+
+  {% if venture_agents %}
+  <p class="section-h">Cloud Fleet ({{ venture_agents|length }})</p>
+  <div class="fleet-rollup">
+    <span class="pill">Total <b>{{ report.fleet.total }}</b></span>
+    <span class="pill passing">Passing <b>{{ report.fleet.passing }}</b></span>
+    <span class="pill local">Local-only <b>{{ report.fleet.local_only }}</b></span>
+    <span class="pill down">Down <b>{{ report.fleet.down }}</b></span>
+  </div>
+  <div class="agent-card" style="padding:0;overflow-x:auto">
+    <table class="fleet-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Venture</th>
+          <th>Status</th>
+          <th>Price</th>
+          <th>Latency</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in venture_agents %}
+        <tr>
+          <td class="num">{{ loop.index }}</td>
+          <td>
+            <div class="vname">
+              {% if v.url %}<a href="{{ v.url }}" target="_blank" rel="noopener">{{ v.name }}</a>{% else %}{{ v.name }}{% endif %}
+            </div>
+            {% if v.purpose %}<div class="vpurpose">{{ v.purpose }}</div>{% endif %}
+          </td>
+          <td><span class="status s-{{ v.status }}">{{ v.status }}</span>{% if v.http %}<div class="vlatency">HTTP {{ v.http }}</div>{% endif %}</td>
+          <td><span class="vprice">{{ v.price or '—' }}</span></td>
+          <td><span class="vlatency">{% if v.latency_ms %}{{ v.latency_ms }} ms{% else %}—{% endif %}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if local_agents %}
+  <p class="section-h">Local Services ({{ local_agents|length }})</p>
+  <div class="agent-card" style="padding:0;overflow-x:auto">
+    <table class="fleet-table">
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Port</th>
+          <th>Status</th>
+          <th>Latency</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in local_agents %}
+        <tr>
+          <td><div class="vname">{{ s.name }}</div><div class="vpurpose"><code>{{ s.source }}</code></div></td>
+          <td><span class="vlatency">:{{ s.port }}</span></td>
+          <td><span class="status s-{{ s.status }}">{{ s.status }}</span>{% if s.http %}<div class="vlatency">HTTP {{ s.http }}</div>{% endif %}</td>
+          <td><span class="vlatency">{% if s.latency_ms %}{{ s.latency_ms }} ms{% else %}—{% endif %}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if ai_agents %}
+  <p class="section-h">AI Models &amp; Fallback Chain</p>
+  {% for a in ai_agents %}
+  <div class="agent-card">
+    <div class="agent-head">
+      <div><span class="agent-name">{{ a.name }}</span><span class="agent-kind">{{ a.kind }}</span></div>
+      <span class="status s-{{ a.status }}">{{ a.status }}</span>
+    </div>
+    <div class="agent-meta">
+      <code>{{ a.source }}</code>
+      {% if a.model_hint %} &middot; model: <b>{{ a.model_hint }}</b>{% endif %}
+      {% if a.purpose %}<br>{{ a.purpose }}{% endif %}
+      {% if a.error %}<br><span style="color:#e74c3c">{{ a.error }}</span>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if thread_agents %}
+  <p class="section-h">Background Loops</p>
+  {% for a in thread_agents %}
+  <div class="agent-card">
+    <div class="agent-head">
+      <div><span class="agent-name">{{ a.name }}</span><span class="agent-kind">{{ a.kind }}</span></div>
+      <span class="status s-{{ a.status }}">{{ a.status }}</span>
+    </div>
+    <div class="agent-meta">
+      <code>{{ a.source }}</code>
+      {% if a.interval_sec %} &middot; every {{ (a.interval_sec/60)|int }} min{% endif %}
+      {% if a.purpose %}<br>{{ a.purpose }}{% endif %}
+      {% if a.last_log %}<br>last: <em>{{ a.last_log }}</em>{% endif %}
+      {% if a.error %}<br><span style="color:#e74c3c">{{ a.error }}</span>{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if service_agents %}
+  <p class="section-h">External Services</p>
+  {% for a in service_agents %}
+  <div class="agent-card">
+    <div class="agent-head">
+      <div><span class="agent-name">{{ a.name }}</span><span class="agent-kind">{{ a.kind }}</span></div>
+      <span class="status s-{{ a.status }}">{{ a.status }}</span>
+    </div>
+    <div class="agent-meta">
+      <code>{{ a.source }}</code>
+      {% if a.purpose %}<br>{{ a.purpose }}{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if router_agents %}
+  <p class="section-h">Internal Routers</p>
+  {% for a in router_agents %}
+  <div class="agent-card">
+    <div class="agent-head">
+      <div><span class="agent-name">{{ a.name }}</span><span class="agent-kind">{{ a.kind }}</span></div>
+      <span class="status s-{{ a.status }}">{{ a.status }}</span>
+    </div>
+    <div class="agent-meta">
+      <code>{{ a.source }}</code>
+      {% if a.purpose %}<br>{{ a.purpose }}{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  {% if mcp_agents %}
+  <p class="section-h">MCP Servers</p>
+  {% for a in mcp_agents %}
+  <div class="agent-card">
+    <div class="agent-head">
+      <div><span class="agent-name">{{ a.name }}</span><span class="agent-kind">{{ a.kind }}</span></div>
+      <span class="status s-{{ a.status }}">{{ a.status }}</span>
+    </div>
+    <div class="agent-meta">
+      <code>{{ a.source }}</code>
+      {% if a.purpose %}<br>{{ a.purpose }}{% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+</div>
+
+<script>
+async function resumeAll() {
+  const btn = document.getElementById('resumeBtn');
+  const msg = document.getElementById('resumeMsg');
+  btn.disabled = true;
+  const original = btn.innerHTML;
+  btn.innerHTML = 'Resuming...';
+  msg.className = '';
+  msg.textContent = '';
+  try {
+    const resp = await fetch('/api/agents/resume', {method: 'POST'});
+    const data = await resp.json();
+    if (data.ok) {
+      const ok = (data.actions || []).filter(a => a.ok).length;
+      const total = (data.actions || []).length;
+      let html = '<b>Resume complete &mdash; ' + ok + '/' + total + ' agents responded.</b>';
+      html += '<ul class="action-list">';
+      (data.actions || []).forEach(a => {
+        html += '<li class="' + (a.ok ? 'ok' : 'fail') + '">' + a.agent + ' &mdash; ' + a.action;
+        if (a.error) html += ' (' + a.error + ')';
+        html += '</li>';
+      });
+      html += '</ul>';
+      msg.innerHTML = html;
+      msg.className = 'ok';
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      msg.textContent = 'Resume failed.';
+      msg.className = 'err';
+    }
+  } catch (e) {
+    msg.textContent = 'Resume failed: ' + e.message;
+    msg.className = 'err';
+  }
+  btn.disabled = false;
+  btn.innerHTML = original;
+}
+</script>
+<script>fetch('/api/analytics/hit?p='+encodeURIComponent(location.pathname)+'&r='+encodeURIComponent(document.referrer),{method:'GET'})</script>
+</body>
+</html>

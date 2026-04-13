@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login | RepairXpert</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+.login-wrap{max-width:380px;margin:120px auto 60px;padding:0 24px;text-align:center}
+.login-wrap h1{font-size:1.5rem;font-weight:800;margin-bottom:.4rem;color:var(--text,#e8e8ed)}
+.login-wrap h1 span{color:var(--accent,#7c6cf8)}
+.login-wrap .sub{font-size:.85rem;color:var(--muted,#888);margin-bottom:1.6rem;line-height:1.5}
+.login-card{background:var(--card-bg,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:12px;padding:24px}
+.login-card label{display:block;font-size:.75rem;font-weight:600;color:var(--muted,#888);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.4rem;text-align:left}
+.login-card input{width:100%;box-sizing:border-box;background:var(--bg,#0a0a12);border:1px solid var(--border,#1e1e2e);border-radius:8px;color:var(--text,#e8e8ed);padding:11px 14px;font-size:.95rem;font-family:monospace}
+.login-card input:focus{outline:none;border-color:var(--accent,#7c6cf8)}
+.login-card button{width:100%;margin-top:1rem;padding:12px;background:var(--accent,#7c6cf8);color:#fff;font-size:.95rem;font-weight:700;border:none;border-radius:8px;cursor:pointer}
+.login-card button:hover{opacity:.9}
+.error{background:#2a1015;border:1px solid #c0392b;color:#e74c3c;padding:10px 14px;border-radius:8px;font-size:.82rem;margin-bottom:1rem;text-align:left}
+.notice{background:#1a222a;border:1px solid #1e3a4a;color:#7bb0d6;padding:10px 14px;border-radius:8px;font-size:.78rem;margin-bottom:1rem;text-align:left;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <h1>Operator <span>Sign In</span></h1>
+  <p class="sub">Same login on phone, laptop, and desktop &mdash; one cookie unlocks Dashboard, Agents, Command Center, and Dispatch Inbox.</p>
+
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  {% if auth_disabled %}
+  <div class="notice">No <code>ADMIN_TOKEN</code> set on this server. Auth is disabled (dev mode). Submitting will redirect you straight through.</div>
+  {% endif %}
+
+  <form method="POST" action="/admin/login" class="login-card">
+    <input type="hidden" name="next" value="{{ next or '/dashboard' }}">
+    <label for="token">Admin Token</label>
+    <input type="password" id="token" name="token" autocomplete="current-password" autofocus required>
+    <button type="submit">Sign In</button>
+  </form>
+
+  <p style="margin-top:1.2rem;font-size:.75rem;color:var(--muted,#888)">
+    <a href="/" style="color:var(--muted,#888);text-decoration:none">&larr; Back to home</a>
+  </p>
+</div>
+</body>
+</html>

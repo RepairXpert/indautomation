@@ -197,6 +197,24 @@ def get_db():
         created_at TEXT NOT NULL,
         unsubscribed INTEGER DEFAULT 0
     )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS dispatches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        company TEXT NOT NULL,
+        contact_email TEXT NOT NULL,
+        equipment TEXT,
+        fault_code TEXT,
+        location TEXT,
+        urgency TEXT NOT NULL DEFAULT 'normal',
+        description TEXT,
+        claimed_by_email TEXT,
+        claimed_at TEXT,
+        closed_at TEXT,
+        resolution TEXT
+    )""")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_dispatches_status ON dispatches(status)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_dispatches_claimed ON dispatches(claimed_by_email)")
     db.commit()
     return db
 
@@ -1222,6 +1240,7 @@ async def vin_lookup(request: Request, vin: str = Form("")):
     """Decode a VIN using the free NHTSA vPIC API."""
     result = None
     error = None
+    vin = (vin or "").strip().upper()
     if vin and len(vin) >= 11:
         import urllib.request
         import urllib.error
@@ -1232,9 +1251,9 @@ async def vin_lookup(request: Request, vin: str = Form("")):
                 data = json.loads(resp.read().decode())
                 if data.get("Results"):
                     raw = data["Results"][0]
-                    result = {k: v for k, v in raw.items() if v and v.strip()}
-        except (urllib.error.URLError, json.JSONDecodeError, KeyError) as e:
-            error = str(e)
+                    result = {k: v for k, v in raw.items() if v and str(v).strip()}
+        except (urllib.error.URLError, json.JSONDecodeError, KeyError):
+            error = "VIN lookup service is temporarily unavailable. Try again in a moment."
     elif vin:
         error = "VIN must be at least 11 characters"
     return templates.TemplateResponse("vin.html", {
@@ -1250,6 +1269,7 @@ async def api_vin_decode(vin: str):
     """JSON VIN decode endpoint for programmatic access."""
     import urllib.request
     import urllib.error
+    vin = (vin or "").strip().upper()
     if len(vin) < 11:
         return JSONResponse({"error": "VIN must be at least 11 characters"}, status_code=400)
     url = f"https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{vin}?format=json"
@@ -1259,10 +1279,13 @@ async def api_vin_decode(vin: str):
             data = json.loads(resp.read().decode())
             if data.get("Results"):
                 raw = data["Results"][0]
-                return JSONResponse({k: v for k, v in raw.items() if v and v.strip()})
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=502)
-    return JSONResponse({"error": "No results"}, status_code=404)
+                return JSONResponse({k: v for k, v in raw.items() if v and str(v).strip()})
+    except Exception:
+        return JSONResponse(
+            {"error": "VIN lookup service unavailable", "vin": vin},
+            status_code=502,
+        )
+    return JSONResponse({"error": "No results", "vin": vin}, status_code=404)
 
 
 @app.get("/sitemap.xml")
@@ -2066,87 +2089,1194 @@ async def connect_submit(
     return templates.TemplateResponse("connect_success.html", {"request": request, "role": role, "name": name})
 
 
-@app.post("/api/lead")
-async def capture_lead(request: Request):
-    """Lead capture: create Stripe customer + send welcome email.
+# ── Dispatch board (connect field techs to open repair jobs) ─────────────────
+DISPATCH_DB_PATH = ROOT / "data" / "dispatches.jsonl"  # legacy, auto-imported
+DISPATCH_URGENCIES = ("low", "normal", "urgent", "critical")
+DISPATCH_STATUSES = ("open", "claimed", "closed")
 
-    Body (JSON): {"email": "...", "name": "...", "plan": "pro"|"enterprise"|"free"}
-    Returns: {"ok": true, "stripe_customer_id": "...", "email_sent": true}
-    """
+
+def _dispatch_row_to_dict(row):
+    return {
+        "id": row["id"],
+        "created_at": row["created_at"],
+        "ts": row["created_at"],  # backward-compat alias for templates/api
+        "status": row["status"],
+        "company": row["company"],
+        "contact_email": row["contact_email"],
+        "equipment": row["equipment"] or "",
+        "fault_code": row["fault_code"] or "",
+        "location": row["location"] or "",
+        "urgency": row["urgency"],
+        "description": row["description"] or "",
+        "claimed_by_email": row["claimed_by_email"] or "",
+        "claimed_at": row["claimed_at"] or "",
+        "closed_at": row["closed_at"] or "",
+        "resolution": row["resolution"] or "",
+    }
+
+
+def _import_legacy_dispatches_jsonl(db):
+    """One-time migration: copy data/dispatches.jsonl rows into the SQLite
+    table if the table is empty and the file exists. Idempotent."""
+    if not DISPATCH_DB_PATH.exists():
+        return
+    existing = db.execute("SELECT COUNT(*) FROM dispatches").fetchone()[0]
+    if existing:
+        return
     try:
-        body = await request.json()
+        for ln in DISPATCH_DB_PATH.read_text(encoding="utf-8").splitlines():
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                r = json.loads(ln)
+            except Exception:
+                continue
+            db.execute(
+                "INSERT INTO dispatches (created_at, status, company, contact_email, "
+                "equipment, fault_code, location, urgency, description) "
+                "VALUES (?,?,?,?,?,?,?,?,?)",
+                (
+                    r.get("ts") or datetime.now(timezone.utc).isoformat(),
+                    r.get("status") or "open",
+                    (r.get("company") or "")[:120],
+                    (r.get("contact_email") or "")[:160],
+                    (r.get("equipment") or "")[:120],
+                    (r.get("fault_code") or "")[:40],
+                    (r.get("location") or "")[:160],
+                    r.get("urgency") if r.get("urgency") in DISPATCH_URGENCIES else "normal",
+                    (r.get("description") or "")[:800],
+                ),
+            )
+        db.commit()
     except Exception:
-        return JSONResponse(status_code=400, content={"ok": False, "error": "Invalid JSON"})
+        pass
 
-    email = (body.get("email") or "").strip().lower()
-    name = (body.get("name") or "").strip()
-    plan = (body.get("plan") or "free").strip()
 
-    if not email or "@" not in email:
-        return JSONResponse(status_code=400, content={"ok": False, "error": "Valid email required"})
+def _load_dispatches(limit: int = 50, status: str = "open", claimed_by_email: str = ""):
+    """Return dispatch entries, newest first."""
+    try:
+        db = get_db()
+        _import_legacy_dispatches_jsonl(db)
+        sql = "SELECT * FROM dispatches WHERE 1=1"
+        params: list = []
+        if status:
+            sql += " AND status = ?"
+            params.append(status)
+        if claimed_by_email:
+            sql += " AND claimed_by_email = ?"
+            params.append(claimed_by_email)
+        sql += " ORDER BY datetime(created_at) DESC LIMIT ?"
+        params.append(max(1, min(int(limit), 200)))
+        rows = db.execute(sql, params).fetchall()
+        db.close()
+        return [_dispatch_row_to_dict(r) for r in rows]
+    except Exception:
+        return []
+
+
+def _get_dispatch(dispatch_id: int):
+    try:
+        db = get_db()
+        row = db.execute("SELECT * FROM dispatches WHERE id=?", (dispatch_id,)).fetchone()
+        db.close()
+        return _dispatch_row_to_dict(row) if row else None
+    except Exception:
+        return None
+
+
+def _send_dispatch_email(subject: str, html: str, to_email: str, reply_to: str = ""):
+    """Best-effort Resend notification. No-op if RESEND_API_KEY unset."""
+    if not RESEND_API_KEY:
+        return
+    try:
+        import httpx
+        payload = {
+            "from": "IndAutomation <hello@repairxpertai.com>",
+            "to": [to_email],
+            "subject": subject,
+            "html": html,
+        }
+        if reply_to:
+            payload["reply_to"] = reply_to
+        httpx.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=8,
+        )
+    except Exception:
+        pass
+
+
+@app.get("/dispatch", response_class=HTMLResponse)
+async def dispatch_page(
+    request: Request,
+    fault_code: str = "",
+    equipment: str = "",
+):
+    """Dispatch board — post an open repair job or claim one.
+
+    Accepts ?fault_code=...&equipment=... for hand-off from /obd, /faults,
+    or /diagnose so a stuck mechanic can prefill the post form.
+    """
+    open_jobs = _load_dispatches(limit=50, status="open")
+    claimed_jobs = _load_dispatches(limit=20, status="claimed")
+    return templates.TemplateResponse(
+        "dispatch.html",
+        {
+            "request": request,
+            "open_jobs": open_jobs,
+            "claimed_jobs": claimed_jobs,
+            "urgencies": DISPATCH_URGENCIES,
+            "prefill_fault_code": (fault_code or "").strip()[:40],
+            "prefill_equipment": (equipment or "").strip()[:120],
+        },
+    )
+
+
+@app.post("/dispatch", response_class=HTMLResponse)
+async def dispatch_submit(
+    request: Request,
+    company: str = Form(...),
+    contact_email: str = Form(...),
+    equipment: str = Form(""),
+    fault_code: str = Form(""),
+    location: str = Form(""),
+    urgency: str = Form("normal"),
+    description: str = Form(""),
+):
+    contact_email = contact_email.strip().lower()
+    company = company.strip()
+    urgency = urgency.strip().lower()
+
+    def _render_error(msg: str):
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": msg,
+            },
+        )
+
+    if not company:
+        return _render_error("Company / plant name required.")
+    if not contact_email or "@" not in contact_email:
+        return _render_error("Valid contact email required.")
+    if urgency not in DISPATCH_URGENCIES:
+        urgency = "normal"
 
     now = datetime.now(timezone.utc).isoformat()
-    stripe_customer_id = None
-    email_sent = False
+    try:
+        db = get_db()
+        cur = db.execute(
+            "INSERT INTO dispatches (created_at, status, company, contact_email, "
+            "equipment, fault_code, location, urgency, description) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            (
+                now, "open",
+                company[:120],
+                contact_email[:160],
+                equipment.strip()[:120],
+                fault_code.strip()[:40],
+                location.strip()[:160],
+                urgency,
+                description.strip()[:800],
+            ),
+        )
+        new_id = cur.lastrowid
+        db.commit()
+        db.close()
+    except Exception:
+        return _render_error("Could not save dispatch. Try again.")
 
-    # 1. Create Stripe customer
-    if _stripe_available:
-        try:
-            customer = stripe.Customer.create(
-                email=email,
-                name=name or None,
-                metadata={"plan": plan, "source": "api_lead"},
-            )
-            stripe_customer_id = customer.id
-        except Exception as e:
-            _log_stripe_event("lead_stripe_error", {"email": email, "error": str(e)})
+    urgency_label = {
+        "low": "Low", "normal": "Normal",
+        "urgent": "Urgent", "critical": "CRITICAL",
+    }.get(urgency, urgency)
+    _send_dispatch_email(
+        subject=f"[Dispatch #{new_id}] {urgency_label} — {company}",
+        to_email="ericwestmail@gmail.com",
+        reply_to=contact_email,
+        html=(
+            f"<h2>New dispatch request #{new_id}</h2>"
+            f"<p><b>Company:</b> {company}<br>"
+            f"<b>Contact:</b> {contact_email}<br>"
+            f"<b>Equipment:</b> {equipment or '—'}<br>"
+            f"<b>Fault code:</b> {fault_code or '—'}<br>"
+            f"<b>Location:</b> {location or '—'}<br>"
+            f"<b>Urgency:</b> {urgency_label}<br>"
+            f"<b>Description:</b> {description or '—'}</p>"
+            f"<p>Route this job to a matched tech from /connect.</p>"
+        ),
+    )
 
-    # 2. Log lead to SQLite
+    return templates.TemplateResponse(
+        "dispatch.html",
+        {
+            "request": request,
+            "open_jobs": _load_dispatches(limit=50, status="open"),
+            "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+            "urgencies": DISPATCH_URGENCIES,
+            "success": f"Dispatch #{new_id} posted for {company}. Techs can claim it from the inbox.",
+        },
+    )
+
+
+@app.post("/dispatch/{dispatch_id}/claim", response_class=HTMLResponse)
+async def dispatch_claim(
+    request: Request,
+    dispatch_id: int,
+    tech_email: str = Form(...),
+):
+    tech_email = tech_email.strip().lower()
+    if not tech_email or "@" not in tech_email:
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": "Valid tech email required to claim a job.",
+            },
+        )
+
+    existing = _get_dispatch(dispatch_id)
+    if not existing:
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": f"Dispatch #{dispatch_id} not found.",
+            },
+        )
+    if existing["status"] != "open":
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": f"Dispatch #{dispatch_id} is already {existing['status']}.",
+            },
+        )
+
+    now = datetime.now(timezone.utc).isoformat()
+    try:
+        db = get_db()
+        # Guard against race: only transition open -> claimed
+        cur = db.execute(
+            "UPDATE dispatches SET status='claimed', claimed_by_email=?, claimed_at=? "
+            "WHERE id=? AND status='open'",
+            (tech_email[:160], now, dispatch_id),
+        )
+        db.commit()
+        changed = cur.rowcount
+        db.close()
+    except Exception:
+        changed = 0
+
+    if not changed:
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": f"Dispatch #{dispatch_id} was just claimed by another tech.",
+            },
+        )
+
+    # Notify the plant manager that a tech picked up the job
+    _send_dispatch_email(
+        subject=f"[Dispatch #{dispatch_id}] Claimed by {tech_email}",
+        to_email=existing["contact_email"],
+        reply_to=tech_email,
+        html=(
+            f"<h2>A field tech has claimed dispatch #{dispatch_id}</h2>"
+            f"<p><b>Tech:</b> {tech_email}<br>"
+            f"<b>Equipment:</b> {existing['equipment'] or '—'}<br>"
+            f"<b>Fault:</b> {existing['fault_code'] or '—'}</p>"
+            f"<p>Reply to this email to coordinate directly with the tech.</p>"
+        ),
+    )
+
+    return templates.TemplateResponse(
+        "dispatch.html",
+        {
+            "request": request,
+            "open_jobs": _load_dispatches(limit=50, status="open"),
+            "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+            "urgencies": DISPATCH_URGENCIES,
+            "success": f"Dispatch #{dispatch_id} claimed by {tech_email}. Plant contact notified.",
+        },
+    )
+
+
+@app.post("/dispatch/{dispatch_id}/close", response_class=HTMLResponse)
+async def dispatch_close(
+    request: Request,
+    dispatch_id: int,
+    resolution: str = Form(""),
+):
+    existing = _get_dispatch(dispatch_id)
+    if not existing:
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": f"Dispatch #{dispatch_id} not found.",
+            },
+        )
+    if existing["status"] == "closed":
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": f"Dispatch #{dispatch_id} is already closed.",
+            },
+        )
+
+    now = datetime.now(timezone.utc).isoformat()
     try:
         db = get_db()
         db.execute(
-            "INSERT INTO checkout_leads (created_at, email, plan, stripe_session_id, status) VALUES (?,?,?,?,?)",
-            (now, email, plan, stripe_customer_id or "", "lead_captured"),
+            "UPDATE dispatches SET status='closed', closed_at=?, resolution=? WHERE id=?",
+            (now, resolution.strip()[:800], dispatch_id),
         )
         db.commit()
         db.close()
-    except Exception as e:
-        _log_stripe_event("lead_db_error", {"email": email, "error": str(e)})
+    except Exception:
+        pass
 
-    # 3. Send welcome email via Resend
-    if RESEND_API_KEY:
-        plan_label = {"pro": "Pro ($19/mo)", "enterprise": "Enterprise ($99/mo)"}.get(plan, "Free")
-        greeting = f"Hi {name}," if name else "Hi there,"
-        html_body = f"""<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;color:#e6edf3;background:#161b22;padding:2rem;border-radius:8px">
-<h2 style="color:#f78166;margin-bottom:1rem">Welcome to RepairXpert Industrial Automation</h2>
-<p>{greeting}</p>
-<p>You're now on our radar for the <strong>{plan_label}</strong> plan. We help field technicians diagnose faults faster with AI — 313+ fault codes, parts recommendations, and direct chat with our diagnostic engine.</p>
-<p style="margin:1.5rem 0"><a href="https://indautomation.onrender.com/pricing" style="display:inline-block;background:#f78166;color:#fff;padding:0.75rem 2rem;border-radius:6px;text-decoration:none;font-weight:600">View Plans &amp; Pricing</a></p>
-<p style="color:#8b949e;font-size:0.85rem">Questions? Reply to this email or visit indautomation.onrender.com. Cancel anytime — no contracts.</p>
-<hr style="border:1px solid #30363d;margin:1.5rem 0">
-<p style="color:#8b949e;font-size:0.78rem">RepairXpert Industrial Automation — AI-powered fault diagnosis for field technicians</p>
-</div>"""
+    return templates.TemplateResponse(
+        "dispatch.html",
+        {
+            "request": request,
+            "open_jobs": _load_dispatches(limit=50, status="open"),
+            "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+            "urgencies": DISPATCH_URGENCIES,
+            "success": f"Dispatch #{dispatch_id} closed.",
+        },
+    )
+
+
+@app.get("/dispatch/inbox", response_class=HTMLResponse)
+async def dispatch_inbox(request: Request, email: str = ""):
+    """Tech inbox — jobs claimed by a specific tech email, plus open jobs
+    they can still claim."""
+    redirect = _require_admin(request)
+    if redirect is not None:
+        return redirect
+    email = email.strip().lower()
+    my_jobs: list = []
+    if email and "@" in email:
+        my_jobs = _load_dispatches(limit=50, status="claimed", claimed_by_email=email)
+        my_closed = _load_dispatches(limit=20, status="closed", claimed_by_email=email)
+    else:
+        my_closed = []
+    open_jobs = _load_dispatches(limit=50, status="open")
+    return templates.TemplateResponse(
+        "dispatch_inbox.html",
+        {
+            "request": request,
+            "email": email,
+            "my_jobs": my_jobs,
+            "my_closed": my_closed,
+            "open_jobs": open_jobs,
+        },
+    )
+
+
+@app.get("/api/dispatch")
+async def api_dispatch_list(
+    status: str = "open",
+    limit: int = 50,
+    claimed_by_email: str = "",
+):
+    """JSON feed of dispatches — for field-tech mobile clients."""
+    if status and status not in DISPATCH_STATUSES:
+        status = "open"
+    rows = _load_dispatches(
+        limit=limit,
+        status=status or "open",
+        claimed_by_email=claimed_by_email.strip().lower(),
+    )
+    return JSONResponse({"count": len(rows), "dispatches": rows})
+
+
+# ── Fleet registry ───────────────────────────────────────────────────────────
+# Single source of truth for the user's 14 cloud ventures + 4 local dev
+# services. Mirrors the VENTURES array in command_center.html (line ~240) and
+# the health_urls dict that was previously inlined in command_center_data().
+# Edit here when adding a new venture; both /api/command-center-data and
+# /api/agents will pick it up.
+VENTURES_REGISTRY = [
+    {"id": "indautomation",  "name": "IndAutomation",
+     "price": "$19/$99/mo",
+     "url": "https://indautomation.onrender.com",
+     "health_url": "https://indautomation.onrender.com/api/health",
+     "purpose": "Stripe check, PLC thread hunting, Glama badge monitoring"},
+    {"id": "clawgrab",       "name": "ClawGrab",
+     "price": "$12/mo",
+     "url": "https://getclawgrab.com",
+     "health_url": "https://clawgrab.onrender.com/health",
+     "purpose": "Transcript directory hunting, Reddit threads, tweet gen"},
+    {"id": "lite",           "name": "LITE Package",
+     "price": "$79", "url": "https://buy.stripe.com/aFa7sMddz4ir",
+     "health_url": None,
+     "purpose": "Offline diagnostics toolkit, one-time Stripe purchase"},
+    {"id": "crucix",         "name": "Crucix",
+     "price": "$29/$99/mo",
+     "url": "https://crucix.live",
+     "health_url": "https://crucix.live",
+     "purpose": "OSINT directories, security forums, threat intel"},
+    {"id": "cryptovault",    "name": "CryptoVault Recovery",
+     "price": "$97/$297", "url": None, "health_url": None,
+     "purpose": "Recovery threads, Bitcoin.com directory, Reddit"},
+    {"id": "soltrade",       "name": "Soltrade",
+     "price": "N/A", "url": None, "health_url": None,
+     "purpose": "Solana trading agent, on-chain signal"},
+    {"id": "cryptotrading",  "name": "CryptoTrading Agent",
+     "price": "N/A", "url": None, "health_url": None,
+     "purpose": "BTC price tracker, F&G index, signal generation"},
+    {"id": "content",        "name": "Content Pipeline",
+     "price": "N/A", "url": None, "health_url": None,
+     "purpose": "Article generation + cross-posting"},
+    {"id": "vendorad",       "name": "Vendor Ad Network",
+     "price": "$500-2K/mo",
+     "url": "https://vendor-ad-network.onrender.com",
+     "health_url": "https://vendor-ad-network.onrender.com/health",
+     "purpose": "Vendor display network, $500-2K/mo per slot"},
+    {"id": "debtclock",      "name": "US Debt Clock",
+     "price": "N/A",
+     "url": "https://us-debt-clock.onrender.com",
+     "health_url": "https://us-debt-clock.onrender.com",
+     "purpose": "Embed opportunities, finance forums, PGPF listing"},
+    {"id": "dealsniper",     "name": "DealSniper",
+     "price": "N/A", "url": None, "health_url": None,
+     "purpose": "Discount deal hunter"},
+    {"id": "clawgrab_mcp",   "name": "ClawGrab MCP",
+     "price": "free", "url": None, "health_url": None,
+     "purpose": "MCP server for ClawGrab tools"},
+    {"id": "invoiceflow",    "name": "InvoiceFlow",
+     "price": "$19-59/mo", "url": None, "health_url": None,
+     "purpose": "Invoice generator + Stripe link"},
+    {"id": "procurement",    "name": "ProcurementEngine",
+     "price": "N/A", "url": None, "health_url": None,
+     "purpose": "Parts price comparison + supplier health (mounted at /api/procurement)"},
+]
+
+# Local dev services from the user's machine (the screenshot scorecard).
+# These are reachable only when the FastAPI process runs on the same host
+# the user develops on. On Render they will all show as `down`.
+LOCAL_SERVICES_REGISTRY = [
+    {"name": "UNO v2",     "port": 8200,  "health_path": "/health"},
+    {"name": "ClawGrab",   "port": 10000, "health_path": "/health"},
+    {"name": "Crucix",     "port": 3117,  "health_path": "/health"},
+    {"name": "OpenRecall", "port": 8082,  "health_path": "/health"},
+]
+
+
+# ── Parts / Connectors / Tools search ────────────────────────────────────────
+from indauto.parts.search import search_parts as _search_parts
+from indauto.parts.catalog import (
+    PARTS_CATALOG as _PARTS_CATALOG,
+    CATEGORY_ALIASES as _PARTS_ALIASES,
+    get_all_categories as _parts_categories,
+)
+
+
+@app.get("/parts", response_class=HTMLResponse)
+async def parts_search_page(request: Request, q: str = "", category: str = ""):
+    """Find connectors, tools, sensors, and replacement parts.
+
+    Hits the in-app PARTS_CATALOG plus builds direct supplier search links
+    (AutomationDirect, Amazon, McMaster, Grainger, Digikey) for any free-text
+    query so the user always gets a useful result, even on a stub category.
+    """
+    q = (q or "").strip()
+    category = (category or "").strip().lower()
+
+    result = None
+    if q or category:
         try:
-            import urllib.request as _urlreq
-            payload = json.dumps({
-                "from": "RepairXpert <hello@repairxpertai.com>",
-                "to": [email],
-                "reply_to": "ericwestmail@gmail.com",
-                "subject": "Welcome to RepairXpert Industrial Automation",
-                "html": html_body,
-            }).encode()
-            req = _urlreq.Request(
-                "https://api.resend.com/emails",
-                data=payload,
-                headers={"Content-Type": "application/json", "Authorization": f"Bearer {RESEND_API_KEY}"},
-            )
-            with _urlreq.urlopen(req, timeout=10):
-                email_sent = True
-        except Exception as e:
-            _log_stripe_event("lead_email_failed", {"email": email, "error": str(e)})
+            result = _search_parts(q, category)
+        except Exception:
+            result = {"parts": [], "search_links": {}, "query": q or category}
 
-    _log_stripe_event("lead_captured", {"email": email, "plan": plan})
-    return JSONResponse(content={"ok": True, "stripe_customer_id": stripe_customer_id, "email_sent": email_sent})
+    # Featured categories pulled from the catalog so the page is useful with
+    # an empty query — connectors and tools surfaced first per user request.
+    featured = []
+    for cat in ("connector", "tool", "proximity_sensor", "vfd_drive",
+                "safety_relay", "contactor", "encoder"):
+        if cat in _PARTS_CATALOG:
+            featured.append({
+                "key": cat,
+                "label": cat.replace("_", " ").title(),
+                "count": len(_PARTS_CATALOG[cat]),
+            })
+
+    return templates.TemplateResponse(
+        "parts.html",
+        {
+            "request": request,
+            "q": q,
+            "category": category,
+            "result": result,
+            "featured": featured,
+            "all_categories": _parts_categories(),
+        },
+    )
+
+
+@app.get("/api/parts/search")
+async def api_parts_search(q: str = "", category: str = ""):
+    """JSON parts search — connectors, tools, sensors. Used by /parts page
+    and external mobile clients."""
+    q = (q or "").strip()
+    category = (category or "").strip().lower()
+    if not q and not category:
+        return JSONResponse(
+            {"error": "Provide ?q=<query> or ?category=<key>", "categories": _parts_categories()},
+            status_code=400,
+        )
+    try:
+        result = _search_parts(q, category)
+    except Exception as e:
+        return JSONResponse({"error": "Search failed", "detail": str(e)[:200]}, status_code=500)
+    return JSONResponse({
+        "query": result.get("query", q or category),
+        "category": category,
+        "count": len(result.get("parts", [])),
+        "parts": result.get("parts", []),
+        "search_links": result.get("search_links", {}),
+    })
+
+
+# ── Agents report + Resume-all-AI ─────────────────────────────────────────────
+def _agents_report():
+    """Aggregate every background agent / loop / AI service this app runs.
+
+    Returns a structured dict for /api/agents and /agents page rendering.
+    Best-effort — never raises, never blocks more than a few seconds.
+    """
+    import urllib.request as _ur
+    now = datetime.now(timezone.utc).isoformat()
+
+    agents: list[dict] = []
+
+    # 1. Revenue loop (started in app.py boot)
+    try:
+        rev_log = get_revenue_log()
+        rev_alive = bool(_revenue_thread and getattr(_revenue_thread, "is_alive", lambda: False)())
+        agents.append({
+            "name": "Revenue Loop",
+            "kind": "background_thread",
+            "source": "revenue_loop.py",
+            "status": "running" if rev_alive else "stopped",
+            "last_log": (rev_log[-1] if rev_log else "no log"),
+            "log_lines": len(rev_log) if rev_log else 0,
+        })
+    except Exception as e:
+        agents.append({
+            "name": "Revenue Loop",
+            "kind": "background_thread",
+            "source": "revenue_loop.py",
+            "status": "error",
+            "error": str(e)[:200],
+        })
+
+    # 2. In-process cloud worker thread
+    try:
+        worker_alive = bool(_worker and _worker.is_alive())
+        agents.append({
+            "name": "Cloud Worker",
+            "kind": "background_thread",
+            "source": "indauto/app.py:_cloud_worker_loop",
+            "status": "running" if worker_alive else "stopped",
+            "interval_sec": 1800,
+            "purpose": "warms Render services + processes cart recovery queue",
+        })
+    except Exception as e:
+        agents.append({
+            "name": "Cloud Worker",
+            "kind": "background_thread",
+            "source": "indauto/app.py:_cloud_worker_loop",
+            "status": "error",
+            "error": str(e)[:200],
+        })
+
+    # 3. Stripe subsystem
+    agents.append({
+        "name": "Stripe Billing",
+        "kind": "external_service",
+        "source": "stripe SDK",
+        "status": "configured" if _stripe_available else "disabled",
+        "purpose": "checkout, subscriptions, lead capture",
+    })
+
+    # 4. Resend email subsystem
+    agents.append({
+        "name": "Resend Email",
+        "kind": "external_service",
+        "source": "RESEND_API_KEY env",
+        "status": "configured" if RESEND_API_KEY else "disabled",
+        "purpose": "lead welcome, dispatch notifications, recovery emails",
+    })
+
+    # 5. Procurement engine
+    proc_status = "running" if procurement_router else "disabled"
+    agents.append({
+        "name": "Procurement Engine",
+        "kind": "router",
+        "source": "procurement_routes.py",
+        "status": proc_status,
+        "purpose": "parts price comparison + supplier health",
+    })
+
+    # 6. LM Studio text model
+    text_url = (CONFIG.get("ai") or {}).get("text_base_url") or \
+               (CONFIG.get("lm_studio") or {}).get("base_url") or \
+               "http://127.0.0.1:1234/v1"
+    text_status = "unknown"
+    try:
+        req = _ur.Request(text_url.rstrip("/") + "/models",
+                          headers={"User-Agent": "RepairXpert/1.0"})
+        with _ur.urlopen(req, timeout=2) as resp:
+            text_status = "connected" if resp.status == 200 else f"http_{resp.status}"
+    except Exception:
+        text_status = "unavailable"
+    agents.append({
+        "name": "LM Studio (Text)",
+        "kind": "ai_model",
+        "source": text_url,
+        "status": text_status,
+        "model_hint": (CONFIG.get("ai") or {}).get("text_model") or "qwen3.5-9b",
+    })
+
+    # 7. LM Studio vision model
+    vision_url = (CONFIG.get("ai") or {}).get("vision_base_url") or \
+                 "http://127.0.0.1:8766/v1"
+    vision_status = "unknown"
+    try:
+        req = _ur.Request(vision_url.rstrip("/") + "/models",
+                          headers={"User-Agent": "RepairXpert/1.0"})
+        with _ur.urlopen(req, timeout=2) as resp:
+            vision_status = "connected" if resp.status == 200 else f"http_{resp.status}"
+    except Exception:
+        vision_status = "unavailable"
+    agents.append({
+        "name": "LM Studio (Vision)",
+        "kind": "ai_model",
+        "source": vision_url,
+        "status": vision_status,
+        "model_hint": (CONFIG.get("ai") or {}).get("vision_model") or "glm-4v-flash",
+    })
+
+    # 8. Cloud AI fallbacks
+    agents.append({
+        "name": "MiniMax M2.7 (cloud fallback)",
+        "kind": "ai_model",
+        "source": "MINIMAX_API_KEY env",
+        "status": "configured" if os.environ.get("MINIMAX_API_KEY") else "disabled",
+        "purpose": "primary cloud LLM for diagnosis when LM Studio offline",
+    })
+    agents.append({
+        "name": "Groq Llama-3.3-70b (cloud fallback)",
+        "kind": "ai_model",
+        "source": "GROQ_API_KEY env",
+        "status": "configured" if os.environ.get("GROQ_API_KEY") else "disabled",
+        "purpose": "secondary cloud LLM for diagnosis",
+    })
+
+    # 9. MCP servers (presence only — they run as separate processes)
+    for mcp_file, label in (
+        ("mcp_server.py", "Industrial Diagnosis MCP"),
+        ("obd_mcp_server.py", "Automotive OBD MCP"),
+    ):
+        present = (ROOT / mcp_file).exists()
+        agents.append({
+            "name": label,
+            "kind": "mcp_server",
+            "source": mcp_file,
+            "status": "available" if present else "missing",
+            "purpose": "exposes diagnosis/parts as MCP tools to AI assistants",
+        })
+
+    # 10. Cloud ventures (the user's fleet) — concurrent health pings
+    venture_results = _ping_ventures(VENTURES_REGISTRY, total_budget_sec=3.0)
+    for v, ping in venture_results:
+        agents.append({
+            "name": v["name"],
+            "kind": "cloud_venture",
+            "source": v.get("health_url") or v.get("url") or "(local-only)",
+            "status": ping["status"],
+            "purpose": v.get("purpose", ""),
+            "price": v.get("price", ""),
+            "url": v.get("url"),
+            "http": ping.get("http"),
+            "latency_ms": ping.get("latency_ms"),
+        })
+
+    # 11. Local dev services (the user's machine — UNO v2, ClawGrab, Crucix, OpenRecall)
+    local_results = _ping_local_services(LOCAL_SERVICES_REGISTRY, timeout_sec=1.0)
+    for svc, ping in local_results:
+        agents.append({
+            "name": svc["name"],
+            "kind": "local_service",
+            "source": f"http://127.0.0.1:{svc['port']}{svc.get('health_path', '/health')}",
+            "status": ping["status"],
+            "port": svc["port"],
+            "http": ping.get("http"),
+            "latency_ms": ping.get("latency_ms"),
+        })
+
+    # Roll-up counts by status and by kind
+    by_status: dict = {}
+    by_kind: dict = {}
+    for a in agents:
+        by_status[a["status"]] = by_status.get(a["status"], 0) + 1
+        by_kind[a["kind"]] = by_kind.get(a["kind"], 0) + 1
+
+    # Fleet roll-up — mirrors the screenshot scorecard
+    fleet_total = sum(1 for a in agents if a["kind"] == "cloud_venture")
+    fleet_passing = sum(1 for a in agents
+                        if a["kind"] == "cloud_venture" and a["status"] == "passing")
+    fleet_local_only = sum(1 for a in agents
+                           if a["kind"] == "cloud_venture" and a["status"] == "local")
+    fleet_down = sum(1 for a in agents
+                     if a["kind"] == "cloud_venture" and a["status"] in ("down", "timeout"))
+
+    return {
+        "generated_at": now,
+        "count": len(agents),
+        "by_status": by_status,
+        "by_kind": by_kind,
+        "fleet": {
+            "total": fleet_total,
+            "passing": fleet_passing,
+            "local_only": fleet_local_only,
+            "down": fleet_down,
+        },
+        "agents": agents,
+    }
+
+
+def _ping_one_url(url: str, timeout: float) -> dict:
+    """Best-effort GET that classifies the result. Never raises."""
+    import urllib.request as _ur
+    import urllib.error as _ue
+    import time as _t
+    started = _t.monotonic()
+    try:
+        req = _ur.Request(url, headers={"User-Agent": "RepairXpertAgents/1.0"})
+        with _ur.urlopen(req, timeout=timeout) as resp:
+            elapsed_ms = int((_t.monotonic() - started) * 1000)
+            return {
+                "status": "passing" if resp.status < 400 else "down",
+                "http": resp.status,
+                "latency_ms": elapsed_ms,
+            }
+    except _ue.HTTPError as e:
+        elapsed_ms = int((_t.monotonic() - started) * 1000)
+        # 4xx/5xx on the health endpoint still means the host is reachable —
+        # mark as 'down' but record the code so the operator can see why.
+        return {"status": "down", "http": e.code, "latency_ms": elapsed_ms}
+    except Exception:
+        elapsed_ms = int((_t.monotonic() - started) * 1000)
+        # Distinguish timeout from connection refused for the operator UI.
+        return {
+            "status": "timeout" if elapsed_ms >= int(timeout * 1000) - 50 else "down",
+            "latency_ms": elapsed_ms,
+        }
+
+
+def _ping_ventures(ventures: list, total_budget_sec: float = 3.0) -> list:
+    """Ping every venture's health_url concurrently. Returns
+    [(venture_dict, ping_dict), ...] in the original order, capped at the
+    total time budget. Ventures with no health_url are marked 'local'."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    results: dict = {}
+    pingable = [v for v in ventures if v.get("health_url")]
+    for v in ventures:
+        if not v.get("health_url"):
+            results[v["id"]] = {"status": "local"}
+
+    if pingable:
+        per_request_timeout = min(2.0, total_budget_sec)
+        with ThreadPoolExecutor(max_workers=min(8, len(pingable))) as pool:
+            future_to_v = {
+                pool.submit(_ping_one_url, v["health_url"], per_request_timeout): v
+                for v in pingable
+            }
+            try:
+                for fut in as_completed(future_to_v, timeout=total_budget_sec):
+                    v = future_to_v[fut]
+                    try:
+                        results[v["id"]] = fut.result()
+                    except Exception:
+                        results[v["id"]] = {"status": "down"}
+            except Exception:
+                # total budget exceeded — anything still pending is timeout
+                for fut, v in future_to_v.items():
+                    if v["id"] not in results:
+                        results[v["id"]] = {"status": "timeout"}
+
+    # Preserve original ordering
+    return [(v, results.get(v["id"], {"status": "down"})) for v in ventures]
+
+
+def _ping_local_services(services: list, timeout_sec: float = 1.0) -> list:
+    """Ping each local service on 127.0.0.1:<port><health_path>."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    results: dict = {}
+    if not services:
+        return []
+    with ThreadPoolExecutor(max_workers=min(8, len(services))) as pool:
+        future_to_s = {}
+        for s in services:
+            url = f"http://127.0.0.1:{s['port']}{s.get('health_path', '/health')}"
+            future_to_s[pool.submit(_ping_one_url, url, timeout_sec)] = s
+        try:
+            for fut in as_completed(future_to_s, timeout=timeout_sec * 2):
+                s = future_to_s[fut]
+                try:
+                    results[s["name"]] = fut.result()
+                except Exception:
+                    results[s["name"]] = {"status": "down"}
+        except Exception:
+            for fut, s in future_to_s.items():
+                if s["name"] not in results:
+                    results[s["name"]] = {"status": "timeout"}
+
+    return [(s, results.get(s["name"], {"status": "down"})) for s in services]
+
+
+# ── Claude Code session discovery (read-only) ────────────────────────────────
+def _discover_claude_sessions(limit: int = 20):
+    """Return recent Claude Code session metadata from ~/.claude/projects.
+
+    Read-only: project slug, session id (filename stem), title, last-modified,
+    size in bytes. Returns [] gracefully if the directory doesn't exist
+    (e.g. running on Render). Used by /dashboard to surface the user's dev
+    sessions alongside the production fleet.
+    """
+    sessions: list = []
+    base = Path.home() / ".claude" / "projects"
+    if not base.exists():
+        return sessions
+    try:
+        for project_dir in base.iterdir():
+            if not project_dir.is_dir():
+                continue
+            for jsonl in project_dir.glob("**/*.jsonl"):
+                try:
+                    stat = jsonl.stat()
+                    title = jsonl.stem
+                    # Cheap title peek: first JSON line if present
+                    try:
+                        with open(jsonl, encoding="utf-8") as f:
+                            first = f.readline()
+                            if first:
+                                row = json.loads(first)
+                                title = (
+                                    row.get("title")
+                                    or row.get("name")
+                                    or row.get("summary")
+                                    or title
+                                )
+                    except Exception:
+                        pass
+                    sessions.append({
+                        "project": project_dir.name,
+                        "session_id": jsonl.stem,
+                        "title": str(title)[:120],
+                        "modified_at": datetime.fromtimestamp(
+                            stat.st_mtime, tz=timezone.utc
+                        ).isoformat(),
+                        "size_bytes": stat.st_size,
+                    })
+                except Exception:
+                    continue
+    except Exception:
+        return []
+    sessions.sort(key=lambda s: s["modified_at"], reverse=True)
+    return sessions[:limit]
+
+
+# ── Operator auth (single shared admin token) ────────────────────────────────
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "")
+ADMIN_COOKIE_NAME = "rxa_admin"
+
+
+def _is_admin(request: Request) -> bool:
+    """True iff caller has the admin cookie OR ADMIN_TOKEN is unset (dev mode)."""
+    if not ADMIN_TOKEN:
+        return True  # no token configured → no auth (local dev / first boot)
+    return request.cookies.get(ADMIN_COOKIE_NAME) == ADMIN_TOKEN
+
+
+def _require_admin(request: Request):
+    """Return a 302 RedirectResponse if not admin, else None."""
+    if _is_admin(request):
+        return None
+    from starlette.responses import RedirectResponse
+    next_url = str(request.url.path)
+    if request.url.query:
+        next_url += "?" + request.url.query
+    return RedirectResponse(
+        url=f"/admin/login?next={next_url}",
+        status_code=302,
+    )
+
+
+@app.get("/admin/login", response_class=HTMLResponse)
+async def admin_login_page(request: Request, next: str = "/dashboard"):
+    """Tiny login form. POSTs back to /admin/login."""
+    return templates.TemplateResponse(
+        "admin_login.html",
+        {
+            "request": request,
+            "next": next,
+            "auth_disabled": not ADMIN_TOKEN,
+            "error": None,
+        },
+    )
+
+
+@app.post("/admin/login", response_class=HTMLResponse)
+async def admin_login_submit(
+    request: Request,
+    token: str = Form(...),
+    next: str = Form("/dashboard"),
+):
+    """Validate token, set HttpOnly cookie, redirect to next."""
+    from starlette.responses import RedirectResponse
+    if not ADMIN_TOKEN:
+        # No token configured server-side; just redirect through.
+        return RedirectResponse(url=next or "/dashboard", status_code=302)
+    if (token or "").strip() != ADMIN_TOKEN:
+        return templates.TemplateResponse(
+            "admin_login.html",
+            {
+                "request": request,
+                "next": next,
+                "auth_disabled": False,
+                "error": "Invalid token.",
+            },
+            status_code=401,
+        )
+    safe_next = next if next and next.startswith("/") else "/dashboard"
+    resp = RedirectResponse(url=safe_next, status_code=302)
+    resp.set_cookie(
+        key=ADMIN_COOKIE_NAME,
+        value=ADMIN_TOKEN,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=60 * 60 * 24 * 30,  # 30 days
+        path="/",
+    )
+    return resp
+
+
+@app.post("/admin/logout")
+async def admin_logout():
+    from starlette.responses import RedirectResponse
+    resp = RedirectResponse(url="/", status_code=302)
+    resp.delete_cookie(ADMIN_COOKIE_NAME, path="/")
+    return resp
+
+
+# ── Unified dashboard ────────────────────────────────────────────────────────
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page(request: Request):
+    """One unified view of every venture, agent, dispatch job, and AI loop.
+
+    Aggregator only — calls existing helpers, reuses existing templates' data
+    sources. Auth-gated (no-op if ADMIN_TOKEN unset).
+    """
+    redirect = _require_admin(request)
+    if redirect is not None:
+        return redirect
+    report = _agents_report()
+    cc_resp = await command_center_data(request)
+    try:
+        cc_json = json.loads(cc_resp.body.decode())
+    except Exception:
+        cc_json = {}
+    open_jobs = _load_dispatches(limit=10, status="open")
+    claimed_jobs = _load_dispatches(limit=10, status="claimed")
+    sessions = _discover_claude_sessions(limit=20)
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {
+            "request": request,
+            "report": report,
+            "command_center": cc_json,
+            "open_jobs": open_jobs,
+            "claimed_jobs": claimed_jobs,
+            "sessions": sessions,
+        },
+    )
+
+
+@app.get("/api/dashboard")
+async def api_dashboard(request: Request):
+    """JSON mirror of /dashboard for mobile / scripts."""
+    redirect = _require_admin(request)
+    if redirect is not None:
+        return JSONResponse({"error": "auth required"}, status_code=401)
+    report = _agents_report()
+    cc_resp = await command_center_data(request)
+    try:
+        cc_json = json.loads(cc_resp.body.decode())
+    except Exception:
+        cc_json = {}
+    return JSONResponse({
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "report": report,
+        "command_center": cc_json,
+        "open_jobs": _load_dispatches(limit=10, status="open"),
+        "claimed_jobs": _load_dispatches(limit=10, status="claimed"),
+        "sessions": _discover_claude_sessions(limit=20),
+    })
+
+
+@app.get("/api/agents")
+async def api_agents():
+    """JSON report of every agent / loop / AI service running in the app."""
+    return JSONResponse(_agents_report())
+
+
+@app.get("/agents", response_class=HTMLResponse)
+async def agents_page(request: Request):
+    """Visual report of every agent / loop / AI service."""
+    redirect = _require_admin(request)
+    if redirect is not None:
+        return redirect
+    report = _agents_report()
+    return templates.TemplateResponse(
+        "agents.html",
+        {"request": request, "report": report},
+    )
+
+
+@app.post("/api/agents/resume")
+async def api_agents_resume():
+    """Wake every AI loop/worker that should be running but isn't.
+
+    - Restarts the revenue-loop thread if dead
+    - Pings LM Studio so it loads its model into memory
+    - Pings cloud worker target services to wake them
+    - Returns the post-resume agent report
+    """
+    import urllib.request as _ur
+    actions: list[dict] = []
+    global _revenue_thread, _worker
+
+    # 1. Restart revenue loop if dead
+    try:
+        alive = bool(_revenue_thread and getattr(_revenue_thread, "is_alive", lambda: False)())
+        if not alive:
+            try:
+                from revenue_loop import start_revenue_loop as _start_rev
+                _revenue_thread = _start_rev()
+                actions.append({"agent": "Revenue Loop", "action": "restarted", "ok": True})
+            except Exception as e:
+                actions.append({"agent": "Revenue Loop", "action": "restart_failed",
+                                "ok": False, "error": str(e)[:200]})
+        else:
+            actions.append({"agent": "Revenue Loop", "action": "already_running", "ok": True})
+    except Exception as e:
+        actions.append({"agent": "Revenue Loop", "action": "check_failed",
+                        "ok": False, "error": str(e)[:200]})
+
+    # 2. Restart cloud worker thread if dead
+    try:
+        if not (_worker and _worker.is_alive()):
+            new_worker = threading.Thread(
+                target=_cloud_worker_loop, daemon=True, name="cloud-worker-resumed"
+            )
+            new_worker.start()
+            _worker = new_worker
+            actions.append({"agent": "Cloud Worker", "action": "restarted", "ok": True})
+        else:
+            actions.append({"agent": "Cloud Worker", "action": "already_running", "ok": True})
+    except Exception as e:
+        actions.append({"agent": "Cloud Worker", "action": "restart_failed",
+                        "ok": False, "error": str(e)[:200]})
+
+    # 3. Wake LM Studio (text + vision) by pinging /models
+    for label, url in (
+        ("LM Studio (Text)",
+         (CONFIG.get("ai") or {}).get("text_base_url") or "http://127.0.0.1:1234/v1"),
+        ("LM Studio (Vision)",
+         (CONFIG.get("ai") or {}).get("vision_base_url") or "http://127.0.0.1:8766/v1"),
+    ):
+        try:
+            req = _ur.Request(url.rstrip("/") + "/models",
+                              headers={"User-Agent": "RepairXpert/1.0"})
+            with _ur.urlopen(req, timeout=3) as resp:
+                actions.append({"agent": label, "action": "wake_ping",
+                                "ok": resp.status == 200, "http": resp.status})
+        except Exception as e:
+            actions.append({"agent": label, "action": "wake_ping",
+                            "ok": False, "error": str(e)[:120]})
+
+    # 4. Warm every venture in the fleet registry (concurrent, time-budgeted)
+    venture_results = _ping_ventures(VENTURES_REGISTRY, total_budget_sec=4.0)
+    for v, ping in venture_results:
+        if ping["status"] == "local":
+            actions.append({"agent": v["name"], "action": "warm",
+                            "ok": True, "note": "local-only, skipped"})
+        else:
+            ok = ping["status"] == "passing"
+            actions.append({
+                "agent": v["name"],
+                "action": "warm",
+                "ok": ok,
+                "http": ping.get("http"),
+                "latency_ms": ping.get("latency_ms"),
+            })
+
+    # 5. Ping local dev services so the operator can see which are up
+    local_results = _ping_local_services(LOCAL_SERVICES_REGISTRY, timeout_sec=1.0)
+    for svc, ping in local_results:
+        actions.append({
+            "agent": f"{svc['name']} (local :{svc['port']})",
+            "action": "wake_ping",
+            "ok": ping["status"] == "passing",
+            "http": ping.get("http"),
+            "latency_ms": ping.get("latency_ms"),
+        })
+
+    return JSONResponse({
+        "ok": True,
+        "actions": actions,
+        "report": _agents_report(),
+    })
 
 
 # ── Command Center ─────────────────────────────────────────────────────────────
@@ -2155,6 +3285,9 @@ async def capture_lead(request: Request):
 @app.get("/command-center", response_class=HTMLResponse)
 async def command_center(request: Request):
     """Command Center — single-page ops dashboard for all ventures."""
+    redirect = _require_admin(request)
+    if redirect is not None:
+        return redirect
     return templates.TemplateResponse("command_center.html", {"request": request})
 
 
@@ -2183,33 +3316,22 @@ async def command_center_data(request: Request):
         "alerts": [],
     }
 
-    # --- Service health checks ---
-    health_urls = {
-        "indautomation": "https://indautomation.onrender.com/api/health",
-        "clawgrab": "https://clawgrab.onrender.com/health",
-        "vendorad": "https://vendor-ad-network.onrender.com/health",
-        "debtclock": "https://us-debt-clock.onrender.com",
-    }
-    for svc, url in health_urls.items():
+    # --- Service health checks (driven by VENTURES_REGISTRY) ---
+    # Reuses the same registry that /api/agents reads, so command-center
+    # and /agents stay in sync. Local-only ventures (no health_url) stay
+    # marked "local"; reachable ones are pinged with a 6s timeout.
+    for venture in VENTURES_REGISTRY:
+        vid = venture["id"]
+        url = venture.get("health_url")
+        if not url:
+            result["services"][vid] = "local"
+            continue
         try:
             req = _ccur.Request(url, headers={"User-Agent": "CommandCenter/1.0"})
             with _ccur.urlopen(req, timeout=6) as resp:
-                result["services"][svc] = "up" if resp.status < 400 else "down"
+                result["services"][vid] = "up" if resp.status < 400 else "down"
         except Exception:
-            result["services"][svc] = "down"
-
-    # Local-only services
-    for local_svc in ["lite", "cryptovault", "soltrade", "cryptotrading",
-                       "content", "dealsniper", "clawgrab_mcp", "invoiceflow", "procurement"]:
-        result["services"][local_svc] = "local"
-
-    # Crucix
-    try:
-        req = _ccur.Request("https://crucix.live", headers={"User-Agent": "CommandCenter/1.0"})
-        with _ccur.urlopen(req, timeout=6) as resp:
-            result["services"]["crucix"] = "up" if resp.status < 400 else "down"
-    except Exception:
-        result["services"]["crucix"] = "down"
+            result["services"][vid] = "down"
 
     # --- IndAutomation details from local DB ---
     try:
@@ -2245,11 +3367,9 @@ async def command_center_data(request: Request):
     result["ai_engines_active"] = engines
     result["brain_cycles_24h"] = len([l for l in result["revenue_loop_log"] if "analyze" in l.lower() or "brain" in l.lower()])
 
-    # --- MRR (all $0 currently) ---
-    for v in ["indautomation", "clawgrab", "lite", "crucix", "cryptovault",
-              "soltrade", "cryptotrading", "content", "vendorad", "debtclock",
-              "dealsniper", "clawgrab_mcp", "invoiceflow", "procurement"]:
-        result["mrr"][v] = "$0"
+    # --- MRR (all $0 currently) — driven by VENTURES_REGISTRY ---
+    for venture in VENTURES_REGISTRY:
+        result["mrr"][venture["id"]] = "$0"
 
     # --- Stripe balance ---
     stripe_bal = "--"
