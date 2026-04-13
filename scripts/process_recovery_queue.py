@@ -14,10 +14,10 @@ import urllib.error
 
 # Default to production
 BASE_URL = os.environ.get("INDAUTO_URL", "https://indautomation.onrender.com")
-WEBHOOK_SECRET = os.environ.get(
-    "STRIPE_WEBHOOK_SECRET",
-    "whsec_Pirb1rx9xI4AKVyUAsphzMNJN98tJ9dt",
-)
+WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+if not WEBHOOK_SECRET:
+    print("[RECOVERY] STRIPE_WEBHOOK_SECRET env var not set", file=sys.stderr)
+    sys.exit(1)
 
 
 def process_queue():

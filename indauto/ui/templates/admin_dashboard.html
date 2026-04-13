@@ -3,80 +3,366 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard | RepairXpertAI</title>
+<title>Admin Dashboard — RepairXpert Industrial Automation</title>
+<meta name="description" content="Real-time admin dashboard for RepairXpert IndAutomation. Monitor diagnoses, revenue, and service health.">
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
 <style>
-:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#c9d1d9;--bright:#e6edf3;--blue:#58a6ff;--green:#3fb950;--orange:#d29922;--red:#f85149;--purple:#bc8cff}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);padding:1.5rem}
-h1{color:var(--bright);font-size:1.5rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
-h1 span{background:var(--green);color:#000;font-size:.7rem;padding:2px 8px;border-radius:10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
-.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.2rem}
-.card .label{font-size:.75rem;color:var(--text);text-transform:uppercase;letter-spacing:.05em}
-.card .value{font-size:1.8rem;font-weight:700;color:var(--bright);margin:.3rem 0}
-.card .sub{font-size:.8rem;color:var(--text)}
-.card.green .value{color:var(--green)}
-.card.blue .value{color:var(--blue)}
-.card.orange .value{color:var(--orange)}
-.card.purple .value{color:var(--purple)}
-table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
-th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--border);font-size:.85rem}
-th{background:#1c2128;color:var(--bright);font-weight:600}
-.up{color:var(--green)}
-.down{color:var(--red)}
-.section{margin-bottom:1.5rem}
-.section h2{font-size:1rem;color:var(--bright);margin-bottom:.6rem}
-.refresh{background:var(--blue);color:#fff;border:none;padding:.4rem 1rem;border-radius:6px;cursor:pointer;font-size:.8rem;float:right}
+/* ── Dashboard Layout ── */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.stat-card .stat-label {
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+.stat-card .stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+.stat-card .stat-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.stat-card.up .stat-value { color: var(--green); }
+.stat-card.down .stat-value { color: var(--red); }
+.stat-card.accent .stat-value { color: var(--accent); }
+
+/* ── Section Headers ── */
+.section-header {
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Services ── */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.service-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.service-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.service-dot.up { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.service-dot.down { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.service-name { font-weight: 600; font-size: 0.9rem; }
+.service-url { font-size: 0.72rem; color: var(--muted); font-family: monospace; }
+
+/* ── Fault Codes Table ── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+.data-table th {
+  text-align: left;
+  font-size: 0.68rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+.data-table td {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+.data-table tr:hover td { background: var(--surface2); }
+.fault-code-tag {
+  background: rgba(247,129,102,0.15);
+  color: var(--accent);
+  font-family: monospace;
+  font-size: 0.8rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+}
+.count-badge {
+  background: var(--surface2);
+  color: var(--muted);
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+}
+
+/* ── Recent History ── */
+.history-scroll { overflow-x: auto; }
+.timestamp { font-family: monospace; font-size: 0.78rem; color: var(--muted); }
+.source-tag {
+  background: rgba(88,166,255,0.15);
+  color: var(--blue);
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+}
+.confidence-bar {
+  display: inline-block;
+  width: 50px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+.confidence-fill {
+  display: inline-block;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--green);
+}
+
+/* ── AI Engine ── */
+.ai-badge {
+  display: inline-block;
+  background: rgba(247,129,102,0.15);
+  color: var(--accent);
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* ── Two-column layout ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ── Revenue card ── */
+.revenue-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+.revenue-main {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 0.25rem;
+}
+.revenue-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.revenue-sub { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; }
+
+/* ── Auto-refresh ── */
+.refresh-note {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-align: right;
+  margin-bottom: 1rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+  .two-col { grid-template-columns: 1fr; }
+  .services-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
-<h1>RepairXpertAI Dashboard <span>LIVE</span> <button class="refresh" onclick="location.reload()">Refresh</button></h1>
+<header>
+  <div class="logo-row">
+    <img src="/static/logo.svg" alt="RepairXpert" height="40">
+  </div>
+  <h1>Admin Dashboard</h1>
+  <span class="badge">LIVE</span>
+</header>
 
-<div class="grid">
-<div class="card green"><div class="label">Total Diagnoses</div><div class="value">{{ stats.total_diagnoses }}</div><div class="sub">All time</div></div>
-<div class="card blue"><div class="label">Fault Codes</div><div class="value">{{ stats.fault_codes }}</div><div class="sub">In database</div></div>
-<div class="card orange"><div class="label">Stripe Balance</div><div class="value">${{ "%.2f"|format(stats.stripe_balance/100) }}</div><div class="sub">Available</div></div>
-<div class="card purple"><div class="label">AI Engine</div><div class="value">{{ stats.ai_engine }}</div><div class="sub">{{ stats.ai_provider }}</div></div>
+<div class="container" style="padding: 1.5rem 1rem; max-width: 1200px; margin: 0 auto">
+
+  <p class="refresh-note">Auto-refresh every 60 seconds</p>
+
+  <!-- STATS ROW -->
+  <div class="dashboard-grid">
+    <div class="stat-card accent">
+      <span class="stat-label">Total Diagnoses</span>
+      <span class="stat-value">{{ stats.total_diagnoses }}</span>
+      <span class="stat-sub">all time</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Fault Codes</span>
+      <span class="stat-value">{{ stats.fault_codes }}</span>
+      <span class="stat-sub">in database</span>
+    </div>
+    <div class="stat-card {% if stats.stripe_balance > 0 %}up{% endif %}">
+      <span class="stat-label">Stripe Balance</span>
+      <span class="stat-value">${{ "%.2f"|format(stats.stripe_balance / 100) if stats.stripe_balance else '0.00' }}</span>
+      <span class="stat-sub">available</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">AI Engine</span>
+      <span class="ai-badge">{{ stats.ai_engine }}</span>
+      <span class="stat-sub">{{ stats.ai_provider }}</span>
+    </div>
+  </div>
+
+  <!-- SERVICES STATUS -->
+  <div class="section-header">Service Health</div>
+  <div class="services-grid">
+    {% for service in services %}
+    <div class="service-item">
+      <div class="service-dot {{ service.status }}"></div>
+      <div>
+        <div class="service-name">{{ service.name }}</div>
+        <div class="service-url">{{ service.url }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- TWO COLUMN: TOP FAULTS + REVENUE -->
+  <div class="two-col">
+    <!-- Top Fault Codes -->
+    <div>
+      <div class="section-header">Top Fault Codes (All Time)</div>
+      {% if top_faults %}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for fault in top_faults %}
+          <tr>
+            <td><span class="fault-code-tag">{{ fault.code or 'N/A' }}</span></td>
+            <td>{{ fault.name }}</td>
+            <td><span class="count-badge">{{ fault.count }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p style="color: var(--muted); font-size: 0.85rem; padding: 1rem; background: var(--surface); border-radius: var(--radius)">No diagnoses recorded yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- Revenue Snapshot -->
+    <div>
+      <div class="section-header">Revenue Snapshot</div>
+      <div class="revenue-card">
+        <div class="revenue-label">Available Balance</div>
+        <div class="revenue-main">${{ "%.2f"|format(stats.stripe_balance / 100) if stats.stripe_balance else '0.00' }}</div>
+        <div class="revenue-sub">Stripe connected · Pro $19/mo · Enterprise $99/mo</div>
+      </div>
+      <div style="margin-top: 0.75rem">
+        <div class="section-header" style="margin-top: 1rem">Plans</div>
+        <table class="data-table">
+          <tbody>
+            <tr>
+              <td><strong>Pro</strong></td>
+              <td style="color: var(--green)">$19/mo</td>
+              <td style="color: var(--muted)">Unlimited diagnoses</td>
+            </tr>
+            <tr>
+              <td><strong>Enterprise</strong></td>
+              <td style="color: var(--accent)">$99/mo</td>
+              <td style="color: var(--muted)">API + team seats</td>
+            </tr>
+            <tr>
+              <td><strong>LITE</strong></td>
+              <td style="color: var(--blue)">$79 one-time</td>
+              <td style="color: var(--muted)">Offline tool</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECENT HISTORY -->
+  <div class="section-header">Recent Diagnoses</div>
+  <div class="history-scroll">
+    {% if recent %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Equipment</th>
+          <th>Fault Code</th>
+          <th>Source</th>
+          <th>Confidence</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in recent %}
+        <tr>
+          <td class="timestamp">{{ entry.time }}</td>
+          <td>{{ entry.equipment }}</td>
+          <td><span class="fault-code-tag">{{ entry.code or 'N/A' }}</span></td>
+          <td><span class="source-tag">{{ entry.source }}</span></td>
+          <td>
+            <span class="confidence-bar">
+              <span class="confidence-fill" style="width: {{ (entry.confidence * 100) | int }}%"></span>
+            </span>
+            <span style="font-size: 0.72rem; color: var(--muted); margin-left: 0.4rem">{{ (entry.confidence * 100) | int }}%</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color: var(--muted); font-size: 0.85rem; padding: 1rem; background: var(--surface); border-radius: var(--radius)">No recent diagnoses.</p>
+    {% endif %}
+  </div>
+
+  <!-- FOOTER LINKS -->
+  <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 1rem">
+    <a href="/admin/dashboard" style="color: var(--accent); font-size: 0.8rem;">Dashboard</a>
+    <a href="/funnel" style="color: var(--muted); font-size: 0.8rem;">Funnel</a>
+    <a href="/history" style="color: var(--muted); font-size: 0.8rem;">Full History</a>
+    <a href="/pricing" style="color: var(--muted); font-size: 0.8rem;">Pricing</a>
+    <a href="/api/health" style="color: var(--muted); font-size: 0.8rem;">Health API</a>
+    <a href="/api/recovery/stats" style="color: var(--muted); font-size: 0.8rem;">Recovery Stats</a>
+  </div>
 </div>
 
-<div class="section">
-<h2>Service Health</h2>
-<table>
-<tr><th>Service</th><th>Status</th><th>URL</th></tr>
-{% for svc in services %}
-<tr><td>{{ svc.name }}</td><td class="{{ 'up' if svc.status == 'up' else 'down' }}">{{ svc.status }}</td><td>{{ svc.url }}</td></tr>
-{% endfor %}
-</table>
-</div>
-
-<div class="section">
-<h2>Top Fault Codes</h2>
-<table>
-<tr><th>#</th><th>Code</th><th>Name</th><th>Count</th></tr>
-{% for f in top_faults %}
-<tr><td>{{ loop.index }}</td><td>{{ f.code }}</td><td>{{ f.name }}</td><td>{{ f.count }}</td></tr>
-{% endfor %}
-{% if not top_faults %}
-<tr><td colspan="4" style="text-align:center;color:var(--text)">No diagnoses yet</td></tr>
-{% endif %}
-</table>
-</div>
-
-<div class="section">
-<h2>Recent Diagnoses</h2>
-<table>
-<tr><th>Time</th><th>Fault Code</th><th>Equipment</th><th>Source</th><th>Confidence</th></tr>
-{% for d in recent %}
-<tr><td>{{ d.time }}</td><td>{{ d.code }}</td><td>{{ d.equipment }}</td><td>{{ d.source }}</td><td>{{ "%.0f"|format(d.confidence*100) }}%</td></tr>
-{% endfor %}
-{% if not recent %}
-<tr><td colspan="5" style="text-align:center;color:var(--text)">No diagnoses yet</td></tr>
-{% endif %}
-</table>
-</div>
-
-<div style="margin-top:2rem;font-size:.75rem;color:var(--text);text-align:center">
-RepairXpertAI Admin Dashboard — Auto-refreshes on reload — Cloud AI: MiniMax M2.7 → Groq → LM Studio
-</div>
+<script>
+// Auto-refresh every 60 seconds
+setTimeout(() => location.reload(), 60000);
+</script>
 </body>
 </html>
