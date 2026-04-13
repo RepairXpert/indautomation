@@ -2213,8 +2213,16 @@ def _send_dispatch_email(subject: str, html: str, to_email: str, reply_to: str =
 
 
 @app.get("/dispatch", response_class=HTMLResponse)
-async def dispatch_page(request: Request):
-    """Dispatch board — post an open repair job or claim one."""
+async def dispatch_page(
+    request: Request,
+    fault_code: str = "",
+    equipment: str = "",
+):
+    """Dispatch board — post an open repair job or claim one.
+
+    Accepts ?fault_code=...&equipment=... for hand-off from /obd, /faults,
+    or /diagnose so a stuck mechanic can prefill the post form.
+    """
     open_jobs = _load_dispatches(limit=50, status="open")
     claimed_jobs = _load_dispatches(limit=20, status="claimed")
     return templates.TemplateResponse(
@@ -2224,6 +2232,8 @@ async def dispatch_page(request: Request):
             "open_jobs": open_jobs,
             "claimed_jobs": claimed_jobs,
             "urgencies": DISPATCH_URGENCIES,
+            "prefill_fault_code": (fault_code or "").strip()[:40],
+            "prefill_equipment": (equipment or "").strip()[:120],
         },
     )
 

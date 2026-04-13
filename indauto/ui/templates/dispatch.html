@@ -91,11 +91,11 @@ textarea{resize:vertical;min-height:80px}
         </div>
         <div class="form-group">
           <label for="equipment">Equipment</label>
-          <input type="text" id="equipment" name="equipment" placeholder="PowerFlex 755 VFD">
+          <input type="text" id="equipment" name="equipment" placeholder="PowerFlex 755 VFD" value="{{ prefill_equipment or '' }}">
         </div>
         <div class="form-group">
           <label for="fault_code">Fault Code</label>
-          <input type="text" id="fault_code" name="fault_code" placeholder="F29, E07, etc.">
+          <input type="text" id="fault_code" name="fault_code" placeholder="F29, E07, etc." value="{{ prefill_fault_code or '' }}">
         </div>
         <div class="form-group">
           <label for="location">Location</label>

@@ -95,12 +95,13 @@
     <img src="/static/logo.svg" alt="RepairXpert Industrial Automation" height="48">
   </div>
   <nav>
-    <a href="/">Diagnose</a>
+    <a href="/">Home</a>
+    <a href="/diagnose">Diagnose</a>
     <a href="/chat">Chat</a>
     <a href="/faults">Fault Codes</a>
     <a href="/vin">VIN Decode</a>
     <a href="/obd" class="active">OBD-II</a>
-    <a href="/history">History</a>
+    <a href="/dispatch">Dispatch</a>
     <a href="/pricing">Pricing</a>
   </nav>
 </header>
@@ -142,6 +143,10 @@
     <h4 style="font-size:0.8rem; color:var(--muted); margin-top:0.75rem; margin-bottom:0.25rem">Fix Steps</h4>
     <ol id="diagSteps"></ol>
     <div id="diagTrick" class="field-trick" style="display:none"></div>
+    <div style="display:flex; gap:0.5rem; margin-top:0.85rem; flex-wrap:wrap">
+      <a id="diagDispatchLink" href="/dispatch" style="flex:1; min-width:140px; text-align:center; padding:0.6rem 0.8rem; background:linear-gradient(135deg,#7c6cf8,#5b4cf3); color:#fff; text-decoration:none; border-radius:8px; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px">Need help &mdash; post dispatch</a>
+      <a id="diagChatLink" href="/chat" style="flex:1; min-width:140px; text-align:center; padding:0.6rem 0.8rem; background:#1a1a28; border:1px solid var(--border); color:var(--text); text-decoration:none; border-radius:8px; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px">Ask AI Chat</a>
+    </div>
   </div>
 
   <!-- DTC Lookup -->
@@ -294,6 +299,18 @@ async function showDiagnosis(code) {
       trickEl.style.display = 'block';
     } else {
       trickEl.style.display = 'none';
+    }
+
+    // Hand-off links: pre-fill dispatch + chat with the current code
+    const eq = data.equipment_type || 'vehicle';
+    const dispatchEl = document.getElementById('diagDispatchLink');
+    if (dispatchEl) {
+      dispatchEl.href = '/dispatch?fault_code=' + encodeURIComponent(data.code) +
+                        '&equipment=' + encodeURIComponent(eq);
+    }
+    const chatEl = document.getElementById('diagChatLink');
+    if (chatEl) {
+      chatEl.href = '/chat?q=' + encodeURIComponent('Help me diagnose ' + data.code + ' on a ' + eq);
     }
 
     box.classList.add('active');
