@@ -2149,6 +2149,225 @@ async def capture_lead(request: Request):
     return JSONResponse(content={"ok": True, "stripe_customer_id": stripe_customer_id, "email_sent": email_sent})
 
 
+# ── Command Center ─────────────────────────────────────────────────────────────
+
+
+@app.get("/command-center", response_class=HTMLResponse)
+async def command_center(request: Request):
+    """Command Center — single-page ops dashboard for all ventures."""
+    return templates.TemplateResponse("command_center.html", {"request": request})
+
+
+@app.get("/api/command-center-data")
+async def command_center_data(request: Request):
+    """Aggregated data for the Command Center dashboard."""
+    import subprocess
+    import urllib.request as _ccur
+
+    now = datetime.now(timezone.utc)
+    result = {
+        "generated_at": now.isoformat(),
+        "services": {},
+        "mrr": {},
+        "last_actions": {},
+        "venture_details": {},
+        "revenue_loop_status": "unknown",
+        "revenue_loop_log": [],
+        "ai_engines_active": 0,
+        "brain_cycles_24h": 0,
+        "outreach": {"emails_sent": "93+", "tweets": "43+", "articles": "14", "replies": "0"},
+        "recent_emails": [],
+        "git_log": [],
+        "crypto": {},
+        "github_actions": [],
+        "alerts": [],
+    }
+
+    # --- Service health checks ---
+    health_urls = {
+        "indautomation": "https://indautomation.onrender.com/api/health",
+        "clawgrab": "https://clawgrab.onrender.com/health",
+        "vendorad": "https://vendor-ad-network.onrender.com/health",
+        "debtclock": "https://us-debt-clock.onrender.com",
+    }
+    for svc, url in health_urls.items():
+        try:
+            req = _ccur.Request(url, headers={"User-Agent": "CommandCenter/1.0"})
+            with _ccur.urlopen(req, timeout=6) as resp:
+                result["services"][svc] = "up" if resp.status < 400 else "down"
+        except Exception:
+            result["services"][svc] = "down"
+
+    # Local-only services
+    for local_svc in ["lite", "cryptovault", "soltrade", "cryptotrading",
+                       "content", "dealsniper", "clawgrab_mcp", "invoiceflow", "procurement"]:
+        result["services"][local_svc] = "local"
+
+    # Crucix
+    try:
+        req = _ccur.Request("https://crucix.live", headers={"User-Agent": "CommandCenter/1.0"})
+        with _ccur.urlopen(req, timeout=6) as resp:
+            result["services"]["crucix"] = "up" if resp.status < 400 else "down"
+    except Exception:
+        result["services"]["crucix"] = "down"
+
+    # --- IndAutomation details from local DB ---
+    try:
+        db = get_db()
+        row = db.execute("SELECT COUNT(*) as cnt, MAX(created_at) as last_ts FROM diagnoses").fetchone()
+        leads_row = db.execute("SELECT COUNT(*) as cnt FROM checkout_leads").fetchone()
+        converted_row = db.execute("SELECT COUNT(*) as cnt FROM checkout_leads WHERE status='converted'").fetchone()
+        result["venture_details"]["indautomation"] = {
+            "total_diagnoses": row["cnt"] if row else 0,
+            "last_diagnosis": row["last_ts"] if row else None,
+            "fault_codes": len(load_fault_db()),
+            "leads": leads_row["cnt"] if leads_row else 0,
+            "customers": converted_row["cnt"] if converted_row else 0,
+            "notes": "Stripe LIVE. Cloud AI 24/7 via MiniMax M2.7 + Groq fallback.",
+        }
+        db.close()
+    except Exception:
+        pass
+
+    # --- Revenue loop status ---
+    try:
+        result["revenue_loop_status"] = "running" if _revenue_thread and _revenue_thread.is_alive() else "stopped"
+        result["revenue_loop_log"] = get_revenue_log()
+    except Exception:
+        result["revenue_loop_log"] = []
+
+    # --- AI engine count ---
+    engines = 0
+    if result["revenue_loop_status"] == "running":
+        engines += 1  # MiniMax revenue loop
+    # Cloud worker always runs inside this process
+    engines += 1  # Cloud worker
+    result["ai_engines_active"] = engines
+    result["brain_cycles_24h"] = len([l for l in result["revenue_loop_log"] if "analyze" in l.lower() or "brain" in l.lower()])
+
+    # --- MRR (all $0 currently) ---
+    for v in ["indautomation", "clawgrab", "lite", "crucix", "cryptovault",
+              "soltrade", "cryptotrading", "content", "vendorad", "debtclock",
+              "dealsniper", "clawgrab_mcp", "invoiceflow", "procurement"]:
+        result["mrr"][v] = "$0"
+
+    # --- Stripe balance ---
+    stripe_bal = "--"
+    if _stripe_available:
+        try:
+            bal = stripe.Balance.retrieve()
+            for b in bal.get("available", []):
+                if b.get("currency") == "usd":
+                    stripe_bal = f"${b['amount'] / 100:.2f}"
+                    break
+        except Exception:
+            stripe_bal = "error"
+    result["crypto"]["stripe_balance"] = stripe_bal
+
+    # --- Crypto data (static from known state) ---
+    result["crypto"]["soltrade_status"] = "LIVE"
+    result["crypto"]["signal"] = "--"
+    result["crypto"]["rsi"] = "--"
+    result["crypto"]["last_trade"] = "--"
+    result["crypto"]["sol_balance"] = "0.017 SOL"
+
+    # Try to read live crypto state if available
+    crypto_state_path = Path("C:/Users/Admin-RP/Documents/CryptoTradingAgent/state")
+    try:
+        if crypto_state_path.exists():
+            for f in sorted(crypto_state_path.glob("*.json"), reverse=True)[:1]:
+                cdata = json.loads(f.read_text(encoding="utf-8"))
+                result["crypto"]["signal"] = cdata.get("signal", "--")
+                result["crypto"]["rsi"] = str(cdata.get("rsi", "--"))
+                result["crypto"]["last_trade"] = cdata.get("last_trade", "--")
+    except Exception:
+        pass
+
+    # --- Git log (IndAutomation repo) ---
+    try:
+        proc = subprocess.run(
+            ["git", "log", "--oneline", "--format=%h|%s|%an", "-20"],
+            capture_output=True, text=True, timeout=5,
+            cwd=str(ROOT),
+        )
+        if proc.returncode == 0:
+            for line in proc.stdout.strip().split("\n"):
+                parts = line.split("|", 2)
+                if len(parts) == 3:
+                    result["git_log"].append({
+                        "hash": parts[0],
+                        "message": parts[1],
+                        "author": parts[2],
+                    })
+    except Exception:
+        pass
+
+    # --- Last actions ---
+    result["last_actions"]["indautomation"] = "Cloud AI 24/7, cart recovery active"
+    result["last_actions"]["clawgrab"] = "v2.24.0 deployed, YouTube fix pending"
+    result["last_actions"]["lite"] = "Stripe link works, Gumroad 404"
+    result["last_actions"]["crucix"] = "Pricing page + Stripe products"
+    result["last_actions"]["cryptovault"] = "Monthly scan scheduled"
+    result["last_actions"]["soltrade"] = "LIVE mode, aggressive RSI 40"
+    result["last_actions"]["cryptotrading"] = "99% backtest accuracy"
+    result["last_actions"]["content"] = "43 tweets, 14 articles"
+    result["last_actions"]["vendorad"] = "API only, no frontend"
+    result["last_actions"]["debtclock"] = "Live WebSocket"
+    result["last_actions"]["dealsniper"] = "9 sources configured"
+    result["last_actions"]["clawgrab_mcp"] = "CAPTCHA blocked"
+    result["last_actions"]["invoiceflow"] = "Rebrand 60%"
+    result["last_actions"]["procurement"] = "Gated: 3 customers"
+
+    # --- GitHub Actions ---
+    result["github_actions"] = [
+        {"name": "Revenue Agent (24/7)", "status": "pass", "last_run": "Continuous on Render"},
+        {"name": "Triple Blind QA", "status": "unknown", "last_run": "--"},
+        {"name": "OpenClaw Agent", "status": "unknown", "last_run": "--"},
+    ]
+
+    # --- Recent emails from Stripe event log ---
+    try:
+        event_log = LOGS_PATH / "stripe_events.jsonl"
+        if event_log.exists():
+            lines = event_log.read_text(encoding="utf-8").strip().split("\n")
+            for line in reversed(lines[-50:]):
+                try:
+                    evt = json.loads(line)
+                    if "email" in evt.get("type", "").lower() or "recovery" in evt.get("type", ""):
+                        d = evt.get("data", {})
+                        result["recent_emails"].append({
+                            "time": evt.get("ts", "")[:19],
+                            "to": d.get("email", ""),
+                            "subject": evt.get("type", ""),
+                        })
+                        if len(result["recent_emails"]) >= 10:
+                            break
+                except Exception:
+                    continue
+    except Exception:
+        pass
+
+    # --- Alerts ---
+    # Zero replies
+    result["alerts"].append({"level": "red", "message": "OUTREACH: 93+ emails sent, 0 human replies. Adjust targeting or copy."})
+
+    # Zero MRR
+    result["alerts"].append({"level": "red", "message": "REVENUE: $0 external MRR across all ventures."})
+
+    # Service health alerts
+    for svc, status in result["services"].items():
+        if status == "down":
+            result["alerts"].append({"level": "red", "message": f"SERVICE DOWN: {svc}"})
+
+    # Gumroad 404
+    result["alerts"].append({"level": "yellow", "message": "LITE: Gumroad product page returns 404. Stripe link works."})
+
+    # YouTube
+    result["alerts"].append({"level": "yellow", "message": "CLAWGRAB: YouTube grab times out on Render (IP blocked)."})
+
+    return JSONResponse(result)
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host=CONFIG["app"]["host"], port=CONFIG["app"]["port"])
