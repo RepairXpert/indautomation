@@ -2520,6 +2520,344 @@ async def api_dispatch_list(
     return JSONResponse({"count": len(rows), "dispatches": rows})
 
 
+# ── Parts / Connectors / Tools search ────────────────────────────────────────
+from indauto.parts.search import search_parts as _search_parts
+from indauto.parts.catalog import (
+    PARTS_CATALOG as _PARTS_CATALOG,
+    CATEGORY_ALIASES as _PARTS_ALIASES,
+    get_all_categories as _parts_categories,
+)
+
+
+@app.get("/parts", response_class=HTMLResponse)
+async def parts_search_page(request: Request, q: str = "", category: str = ""):
+    """Find connectors, tools, sensors, and replacement parts.
+
+    Hits the in-app PARTS_CATALOG plus builds direct supplier search links
+    (AutomationDirect, Amazon, McMaster, Grainger, Digikey) for any free-text
+    query so the user always gets a useful result, even on a stub category.
+    """
+    q = (q or "").strip()
+    category = (category or "").strip().lower()
+
+    result = None
+    if q or category:
+        try:
+            result = _search_parts(q, category)
+        except Exception:
+            result = {"parts": [], "search_links": {}, "query": q or category}
+
+    # Featured categories pulled from the catalog so the page is useful with
+    # an empty query — connectors and tools surfaced first per user request.
+    featured = []
+    for cat in ("connector", "tool", "proximity_sensor", "vfd_drive",
+                "safety_relay", "contactor", "encoder"):
+        if cat in _PARTS_CATALOG:
+            featured.append({
+                "key": cat,
+                "label": cat.replace("_", " ").title(),
+                "count": len(_PARTS_CATALOG[cat]),
+            })
+
+    return templates.TemplateResponse(
+        "parts.html",
+        {
+            "request": request,
+            "q": q,
+            "category": category,
+            "result": result,
+            "featured": featured,
+            "all_categories": _parts_categories(),
+        },
+    )
+
+
+@app.get("/api/parts/search")
+async def api_parts_search(q: str = "", category: str = ""):
+    """JSON parts search — connectors, tools, sensors. Used by /parts page
+    and external mobile clients."""
+    q = (q or "").strip()
+    category = (category or "").strip().lower()
+    if not q and not category:
+        return JSONResponse(
+            {"error": "Provide ?q=<query> or ?category=<key>", "categories": _parts_categories()},
+            status_code=400,
+        )
+    try:
+        result = _search_parts(q, category)
+    except Exception as e:
+        return JSONResponse({"error": "Search failed", "detail": str(e)[:200]}, status_code=500)
+    return JSONResponse({
+        "query": result.get("query", q or category),
+        "category": category,
+        "count": len(result.get("parts", [])),
+        "parts": result.get("parts", []),
+        "search_links": result.get("search_links", {}),
+    })
+
+
+# ── Agents report + Resume-all-AI ─────────────────────────────────────────────
+def _agents_report():
+    """Aggregate every background agent / loop / AI service this app runs.
+
+    Returns a structured dict for /api/agents and /agents page rendering.
+    Best-effort — never raises, never blocks more than a few seconds.
+    """
+    import urllib.request as _ur
+    now = datetime.now(timezone.utc).isoformat()
+
+    agents: list[dict] = []
+
+    # 1. Revenue loop (started in app.py boot)
+    try:
+        rev_log = get_revenue_log()
+        rev_alive = bool(_revenue_thread and getattr(_revenue_thread, "is_alive", lambda: False)())
+        agents.append({
+            "name": "Revenue Loop",
+            "kind": "background_thread",
+            "source": "revenue_loop.py",
+            "status": "running" if rev_alive else "stopped",
+            "last_log": (rev_log[-1] if rev_log else "no log"),
+            "log_lines": len(rev_log) if rev_log else 0,
+        })
+    except Exception as e:
+        agents.append({
+            "name": "Revenue Loop",
+            "kind": "background_thread",
+            "source": "revenue_loop.py",
+            "status": "error",
+            "error": str(e)[:200],
+        })
+
+    # 2. In-process cloud worker thread
+    try:
+        worker_alive = bool(_worker and _worker.is_alive())
+        agents.append({
+            "name": "Cloud Worker",
+            "kind": "background_thread",
+            "source": "indauto/app.py:_cloud_worker_loop",
+            "status": "running" if worker_alive else "stopped",
+            "interval_sec": 1800,
+            "purpose": "warms Render services + processes cart recovery queue",
+        })
+    except Exception as e:
+        agents.append({
+            "name": "Cloud Worker",
+            "kind": "background_thread",
+            "source": "indauto/app.py:_cloud_worker_loop",
+            "status": "error",
+            "error": str(e)[:200],
+        })
+
+    # 3. Stripe subsystem
+    agents.append({
+        "name": "Stripe Billing",
+        "kind": "external_service",
+        "source": "stripe SDK",
+        "status": "configured" if _stripe_available else "disabled",
+        "purpose": "checkout, subscriptions, lead capture",
+    })
+
+    # 4. Resend email subsystem
+    agents.append({
+        "name": "Resend Email",
+        "kind": "external_service",
+        "source": "RESEND_API_KEY env",
+        "status": "configured" if RESEND_API_KEY else "disabled",
+        "purpose": "lead welcome, dispatch notifications, recovery emails",
+    })
+
+    # 5. Procurement engine
+    proc_status = "running" if procurement_router else "disabled"
+    agents.append({
+        "name": "Procurement Engine",
+        "kind": "router",
+        "source": "procurement_routes.py",
+        "status": proc_status,
+        "purpose": "parts price comparison + supplier health",
+    })
+
+    # 6. LM Studio text model
+    text_url = (CONFIG.get("ai") or {}).get("text_base_url") or \
+               (CONFIG.get("lm_studio") or {}).get("base_url") or \
+               "http://127.0.0.1:1234/v1"
+    text_status = "unknown"
+    try:
+        req = _ur.Request(text_url.rstrip("/") + "/models",
+                          headers={"User-Agent": "RepairXpert/1.0"})
+        with _ur.urlopen(req, timeout=2) as resp:
+            text_status = "connected" if resp.status == 200 else f"http_{resp.status}"
+    except Exception:
+        text_status = "unavailable"
+    agents.append({
+        "name": "LM Studio (Text)",
+        "kind": "ai_model",
+        "source": text_url,
+        "status": text_status,
+        "model_hint": (CONFIG.get("ai") or {}).get("text_model") or "qwen3.5-9b",
+    })
+
+    # 7. LM Studio vision model
+    vision_url = (CONFIG.get("ai") or {}).get("vision_base_url") or \
+                 "http://127.0.0.1:8766/v1"
+    vision_status = "unknown"
+    try:
+        req = _ur.Request(vision_url.rstrip("/") + "/models",
+                          headers={"User-Agent": "RepairXpert/1.0"})
+        with _ur.urlopen(req, timeout=2) as resp:
+            vision_status = "connected" if resp.status == 200 else f"http_{resp.status}"
+    except Exception:
+        vision_status = "unavailable"
+    agents.append({
+        "name": "LM Studio (Vision)",
+        "kind": "ai_model",
+        "source": vision_url,
+        "status": vision_status,
+        "model_hint": (CONFIG.get("ai") or {}).get("vision_model") or "glm-4v-flash",
+    })
+
+    # 8. Cloud AI fallbacks
+    agents.append({
+        "name": "MiniMax M2.7 (cloud fallback)",
+        "kind": "ai_model",
+        "source": "MINIMAX_API_KEY env",
+        "status": "configured" if os.environ.get("MINIMAX_API_KEY") else "disabled",
+        "purpose": "primary cloud LLM for diagnosis when LM Studio offline",
+    })
+    agents.append({
+        "name": "Groq Llama-3.3-70b (cloud fallback)",
+        "kind": "ai_model",
+        "source": "GROQ_API_KEY env",
+        "status": "configured" if os.environ.get("GROQ_API_KEY") else "disabled",
+        "purpose": "secondary cloud LLM for diagnosis",
+    })
+
+    # 9. MCP servers (presence only — they run as separate processes)
+    for mcp_file, label in (
+        ("mcp_server.py", "Industrial Diagnosis MCP"),
+        ("obd_mcp_server.py", "Automotive OBD MCP"),
+    ):
+        present = (ROOT / mcp_file).exists()
+        agents.append({
+            "name": label,
+            "kind": "mcp_server",
+            "source": mcp_file,
+            "status": "available" if present else "missing",
+            "purpose": "exposes diagnosis/parts as MCP tools to AI assistants",
+        })
+
+    # Roll-up counts by status
+    by_status: dict = {}
+    for a in agents:
+        by_status[a["status"]] = by_status.get(a["status"], 0) + 1
+
+    return {
+        "generated_at": now,
+        "count": len(agents),
+        "by_status": by_status,
+        "agents": agents,
+    }
+
+
+@app.get("/api/agents")
+async def api_agents():
+    """JSON report of every agent / loop / AI service running in the app."""
+    return JSONResponse(_agents_report())
+
+
+@app.get("/agents", response_class=HTMLResponse)
+async def agents_page(request: Request):
+    """Visual report of every agent / loop / AI service."""
+    report = _agents_report()
+    return templates.TemplateResponse(
+        "agents.html",
+        {"request": request, "report": report},
+    )
+
+
+@app.post("/api/agents/resume")
+async def api_agents_resume():
+    """Wake every AI loop/worker that should be running but isn't.
+
+    - Restarts the revenue-loop thread if dead
+    - Pings LM Studio so it loads its model into memory
+    - Pings cloud worker target services to wake them
+    - Returns the post-resume agent report
+    """
+    import urllib.request as _ur
+    actions: list[dict] = []
+    global _revenue_thread, _worker
+
+    # 1. Restart revenue loop if dead
+    try:
+        alive = bool(_revenue_thread and getattr(_revenue_thread, "is_alive", lambda: False)())
+        if not alive:
+            try:
+                from revenue_loop import start_revenue_loop as _start_rev
+                _revenue_thread = _start_rev()
+                actions.append({"agent": "Revenue Loop", "action": "restarted", "ok": True})
+            except Exception as e:
+                actions.append({"agent": "Revenue Loop", "action": "restart_failed",
+                                "ok": False, "error": str(e)[:200]})
+        else:
+            actions.append({"agent": "Revenue Loop", "action": "already_running", "ok": True})
+    except Exception as e:
+        actions.append({"agent": "Revenue Loop", "action": "check_failed",
+                        "ok": False, "error": str(e)[:200]})
+
+    # 2. Restart cloud worker thread if dead
+    try:
+        if not (_worker and _worker.is_alive()):
+            new_worker = threading.Thread(
+                target=_cloud_worker_loop, daemon=True, name="cloud-worker-resumed"
+            )
+            new_worker.start()
+            _worker = new_worker
+            actions.append({"agent": "Cloud Worker", "action": "restarted", "ok": True})
+        else:
+            actions.append({"agent": "Cloud Worker", "action": "already_running", "ok": True})
+    except Exception as e:
+        actions.append({"agent": "Cloud Worker", "action": "restart_failed",
+                        "ok": False, "error": str(e)[:200]})
+
+    # 3. Wake LM Studio (text + vision) by pinging /models
+    for label, url in (
+        ("LM Studio (Text)",
+         (CONFIG.get("ai") or {}).get("text_base_url") or "http://127.0.0.1:1234/v1"),
+        ("LM Studio (Vision)",
+         (CONFIG.get("ai") or {}).get("vision_base_url") or "http://127.0.0.1:8766/v1"),
+    ):
+        try:
+            req = _ur.Request(url.rstrip("/") + "/models",
+                              headers={"User-Agent": "RepairXpert/1.0"})
+            with _ur.urlopen(req, timeout=3) as resp:
+                actions.append({"agent": label, "action": "wake_ping",
+                                "ok": resp.status == 200, "http": resp.status})
+        except Exception as e:
+            actions.append({"agent": label, "action": "wake_ping",
+                            "ok": False, "error": str(e)[:120]})
+
+    # 4. Warm Render services so cold starts don't bite next request
+    for url in (
+        "https://indautomation.onrender.com/api/health",
+        "https://clawgrab.onrender.com/health",
+    ):
+        try:
+            req = _ur.Request(url, headers={"User-Agent": "RepairXpert/1.0"})
+            with _ur.urlopen(req, timeout=4) as resp:
+                actions.append({"agent": url, "action": "warm",
+                                "ok": resp.status == 200, "http": resp.status})
+        except Exception as e:
+            actions.append({"agent": url, "action": "warm",
+                            "ok": False, "error": str(e)[:120]})
+
+    return JSONResponse({
+        "ok": True,
+        "actions": actions,
+        "report": _agents_report(),
+    })
+
+
 # ── Command Center ─────────────────────────────────────────────────────────────
 
 

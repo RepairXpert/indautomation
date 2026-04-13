@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find Connectors, Tools & Parts | RepairXpert</title>
+<meta name="description" content="Search industrial connectors, hand tools, sensors, and replacement parts. M12 cordsets, Fluke meters, Klein tools, Allen-Bradley spares — direct supplier links from AutomationDirect, Amazon, McMaster, Grainger, Digikey.">
+<link rel="canonical" href="https://indautomation.onrender.com/parts">
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+.parts-hero{text-align:center;padding:40px 20px 20px;max-width:760px;margin:0 auto}
+.parts-hero h1{font-size:1.9rem;font-weight:800;line-height:1.15;letter-spacing:-0.5px;margin-bottom:.5rem}
+.parts-hero h1 span{color:var(--accent,#7c6cf8)}
+.parts-hero .sub{font-size:.92rem;color:var(--muted,#888);line-height:1.5;margin-bottom:1.25rem}
+.parts-wrap{max-width:880px;margin:0 auto;padding:0 20px 80px}
+.search-card{background:var(--card-bg,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:12px;padding:18px;margin-bottom:1.2rem}
+.search-row{display:flex;gap:8px;flex-wrap:wrap}
+.search-row input[type=text],.search-row select{background:var(--bg,#0a0a12);border:1px solid var(--border,#1e1e2e);border-radius:8px;color:var(--text,#e8e8ed);padding:11px 14px;font-size:.95rem}
+.search-row input[type=text]{flex:1;min-width:220px}
+.search-row select{min-width:160px}
+.search-row input:focus,.search-row select:focus{outline:none;border-color:var(--accent,#7c6cf8)}
+.search-row button{padding:11px 22px;background:var(--accent,#7c6cf8);color:#fff;font-weight:700;border:none;border-radius:8px;cursor:pointer;font-size:.92rem}
+.search-row button:hover{opacity:.88}
+.featured-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:.85rem}
+.chip{display:inline-block;padding:6px 12px;background:var(--bg,#0a0a12);border:1px solid var(--border,#1e1e2e);border-radius:18px;font-size:.78rem;color:var(--muted,#888);text-decoration:none;transition:border-color .15s,color .15s}
+.chip:hover{border-color:var(--accent,#7c6cf8);color:var(--text,#e8e8ed)}
+.chip b{color:var(--accent,#7c6cf8);font-weight:700;margin-left:4px}
+.section-h{font-size:.78rem;color:var(--muted,#888);text-transform:uppercase;letter-spacing:.5px;margin:0 0 .6rem 0;font-weight:700}
+.part{background:var(--card-bg,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:10px;padding:16px;margin-bottom:.8rem}
+.part h3{font-size:1rem;font-weight:700;color:var(--text,#e8e8ed);margin:0 0 .25rem 0}
+.part .pn{font-family:monospace;font-size:.78rem;color:var(--accent,#7c6cf8);margin-bottom:.4rem}
+.part .desc{font-size:.85rem;color:var(--text-secondary,#b0b0c0);line-height:1.5;margin-bottom:.7rem}
+.suppliers{display:flex;gap:6px;flex-wrap:wrap}
+.supplier{display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--bg,#0a0a12);border:1px solid var(--border,#1e1e2e);border-radius:6px;text-decoration:none;color:var(--text,#e8e8ed);font-size:.78rem;transition:border-color .15s}
+.supplier:hover{border-color:var(--accent,#7c6cf8)}
+.supplier .name{font-weight:600}
+.supplier .price{color:var(--muted,#888);font-family:monospace}
+.search-links{display:flex;gap:6px;flex-wrap:wrap;margin-top:.4rem}
+.search-link{padding:7px 12px;background:linear-gradient(135deg,#1a1a28,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:6px;text-decoration:none;color:var(--text,#e8e8ed);font-size:.78rem;transition:border-color .15s}
+.search-link:hover{border-color:var(--accent,#7c6cf8)}
+.empty{text-align:center;padding:24px 0;color:var(--muted,#888);font-size:.88rem}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:.6rem}
+</style>
+</head>
+<body>
+<nav style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border,#1e1e2e);gap:16px;flex-wrap:wrap">
+  <a href="/" style="font-weight:800;font-size:1rem;text-decoration:none;color:var(--text,#e8e8ed)">IndAutomation</a>
+  <a href="/diagnose" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Diagnose</a>
+  <a href="/chat" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">AI Chat</a>
+  <a href="/faults" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Fault Codes</a>
+  <a href="/parts" style="font-size:.85rem;color:var(--accent,#7c6cf8);text-decoration:none;font-weight:700">Parts</a>
+  <a href="/obd" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">OBD-II</a>
+  <a href="/dispatch" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Dispatch</a>
+  <a href="/agents" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Agents</a>
+  <a href="/pricing" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Pricing</a>
+</nav>
+
+<div class="parts-hero">
+  <h1>Find <span>Connectors, Tools &amp; Parts</span></h1>
+  <p class="sub">Search across industrial connectors (M12, M8, RJ45), field-tech tools (Fluke, Klein, Knipex, FLIR), sensors, drives, and spares. Direct supplier links from AutomationDirect, Amazon, McMaster, Grainger, and Digikey.</p>
+</div>
+
+<div class="parts-wrap">
+  <div class="search-card">
+    <form method="GET" action="/parts">
+      <div class="search-row">
+        <input type="text" name="q" value="{{ q or '' }}" placeholder="e.g. M12 4-pin cable, Fluke multimeter, 18mm proximity sensor" autocomplete="off">
+        <select name="category">
+          <option value="">All categories</option>
+          {% for cat in all_categories %}
+          <option value="{{ cat }}" {% if cat == category %}selected{% endif %}>{{ cat.replace('_', ' ').title() }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit">Search</button>
+      </div>
+      <div class="featured-row">
+        <span style="font-size:.75rem;color:var(--muted,#888);align-self:center;margin-right:4px">Popular:</span>
+        {% for f in featured %}
+        <a class="chip" href="/parts?category={{ f.key }}">{{ f.label }}<b>{{ f.count }}</b></a>
+        {% endfor %}
+      </div>
+    </form>
+  </div>
+
+  {% if result %}
+    <p class="section-h">Results for "{{ result.query }}" &middot; {{ result.parts|length }} part{{ '' if result.parts|length == 1 else 's' }} in catalog</p>
+    {% if result.parts %}
+      {% for p in result.parts %}
+      <div class="part">
+        <h3>{{ p.name }}</h3>
+        <div class="pn">{{ p.part_no }}</div>
+        <div class="desc">{{ p.description }}</div>
+        <div class="suppliers">
+          {% for s in p.suppliers %}
+          <a class="supplier" href="{{ s.url }}" target="_blank" rel="noopener nofollow sponsored">
+            <span class="name">{{ s.name }}</span>
+            {% if s.est_price %}<span class="price">${{ "%.2f"|format(s.est_price) }}</span>{% endif %}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="part">
+        <div class="empty">No catalog match for "{{ result.query }}". Try the supplier links below.</div>
+      </div>
+    {% endif %}
+
+    {% if result.search_links %}
+    <p class="section-h" style="margin-top:1.2rem">Search "{{ result.query }}" at suppliers</p>
+    <div class="search-links">
+      {% for name, url in result.search_links.items() %}
+      <a class="search-link" href="{{ url }}" target="_blank" rel="noopener nofollow sponsored">{{ name }} &rarr;</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  {% else %}
+    <p class="section-h">All categories ({{ all_categories|length }})</p>
+    <div class="search-card">
+      <div class="cat-grid">
+        {% for cat in all_categories %}
+        <a class="chip" href="/parts?category={{ cat }}" style="text-align:center">{{ cat.replace('_', ' ').title() }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+</div>
+<script>fetch('/api/analytics/hit?p='+encodeURIComponent(location.pathname)+'&r='+encodeURIComponent(document.referrer),{method:'GET'})</script>
+</body>
+</html>

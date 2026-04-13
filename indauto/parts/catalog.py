@@ -511,6 +511,152 @@ PARTS_CATALOG: dict[str, list[dict]] = {
             ],
         },
     ],
+
+    "connector": [
+        {
+            "name": "Phoenix Contact M12 4-Pin A-Coded Sensor Cable, 5m",
+            "part_no": "SAC-4P-5,0-PUR/M12FS",
+            "description": "M12 female straight to flying leads, 4-pin A-coded, 5m PUR jacket, IP67",
+            "suppliers": [
+                {"name": "AutomationDirect", "url": "https://www.automationdirect.com/adc/shopping/catalog/cables/m12_cordsets", "est_price": 28.00},
+                {"name": "Digikey", "url": "https://www.digikey.com/en/products/result?keywords=SAC-4P-5%2C0-PUR%2FM12FS", "est_price": 32.00},
+                {"name": "Amazon", "url": f"https://www.amazon.com/s?k=Phoenix+Contact+M12+4-pin+sensor+cable+5m&tag={AMAZON_TAG}", "est_price": 35.00},
+            ],
+        },
+        {
+            "name": "Turck M12 5-Pin Male Right-Angle Cable, 2m",
+            "part_no": "RKC 5T-2/S90",
+            "description": "M12 male right-angle to flying leads, 5-pin, 2m, oil-resistant PUR",
+            "suppliers": [
+                {"name": "AutomationDirect", "url": "https://www.automationdirect.com/adc/shopping/catalog/cables/m12_cordsets/m12_5-pin", "est_price": 24.00},
+                {"name": "Digikey", "url": "https://www.digikey.com/en/products/result?keywords=Turck+RKC+5T-2", "est_price": 27.00},
+                {"name": "Mouser", "url": "https://www.mouser.com/Search/Refine?Keyword=Turck+RKC+5T-2%2FS90", "est_price": 26.00},
+            ],
+        },
+        {
+            "name": "Allen-Bradley 889D 4-Pin DC Micro Cordset, 10m",
+            "part_no": "889D-F4AC-10",
+            "description": "M12 4-pin DC micro female straight cordset, 10m, PVC, IP67, A-B branded",
+            "suppliers": [
+                {"name": "AutomationDirect", "url": "https://www.automationdirect.com/adc/shopping/catalog/cables/m12_cordsets/m12_4-pin", "est_price": 38.00},
+                {"name": "Amazon", "url": f"https://www.amazon.com/s?k=Allen-Bradley+889D-F4AC-10+cordset&tag={AMAZON_TAG}", "est_price": 52.00},
+                {"name": "Grainger", "url": "https://www.grainger.com/search?searchQuery=889D-F4AC-10", "est_price": 64.00},
+            ],
+        },
+        {
+            "name": "Wago 221 Lever-Nut Splicing Connector Assortment",
+            "part_no": "221-2401",
+            "description": "2/3/5-conductor lever splice, 24-12 AWG, UL listed, panel-friendly. 60-pack",
+            "suppliers": [
+                {"name": "Amazon", "url": f"https://www.amazon.com/s?k=Wago+221+lever+nut+assortment+60+pack&tag={AMAZON_TAG}", "est_price": 28.00},
+                {"name": "AutomationDirect", "url": "https://www.automationdirect.com/adc/shopping/catalog/wiring_solutions/wire_connectors", "est_price": 32.00},
+                {"name": "Grainger", "url": "https://www.grainger.com/search?searchQuery=Wago+221-2401", "est_price": 36.00},
+            ],
+        },
+        {
+            "name": "Harting Han 10A Power Connector Kit",
+            "part_no": "09200100301",
+            "description": "10-pin industrial rectangular power connector, top entry, panel mount + hood",
+            "suppliers": [
+                {"name": "Digikey", "url": "https://www.digikey.com/en/products/result?keywords=Harting+09200100301", "est_price": 88.00},
+                {"name": "Mouser", "url": "https://www.mouser.com/Search/Refine?Keyword=Harting+09200100301", "est_price": 92.00},
+                {"name": "Grainger", "url": "https://www.grainger.com/search?searchQuery=Harting+Han+10A", "est_price": 110.00},
+            ],
+        },
+        {
+            "name": "RJ45 Cat6 Industrial Ethernet Patch Cord, 3m",
+            "part_no": "STP-XAUE-CAT6-3M",
+            "description": "Shielded Cat6 patch cord, M12-D to RJ45, industrial PoE-rated, 3m",
+            "suppliers": [
+                {"name": "AutomationDirect", "url": "https://www.automationdirect.com/adc/shopping/catalog/communications/industrial_ethernet_cables", "est_price": 42.00},
+                {"name": "Amazon", "url": f"https://www.amazon.com/s?k=industrial+M12+RJ45+Cat6+patch+cord+3m&tag={AMAZON_TAG}", "est_price": 38.00},
+                {"name": "Digikey", "url": "https://www.digikey.com/en/products/result?keywords=M12+D-coded+Cat6+patch+cord", "est_price": 45.00},
+            ],
+        },
+    ],
+
+    "tool": [
+        {
+            "name": "Fluke 87V Industrial True-RMS Multimeter",
+            "part_no": "FLUKE-87V",
+            "description": "True-RMS DMM with temperature, frequency, low-pass filter for VFD measurement. The field-tech standard.",
+            "suppliers": [
+                {"name": "AutomationDirect", "url": "https://www.automationdirect.com/adc/shopping/catalog/test_equipment/digital_multimeters", "est_price": 459.00},
+                {"name": "Amazon", "url": f"https://www.amazon.com/s?k=Fluke+87V+industrial+multimeter&tag={AMAZON_TAG}", "est_price": 489.00},
+                {"name": "Grainger", "url": "https://www.grainger.com/search?searchQuery=Fluke+87V", "est_price": 519.00},
+            ],
+        },
+        {
+            "name": "Fluke T6-1000 Electrical Tester (FieldSense)",
+            "part_no": "FLUKE-T6-1000",
+            "description": "Non-contact voltage + current measurement up to 1000V AC. No test leads in the bus bar.",
+            "suppliers": [
+                {"name": "Amazon", "url": f"https://www.amazon.com/s?k=Fluke+T6-1000+electrical+tester&tag={AMAZON_TAG}", "est_price": 379.00},
+                {"name": "AutomationDirect", "url": "https://www.automationdirect.com/adc/shopping/catalog/test_equipment", "est_price": 395.00},
+                {"name": "Grainger", "url": "https://www.grainger.com/search?searchQuery=Fluke+T6-1000", "est_price": 425.00},
+            ],
+        },
+        {
+            "name": "Klein Tools 11-in-1 Screwdriver / Nut Driver",
+            "part_no": "32500",
+            "description": "Cushion-grip multi-bit driver: Phillips, slotted, square, Torx, plus 1/4 and 5/16 nut drivers",
+            "suppliers": [
+                {"name": "Amazon", "url": f"https://www.amazon.com/s?k=Klein+Tools+32500+11-in-1&tag={AMAZON_TAG}", "est_price": 22.00},
+                {"name": "Grainger", "url": "https://www.grainger.com/search?searchQuery=Klein+32500", "est_price": 28.00},
+                {"name": "McMaster-Carr", "url": "https://www.mcmaster.com/products/screwdrivers/multi-bit-screwdrivers", "est_price": 30.00},
+            ],
+        },
+        {
+            "name": "Knipex Cobra Adjustable Pliers Set, 3-piece",
+            "part_no": "00 20 09 V01",
+            "description": "7\", 10\", 12\" Cobra water-pump pliers — German tool kit staple for plant and panel work",
+            "suppliers": [
+                {"name": "Amazon", "url": f"https://www.amazon.com/s?k=Knipex+Cobra+pliers+set+3+piece&tag={AMAZON_TAG}", "est_price": 89.00},
+                {"name": "McMaster-Carr", "url": "https://www.mcmaster.com/products/pliers/water-pump-pliers", "est_price": 105.00},
+                {"name": "Grainger", "url": "https://www.grainger.com/search?searchQuery=Knipex+Cobra+set", "est_price": 119.00},
+            ],
+        },
+        {
+            "name": "Wera 950/9 Hex-Plus Allen Key Set, Metric",
+            "part_no": "950/9 Hex-Plus 1",
+            "description": "9-piece L-key set, 1.5–10 mm, Hex-Plus geometry — won't cam out on stripped fasteners",
+            "suppliers": [
+                {"name": "Amazon", "url": f"https://www.amazon.com/s?k=Wera+950+9+Hex-Plus+metric&tag={AMAZON_TAG}", "est_price": 38.00},
+                {"name": "McMaster-Carr", "url": "https://www.mcmaster.com/products/hex-keys", "est_price": 45.00},
+                {"name": "Grainger", "url": "https://www.grainger.com/search?searchQuery=Wera+950+Hex-Plus", "est_price": 52.00},
+            ],
+        },
+        {
+            "name": "Klein 11055 Wire Stripper / Cutter, 10-18 AWG",
+            "part_no": "11055",
+            "description": "Solid + stranded wire stripper for control panel work. 10-18 AWG solid, 12-20 AWG stranded.",
+            "suppliers": [
+                {"name": "Amazon", "url": f"https://www.amazon.com/s?k=Klein+11055+wire+stripper&tag={AMAZON_TAG}", "est_price": 18.00},
+                {"name": "AutomationDirect", "url": "https://www.automationdirect.com/adc/shopping/catalog/wiring_solutions/wire_strippers", "est_price": 22.00},
+                {"name": "Grainger", "url": "https://www.grainger.com/search?searchQuery=Klein+11055", "est_price": 28.00},
+            ],
+        },
+        {
+            "name": "Phoenix Contact CRIMPFOX 6 Ratcheting Crimper",
+            "part_no": "1212045",
+            "description": "Ratcheting ferrule crimper, 0.25-6 mm² wire, color-coded sleeves. Required for European panel wiring.",
+            "suppliers": [
+                {"name": "Digikey", "url": "https://www.digikey.com/en/products/result?keywords=Phoenix+Contact+CRIMPFOX+6", "est_price": 88.00},
+                {"name": "Amazon", "url": f"https://www.amazon.com/s?k=Phoenix+Contact+CRIMPFOX+6+1212045&tag={AMAZON_TAG}", "est_price": 95.00},
+                {"name": "Mouser", "url": "https://www.mouser.com/Search/Refine?Keyword=CRIMPFOX+6", "est_price": 92.00},
+            ],
+        },
+        {
+            "name": "FLIR ONE Pro Thermal Imaging Camera (USB-C / Lightning)",
+            "part_no": "FLIR-ONE-PRO",
+            "description": "Phone-attached thermal camera, 19,200 px, MSX overlay. Hot bearings, panel hot spots, motor surface temp.",
+            "suppliers": [
+                {"name": "Amazon", "url": f"https://www.amazon.com/s?k=FLIR+ONE+Pro+thermal+camera&tag={AMAZON_TAG}", "est_price": 419.00},
+                {"name": "Grainger", "url": "https://www.grainger.com/search?searchQuery=FLIR+ONE+Pro", "est_price": 449.00},
+                {"name": "AutomationDirect", "url": "https://www.automationdirect.com/adc/shopping/catalog/test_equipment/thermal_imagers", "est_price": 469.00},
+            ],
+        },
+    ],
 }
 
 # Mapping aliases — so multiple category names can resolve to the same parts list
@@ -552,6 +698,28 @@ CATEGORY_ALIASES: dict[str, str] = {
     "load_cell": "scale_load_cell",
     "scale": "scale_load_cell",
     "weight": "scale_load_cell",
+    "connectors": "connector",
+    "cable": "connector",
+    "cables": "connector",
+    "cordset": "connector",
+    "cordsets": "connector",
+    "m12": "connector",
+    "m8": "connector",
+    "rj45": "connector",
+    "ethernet_cable": "connector",
+    "tools": "tool",
+    "multimeter": "tool",
+    "dmm": "tool",
+    "fluke": "tool",
+    "klein": "tool",
+    "knipex": "tool",
+    "screwdriver": "tool",
+    "pliers": "tool",
+    "crimper": "tool",
+    "wire_stripper": "tool",
+    "thermal_camera": "tool",
+    "flir": "tool",
+    "hand_tool": "tool",
 }
 
 
