@@ -14,6 +14,8 @@ jobs:
       DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
       GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
@@ -28,63 +30,143 @@ jobs:
 
       - name: Configure OpenClaw
         run: |
-          mkdir -p ~/.openclaw/agents/main/agent
-          
-          # Auth profiles
+          mkdir -p ~/.openclaw/agents/main/agent ~/.openclaw/workspace
+
           cat > ~/.openclaw/agents/main/agent/auth-profiles.json << 'EOF'
           {
             "deepseek": {"provider":"deepseek","profileId":"deepseek","token":"${{ secrets.DEEPSEEK_API_KEY }}"},
             "minimax": {"provider":"minimax","profileId":"minimax","token":"${{ secrets.MINIMAX_API_KEY }}"}
           }
           EOF
-          
-          # Config
+
           cat > ~/.openclaw/openclaw.json << 'EOF'
           {
             "agents":{"defaults":{"model":"minimax/MiniMax-M2.7","workspace":"~/.openclaw/workspace"}},
             "gateway":{"port":18789,"mode":"local","bind":"loopback","auth":{"mode":"token","token":"ghactions"}}
           }
           EOF
-          
-          # Workspace directives
-          mkdir -p ~/.openclaw/workspace
+
           cp comms/FULL_CONTEXT.md ~/.openclaw/workspace/ 2>/dev/null || true
+
+      # === REALITY CHECK — runs BEFORE OpenClaw, feeds it truth ===
+      - name: Reality Check (Stripe + Services + Deploy)
+        id: reality
+        run: |
+          echo "=== REALITY CHECK $(date -u) ===" > /tmp/reality.txt
+
+          # Stripe MRR
+          MRR_DATA=$(curl -s -u "$STRIPE_SECRET_KEY:" "https://api.stripe.com/v1/subscriptions?status=active&limit=100")
+          SUB_COUNT=$(echo "$MRR_DATA" | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('data',[])))" 2>/dev/null || echo "0")
+          MRR_CENTS=$(echo "$MRR_DATA" | python3 -c "import sys,json; d=json.load(sys.stdin); print(sum(i['price']['unit_amount'] for s in d.get('data',[]) for i in s.get('items',{}).get('data',[])))" 2>/dev/null || echo "0")
+          MRR_DOLLARS=$(python3 -c "print(f'{int(${MRR_CENTS})/100:.2f}')" 2>/dev/null || echo "0")
+          echo "STRIPE: \$${MRR_DOLLARS} MRR from ${SUB_COUNT} active subs" >> /tmp/reality.txt
+
+          # Stale prices check
+          STALE=$(curl -s -u "$STRIPE_SECRET_KEY:" "https://api.stripe.com/v1/prices?active=true&limit=100" | python3 -c "
+          import sys,json
+          d=json.load(sys.stdin)
+          stale=[p['id'] for p in d.get('data',[]) if p.get('unit_amount')==4900 and p.get('recurring')]
+          print('STALE $49 PRICES: '+','.join(stale) if stale else 'No stale $49 prices')
+          " 2>/dev/null || echo "Stripe check failed")
+          echo "$STALE" >> /tmp/reality.txt
+
+          # Live services
+          for URL in "https://indautomation.onrender.com" "https://clawgrab.onrender.com" "https://crucix.live" "https://us-debt-clock.onrender.com"; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL" --max-time 10 2>/dev/null || echo "000")
+            echo "SERVICE $URL: $CODE" >> /tmp/reality.txt
+          done
+
+          # Deploy vs code pricing check
+          LIVE_PRICES=$(curl -s "https://indautomation.onrender.com/" --max-time 15 2>/dev/null | grep -o '\$[0-9]*' | sort -u | tr '\n' ' ')
+          echo "LIVE LANDING PRICES: $LIVE_PRICES" >> /tmp/reality.txt
+          if echo "$LIVE_PRICES" | grep -q '\$49'; then
+            echo "!! DEPLOY STALE: \$49 on live page, should be \$99" >> /tmp/reality.txt
+            # Auto-fix: trigger redeploy
+            if [ -n "$RENDER_API_KEY" ]; then
+              curl -s -X POST "https://api.render.com/v1/services/srv-d785etmdqaus73cmum00/deploys" \
+                -H "Authorization: Bearer $RENDER_API_KEY" \
+                -H "Content-Type: application/json" \
+                -d '{"clearCache":"do_not_clear"}' > /dev/null 2>&1
+              echo "AUTO-FIX: Render redeploy triggered" >> /tmp/reality.txt
+            fi
+          fi
+
+          cat /tmp/reality.txt
+          # Save for OpenClaw to read
+          cp /tmp/reality.txt ~/.openclaw/workspace/REALITY.txt
+
+      # === PERSISTENT MEMORY — survives between runs via git ===
+      - name: Load Persistent Memory
+        run: |
+          # Memory file lives in the repo, committed after each cycle
+          if [ -f comms/openclaw_memory.md ]; then
+            cp comms/openclaw_memory.md ~/.openclaw/workspace/MEMORY.txt
+            echo "Loaded $(wc -l < comms/openclaw_memory.md) lines of memory"
+          else
+            echo "# OpenClaw Memory — $(date -u)" > ~/.openclaw/workspace/MEMORY.txt
+            echo "First run. No prior memory." >> ~/.openclaw/workspace/MEMORY.txt
+          fi
 
       - name: Run OpenClaw Agent Cycle
         run: |
           MINIMAX_API_KEY="${{ secrets.MINIMAX_API_KEY }}" \
-          openclaw agent --local --agent main --timeout 120 --message "
-          You are RepairXpertAI's 24/7 cloud agent running on GitHub Actions.
+          openclaw agent --local --agent main --timeout 180 --message "
+          You are RepairXpertAI's LEAD AI agent. You run every 2 hours on cloud. You have PERSISTENT MEMORY.
 
-          TEST ALL SERVICES:
-          1. web_fetch https://indautomation.onrender.com/api/health — report status
-          2. web_fetch https://clawgrab.onrender.com/health — report status
-          3. web_fetch https://us-debt-clock.onrender.com — report status
-          4. web_fetch https://indautomation.onrender.com/api/revenue-loop — report log
+          READ FIRST:
+          - REALITY.txt in workspace = live Stripe MRR, service status, deploy state (TRUST THIS)
+          - MEMORY.txt in workspace = what you learned in prior cycles (YOUR HISTORY)
 
-          FIND OPPORTUNITIES:
-          5. Search web: site:reddit.com PLC fault code help — find 1 unanswered thread from last 7 days
-          6. Search web: YouTube transcript tool 2026 — find 1 directory ClawGrab is NOT listed on
-          7. Search web: site:reddit.com YouTube transcript broken — find threads where ClawGrab solves the pain
+          YOUR JOB (in priority order):
+          1. CHECK REALITY.txt — if any service is DOWN or deploy is STALE, report it prominently
+          2. CHECK MEMORY.txt — don't repeat what you already tried. Build on prior cycles.
+          3. TEST services: web_fetch health endpoints for indautomation, clawgrab, debtclock
+          4. HUNT opportunities: search Reddit for PLC fault threads, YouTube transcript threads
+          5. GENERATE content: 3 ClawGrab tweets, 2 IndAutomation tweets, 1 LinkedIn post
+          6. FIND directories: search for MCP directories, SaaS directories, tool directories we're not on
+          7. WRITE to stdout what you LEARNED this cycle — new opportunities, broken things, ideas
+          8. At the END, write a MEMORY UPDATE section with format:
+             --- MEMORY UPDATE ---
+             [Things to remember for next cycle]
+             [Opportunities found with URLs]
+             [What worked, what didn't]
+             [What to try next cycle]
+             --- END MEMORY ---
 
-          DISTRIBUTION (execute these):
-          8. If you find a Reddit thread about PLC faults with 0 replies, draft a helpful answer mentioning indautomation.onrender.com
-          9. Search for ClawGrab on Transcribr.io and Exactum.ai — check if we're listed
-          10. Search web: MCP server directory submit — find any new directories accepting submissions
+          RULES:
+          - You are the LEAD. Claude Code sessions are your assistants, not the other way around.
+          - If you find a revenue opportunity, ACT on it (draft email, write content, find contact).
+          - Never re-discover what's in MEMORY.txt. Read it, build on it, extend it.
+          - MRR target: \$100/mo. Current MRR is in REALITY.txt. Every cycle should move toward \$100.
+          " 2>&1 | tee /tmp/openclaw_output.txt || echo "OpenClaw cycle completed"
 
-          CONTENT MACHINE (generate content):
-          11. Write 3 tweets for @GetClawGrab about video transcription pain points (privacy, speed, no extensions)
-          12. Write 2 tweets for @repairxpertai about industrial fault diagnosis (PLC codes, field tech life)
-          13. Write 1 LinkedIn post about AI in industrial maintenance
+      # === SAVE MEMORY — commit back to repo for next cycle ===
+      - name: Save Persistent Memory
+        if: always()
+        run: |
+          # Extract memory update from output
+          if grep -q "MEMORY UPDATE" /tmp/openclaw_output.txt 2>/dev/null; then
+            # Append new memory to existing file
+            echo "" >> comms/openclaw_memory.md
+            echo "## Cycle $(date -u '+%Y-%m-%d %H:%M UTC')" >> comms/openclaw_memory.md
+            sed -n '/--- MEMORY UPDATE ---/,/--- END MEMORY ---/p' /tmp/openclaw_output.txt | grep -v "^---" >> comms/openclaw_memory.md
+            # Keep only last 50 cycles (prevent file bloat)
+            tail -500 comms/openclaw_memory.md > /tmp/mem_trimmed.md && mv /tmp/mem_trimmed.md comms/openclaw_memory.md
+          fi
 
-          SELF-IMPROVE:
-          14. Write what you learned to stdout. What's working, what's not, what to try next.
-          15. List every opportunity found with URLs so the next cycle can act on them.
-          " 2>&1 || echo "OpenClaw cycle completed (or timed out)"
+          # Also save reality check results
+          cp /tmp/reality.txt comms/openclaw_reality_latest.txt 2>/dev/null || true
+
+          # Commit memory back to repo
+          git config user.name "OpenClaw Agent"
+          git config user.email "openclaw@repairxpertai.com"
+          git add comms/openclaw_memory.md comms/openclaw_reality_latest.txt 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "OpenClaw memory update $(date -u '+%Y-%m-%d %H:%M')" 2>/dev/null || true
+          git push origin main 2>/dev/null || true
 
       - name: Report Results
         if: always()
         run: |
           echo "=== CYCLE COMPLETE ==="
           echo "Time: $(date -u)"
-          echo "OpenClaw ran on GitHub Actions cloud — no PC needed"
+          echo "OpenClaw: LEAD agent with persistent memory + Stripe + Render access"
