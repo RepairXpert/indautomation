@@ -72,13 +72,14 @@ def check_stripe():
     if not STRIPE_KEY:
         return {"balance": 0, "recent": 0}
     try:
+        import base64
+        auth = base64.b64encode(f"{STRIPE_KEY}:".encode()).decode()
         data = _http("https://api.stripe.com/v1/balance",
-                      headers={"Authorization": f"Bearer {STRIPE_KEY}"})
+                      headers={"Authorization": f"Basic {auth}"})
         balance = data["available"][0]["amount"]
 
-        # Check recent payment intents
         pi_data = _http("https://api.stripe.com/v1/payment_intents?limit=5",
-                         headers={"Authorization": f"Bearer {STRIPE_KEY}"})
+                         headers={"Authorization": f"Basic {auth}"})
         succeeded = [p for p in pi_data.get("data", []) if p["status"] == "succeeded"]
 
         log(f"Stripe: ${balance/100:.2f} balance, {len(succeeded)} recent payments")
@@ -86,6 +87,43 @@ def check_stripe():
     except Exception as e:
         log(f"Stripe error: {e}")
         return {"balance": 0, "recent": 0}
+
+
+def execute_task(task_description):
+    """OpenCode-style: ask MiniMax to analyze a task and return executable actions.
+    This gives the loop autonomous decision-making capability."""
+    analysis = ask_minimax(
+        f"You are an autonomous revenue agent for RepairXpertAI. "
+        f"Analyze this task and return a JSON with 'actions' array. "
+        f"Each action has 'type' (email/tweet/check/skip) and 'detail'. "
+        f"Task: {task_description}"
+    )
+    if analysis:
+        try:
+            import re
+            match = re.search(r'\{.*\}', analysis, re.DOTALL)
+            if match:
+                return json.loads(match.group())
+        except Exception:
+            pass
+    return None
+
+
+def send_email_via_resend(to, subject, body):
+    """Send email through Resend API — autonomous outreach capability."""
+    if not RESEND_KEY:
+        log("No Resend key — email skipped")
+        return False
+    try:
+        _http("https://api.resend.com/emails", method="POST",
+              data={"from": "RepairXpertAI <hello@repairxpertai.com>",
+                    "to": [to], "subject": subject, "html": body},
+              headers={"Authorization": f"Bearer {RESEND_KEY}"})
+        log(f"Email sent: {to}")
+        return True
+    except Exception as e:
+        log(f"Email failed ({to}): {e}")
+        return False
 
 
 def process_cart_recovery():
@@ -125,32 +163,48 @@ def ask_minimax(prompt):
 
 
 def revenue_cycle():
-    """One full revenue cycle."""
+    """One full revenue cycle — autonomous OpenCode-style execution."""
     log("=== REVENUE CYCLE START ===")
 
     # 1. Health check all services (keeps them warm)
     health = check_services()
 
-    # 2. Check Stripe
+    # 2. Check Stripe for new revenue
     stripe = check_stripe()
+    if stripe["recent"] > 0:
+        log(f"*** NEW REVENUE DETECTED: {stripe['recent']} payments ***")
 
     # 3. Process cart recovery
     process_cart_recovery()
 
-    # 4. Ask MiniMax for next action
-    if stripe["balance"] == 0 or True:  # always analyze
-        analysis = ask_minimax(
-            f"You are a revenue strategist for RepairXpertAI. "
-            f"Current Stripe balance: ${stripe['balance']/100:.2f}. "
-            f"Services: {health}. "
-            f"Products: IndAutomation ($19/mo fault diagnosis), ClawGrab ($12/mo transcription), "
-            f"LITE ($79 offline tool), Crucix ($29/$99 OSINT). "
-            f"We have $0 external MRR. 78+ cold emails sent, 0 replies. "
-            f"What is the ONE thing we should do RIGHT NOW to get the first paying customer? "
-            f"Be specific — name a channel, a message, a target. 100 words max."
-        )
-        if analysis:
-            log(f"MiniMax says: {analysis[:200]}")
+    # 4. Ask MiniMax for analysis + executable action
+    analysis = ask_minimax(
+        f"You are RepairXpertAI's autonomous revenue agent running 24/7 in the cloud. "
+        f"Stripe: ${stripe['balance']/100:.2f}. Services: {health}. "
+        f"Products: IndAutomation $19/$99/mo, ClawGrab $12/mo, LITE $79, Crucix $29/$99. "
+        f"93+ cold emails sent to industrial/HVAC/auto/building companies. 0 replies. "
+        f"40+ tweets posted. 14 Dev.to articles. "
+        f"What is the ONE most impactful thing to do RIGHT NOW? "
+        f"Return JSON: {{\"action\": \"email|analyze|skip\", \"target\": \"...\", "
+        f"\"subject\": \"...\", \"reason\": \"...\"}}. 50 words max."
+    )
+    if analysis:
+        log(f"MiniMax: {analysis[:200]}")
+
+        # 5. Auto-execute MiniMax's recommendation (OpenCode-style)
+        task = execute_task(analysis)
+        if task and task.get("actions"):
+            for action in task["actions"][:3]:  # max 3 actions per cycle
+                if action.get("type") == "email" and action.get("detail"):
+                    detail = action["detail"]
+                    if isinstance(detail, dict) and detail.get("to"):
+                        send_email_via_resend(
+                            detail["to"],
+                            detail.get("subject", "RepairXpertAI — AI-Powered Fault Diagnosis"),
+                            detail.get("body", f"<p>Check out <a href='https://indautomation.onrender.com'>IndAutomation</a></p>")
+                        )
+                elif action.get("type") == "skip":
+                    log(f"MiniMax chose to skip: {action.get('detail', 'no reason')}")
 
     log("=== REVENUE CYCLE END ===")
 
