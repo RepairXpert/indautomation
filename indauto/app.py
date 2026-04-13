@@ -2483,6 +2483,9 @@ async def dispatch_close(
 async def dispatch_inbox(request: Request, email: str = ""):
     """Tech inbox — jobs claimed by a specific tech email, plus open jobs
     they can still claim."""
+    redirect = _require_admin(request)
+    if redirect is not None:
+        return redirect
     email = email.strip().lower()
     my_jobs: list = []
     if email and "@" in email:
@@ -2970,6 +2973,197 @@ def _ping_local_services(services: list, timeout_sec: float = 1.0) -> list:
     return [(s, results.get(s["name"], {"status": "down"})) for s in services]
 
 
+# ── Claude Code session discovery (read-only) ────────────────────────────────
+def _discover_claude_sessions(limit: int = 20):
+    """Return recent Claude Code session metadata from ~/.claude/projects.
+
+    Read-only: project slug, session id (filename stem), title, last-modified,
+    size in bytes. Returns [] gracefully if the directory doesn't exist
+    (e.g. running on Render). Used by /dashboard to surface the user's dev
+    sessions alongside the production fleet.
+    """
+    sessions: list = []
+    base = Path.home() / ".claude" / "projects"
+    if not base.exists():
+        return sessions
+    try:
+        for project_dir in base.iterdir():
+            if not project_dir.is_dir():
+                continue
+            for jsonl in project_dir.glob("**/*.jsonl"):
+                try:
+                    stat = jsonl.stat()
+                    title = jsonl.stem
+                    # Cheap title peek: first JSON line if present
+                    try:
+                        with open(jsonl, encoding="utf-8") as f:
+                            first = f.readline()
+                            if first:
+                                row = json.loads(first)
+                                title = (
+                                    row.get("title")
+                                    or row.get("name")
+                                    or row.get("summary")
+                                    or title
+                                )
+                    except Exception:
+                        pass
+                    sessions.append({
+                        "project": project_dir.name,
+                        "session_id": jsonl.stem,
+                        "title": str(title)[:120],
+                        "modified_at": datetime.fromtimestamp(
+                            stat.st_mtime, tz=timezone.utc
+                        ).isoformat(),
+                        "size_bytes": stat.st_size,
+                    })
+                except Exception:
+                    continue
+    except Exception:
+        return []
+    sessions.sort(key=lambda s: s["modified_at"], reverse=True)
+    return sessions[:limit]
+
+
+# ── Operator auth (single shared admin token) ────────────────────────────────
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN", "")
+ADMIN_COOKIE_NAME = "rxa_admin"
+
+
+def _is_admin(request: Request) -> bool:
+    """True iff caller has the admin cookie OR ADMIN_TOKEN is unset (dev mode)."""
+    if not ADMIN_TOKEN:
+        return True  # no token configured → no auth (local dev / first boot)
+    return request.cookies.get(ADMIN_COOKIE_NAME) == ADMIN_TOKEN
+
+
+def _require_admin(request: Request):
+    """Return a 302 RedirectResponse if not admin, else None."""
+    if _is_admin(request):
+        return None
+    from starlette.responses import RedirectResponse
+    next_url = str(request.url.path)
+    if request.url.query:
+        next_url += "?" + request.url.query
+    return RedirectResponse(
+        url=f"/admin/login?next={next_url}",
+        status_code=302,
+    )
+
+
+@app.get("/admin/login", response_class=HTMLResponse)
+async def admin_login_page(request: Request, next: str = "/dashboard"):
+    """Tiny login form. POSTs back to /admin/login."""
+    return templates.TemplateResponse(
+        "admin_login.html",
+        {
+            "request": request,
+            "next": next,
+            "auth_disabled": not ADMIN_TOKEN,
+            "error": None,
+        },
+    )
+
+
+@app.post("/admin/login", response_class=HTMLResponse)
+async def admin_login_submit(
+    request: Request,
+    token: str = Form(...),
+    next: str = Form("/dashboard"),
+):
+    """Validate token, set HttpOnly cookie, redirect to next."""
+    from starlette.responses import RedirectResponse
+    if not ADMIN_TOKEN:
+        # No token configured server-side; just redirect through.
+        return RedirectResponse(url=next or "/dashboard", status_code=302)
+    if (token or "").strip() != ADMIN_TOKEN:
+        return templates.TemplateResponse(
+            "admin_login.html",
+            {
+                "request": request,
+                "next": next,
+                "auth_disabled": False,
+                "error": "Invalid token.",
+            },
+            status_code=401,
+        )
+    safe_next = next if next and next.startswith("/") else "/dashboard"
+    resp = RedirectResponse(url=safe_next, status_code=302)
+    resp.set_cookie(
+        key=ADMIN_COOKIE_NAME,
+        value=ADMIN_TOKEN,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=60 * 60 * 24 * 30,  # 30 days
+        path="/",
+    )
+    return resp
+
+
+@app.post("/admin/logout")
+async def admin_logout():
+    from starlette.responses import RedirectResponse
+    resp = RedirectResponse(url="/", status_code=302)
+    resp.delete_cookie(ADMIN_COOKIE_NAME, path="/")
+    return resp
+
+
+# ── Unified dashboard ────────────────────────────────────────────────────────
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page(request: Request):
+    """One unified view of every venture, agent, dispatch job, and AI loop.
+
+    Aggregator only — calls existing helpers, reuses existing templates' data
+    sources. Auth-gated (no-op if ADMIN_TOKEN unset).
+    """
+    redirect = _require_admin(request)
+    if redirect is not None:
+        return redirect
+    report = _agents_report()
+    cc_resp = await command_center_data(request)
+    try:
+        cc_json = json.loads(cc_resp.body.decode())
+    except Exception:
+        cc_json = {}
+    open_jobs = _load_dispatches(limit=10, status="open")
+    claimed_jobs = _load_dispatches(limit=10, status="claimed")
+    sessions = _discover_claude_sessions(limit=20)
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {
+            "request": request,
+            "report": report,
+            "command_center": cc_json,
+            "open_jobs": open_jobs,
+            "claimed_jobs": claimed_jobs,
+            "sessions": sessions,
+        },
+    )
+
+
+@app.get("/api/dashboard")
+async def api_dashboard(request: Request):
+    """JSON mirror of /dashboard for mobile / scripts."""
+    redirect = _require_admin(request)
+    if redirect is not None:
+        return JSONResponse({"error": "auth required"}, status_code=401)
+    report = _agents_report()
+    cc_resp = await command_center_data(request)
+    try:
+        cc_json = json.loads(cc_resp.body.decode())
+    except Exception:
+        cc_json = {}
+    return JSONResponse({
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "report": report,
+        "command_center": cc_json,
+        "open_jobs": _load_dispatches(limit=10, status="open"),
+        "claimed_jobs": _load_dispatches(limit=10, status="claimed"),
+        "sessions": _discover_claude_sessions(limit=20),
+    })
+
+
 @app.get("/api/agents")
 async def api_agents():
     """JSON report of every agent / loop / AI service running in the app."""
@@ -2979,6 +3173,9 @@ async def api_agents():
 @app.get("/agents", response_class=HTMLResponse)
 async def agents_page(request: Request):
     """Visual report of every agent / loop / AI service."""
+    redirect = _require_admin(request)
+    if redirect is not None:
+        return redirect
     report = _agents_report()
     return templates.TemplateResponse(
         "agents.html",
@@ -3088,6 +3285,9 @@ async def api_agents_resume():
 @app.get("/command-center", response_class=HTMLResponse)
 async def command_center(request: Request):
     """Command Center — single-page ops dashboard for all ventures."""
+    redirect = _require_admin(request)
+    if redirect is not None:
+        return redirect
     return templates.TemplateResponse("command_center.html", {"request": request})
 
 

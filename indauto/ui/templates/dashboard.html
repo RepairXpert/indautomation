@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="30">
+<title>Dashboard | RepairXpert</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+.dash-hero{padding:24px 20px 8px;max-width:1100px;margin:0 auto}
+.dash-hero h1{font-size:1.55rem;font-weight:800;margin:0 0 .15rem 0;color:var(--text,#e8e8ed)}
+.dash-hero h1 span{color:var(--accent,#7c6cf8)}
+.dash-hero .sub{font-size:.8rem;color:var(--muted,#888);margin:0}
+.dash-wrap{max-width:1100px;margin:0 auto;padding:0 20px 80px}
+.kpi-row{display:flex;gap:8px;flex-wrap:wrap;margin:1rem 0 1.4rem}
+.kpi{flex:1;min-width:130px;background:var(--card-bg,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:10px;padding:12px 16px}
+.kpi .label{font-size:.65rem;color:var(--muted,#888);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.kpi .value{font-size:1.4rem;font-weight:800;color:var(--text,#e8e8ed);margin-top:2px}
+.kpi.passing .value{color:#2ecc71}
+.kpi.down .value{color:#e74c3c}
+.kpi.local .value{color:#7bb0d6}
+.kpi.accent .value{color:var(--accent,#7c6cf8)}
+.section{background:var(--card-bg,#12121a);border:1px solid var(--border,#1e1e2e);border-radius:12px;padding:18px;margin-bottom:1rem}
+.section h2{font-size:.78rem;color:var(--muted,#888);text-transform:uppercase;letter-spacing:.5px;margin:0 0 .9rem 0;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.section h2 a{color:var(--accent,#7c6cf8);text-decoration:none;font-size:.7rem;font-weight:700;text-transform:none;letter-spacing:0}
+.section h2 a:hover{text-decoration:underline}
+.fleet-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.fleet-table th{text-align:left;padding:6px 8px;color:var(--muted,#888);font-size:.65rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border,#1e1e2e);font-weight:700}
+.fleet-table td{padding:8px;border-bottom:1px solid var(--border,#1e1e2e);vertical-align:top}
+.fleet-table tr:last-child td{border-bottom:none}
+.fleet-table .num{color:var(--muted,#888);font-family:monospace;width:24px}
+.fleet-table .vname{font-weight:700;color:var(--text,#e8e8ed)}
+.fleet-table .vname a{color:var(--text,#e8e8ed);text-decoration:none}
+.fleet-table .vname a:hover{color:var(--accent,#7c6cf8)}
+.fleet-table .vpurpose{color:var(--muted,#888);font-size:.72rem;margin-top:2px;line-height:1.4}
+.fleet-table .vlatency{font-family:monospace;font-size:.7rem;color:var(--muted,#888)}
+.fleet-table .vprice{color:var(--accent,#7c6cf8);font-family:monospace;font-size:.7rem;white-space:nowrap}
+.status{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.s-running,.s-connected,.s-configured,.s-available,.s-passing{background:#0f2a1a;color:#2ecc71}
+.s-stopped,.s-disabled,.s-missing,.s-unavailable,.s-down{background:#1a1a1a;color:#888}
+.s-error{background:#2a1015;color:#e74c3c}
+.s-unknown,.s-local{background:#1a222a;color:#7bb0d6}
+.s-timeout{background:#2a221a;color:#e8a65a}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.job{padding:10px 0;border-top:1px solid var(--border,#1e1e2e);font-size:.82rem}
+.job:first-child{border-top:none;padding-top:0}
+.job .head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.job .company{font-weight:700;color:var(--text,#e8e8ed)}
+.job .meta{font-size:.7rem;color:var(--muted,#888)}
+.job .desc{font-size:.75rem;color:var(--text-secondary,#b0b0c0);margin-top:3px;line-height:1.4}
+.empty{text-align:center;padding:18px 0;color:var(--muted,#888);font-size:.82rem}
+.session{padding:8px 0;border-top:1px solid var(--border,#1e1e2e);font-size:.82rem}
+.session:first-child{border-top:none;padding-top:0}
+.session .title{color:var(--text,#e8e8ed);font-weight:600}
+.session .meta{font-size:.7rem;color:var(--muted,#888);margin-top:2px;font-family:monospace}
+.ai-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border,#1e1e2e);font-size:.82rem}
+.ai-row:first-child{border-top:none;padding-top:0}
+.ai-row .tier{font-family:monospace;font-size:.7rem;color:var(--accent,#7c6cf8);font-weight:700;margin-right:8px}
+.btn-resume{padding:8px 16px;background:linear-gradient(135deg,#7c6cf8,#5b4cf3);color:#fff;font-weight:700;border:none;border-radius:6px;cursor:pointer;font-size:.78rem;text-decoration:none}
+.btn-resume:hover{opacity:.9}
+.log-line{font-family:monospace;font-size:.72rem;color:var(--muted,#888);margin-top:4px;line-height:1.4;white-space:pre-wrap;word-break:break-all}
+.footer{text-align:center;font-size:.7rem;color:var(--muted,#888);margin-top:1.5rem;font-family:monospace}
+.footer a{color:var(--accent,#7c6cf8);text-decoration:none}
+@media (max-width:680px){.two-col{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav style="display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border,#1e1e2e);gap:16px;flex-wrap:wrap">
+  <a href="/" style="font-weight:800;font-size:1rem;text-decoration:none;color:var(--text,#e8e8ed)">IndAutomation</a>
+  <a href="/dashboard" style="font-size:.85rem;color:var(--accent,#7c6cf8);text-decoration:none;font-weight:700">Dashboard</a>
+  <a href="/agents" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Agents</a>
+  <a href="/command-center" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Command Center</a>
+  <a href="/dispatch" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Dispatch</a>
+  <a href="/parts" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Parts</a>
+  <a href="/diagnose" style="font-size:.85rem;color:var(--muted,#888);text-decoration:none">Diagnose</a>
+  <form method="POST" action="/admin/logout" style="margin-left:auto"><button type="submit" style="background:none;border:none;color:var(--muted,#888);font-size:.78rem;cursor:pointer">Sign out</button></form>
+</nav>
+
+{% set venture_agents = report.agents | selectattr('kind', 'equalto', 'cloud_venture') | list %}
+{% set local_agents = report.agents | selectattr('kind', 'equalto', 'local_service') | list %}
+{% set ai_agents = report.agents | selectattr('kind', 'equalto', 'ai_model') | list %}
+{% set thread_agents = report.agents | selectattr('kind', 'equalto', 'background_thread') | list %}
+
+<div class="dash-hero">
+  <h1>Operator <span>Dashboard</span></h1>
+  <p class="sub">Every venture, agent, dispatch job, AI loop, and dev session in one scroll. Auto-refreshes every 30s.</p>
+</div>
+
+<div class="dash-wrap">
+  <!-- KPI strip -->
+  <div class="kpi-row">
+    <div class="kpi"><div class="label">Fleet</div><div class="value">{{ report.fleet.total }}</div></div>
+    <div class="kpi passing"><div class="label">Passing</div><div class="value">{{ report.fleet.passing }}</div></div>
+    <div class="kpi local"><div class="label">Local-only</div><div class="value">{{ report.fleet.local_only }}</div></div>
+    <div class="kpi down"><div class="label">Down</div><div class="value">{{ report.fleet.down }}</div></div>
+    <div class="kpi accent"><div class="label">Open jobs</div><div class="value">{{ open_jobs|length }}</div></div>
+    <div class="kpi accent"><div class="label">In progress</div><div class="value">{{ claimed_jobs|length }}</div></div>
+    <div class="kpi accent"><div class="label">Stripe bal</div><div class="value">{{ command_center.crypto.stripe_balance if command_center.crypto else '--' }}</div></div>
+    <div class="kpi accent"><div class="label">Sessions</div><div class="value">{{ sessions|length }}</div></div>
+  </div>
+
+  <!-- Cloud Fleet -->
+  {% if venture_agents %}
+  <div class="section">
+    <h2>Cloud Fleet ({{ venture_agents|length }}) <a href="/agents">Agents page &rarr;</a></h2>
+    <div style="overflow-x:auto">
+      <table class="fleet-table">
+        <thead>
+          <tr><th>#</th><th>Venture</th><th>Status</th><th>Price</th><th>Latency</th></tr>
+        </thead>
+        <tbody>
+          {% for v in venture_agents %}
+          <tr>
+            <td class="num">{{ loop.index }}</td>
+            <td>
+              <div class="vname">
+                {% if v.url %}<a href="{{ v.url }}" target="_blank" rel="noopener">{{ v.name }}</a>{% else %}{{ v.name }}{% endif %}
+              </div>
+              {% if v.purpose %}<div class="vpurpose">{{ v.purpose }}</div>{% endif %}
+            </td>
+            <td><span class="status s-{{ v.status }}">{{ v.status }}</span></td>
+            <td><span class="vprice">{{ v.price or '—' }}</span></td>
+            <td><span class="vlatency">{% if v.latency_ms %}{{ v.latency_ms }} ms{% else %}—{% endif %}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="two-col">
+    <!-- Local Services -->
+    {% if local_agents %}
+    <div class="section">
+      <h2>Local Services ({{ local_agents|length }})</h2>
+      <table class="fleet-table">
+        <tbody>
+          {% for s in local_agents %}
+          <tr>
+            <td><div class="vname">{{ s.name }}</div><div class="vpurpose">:{{ s.port }}</div></td>
+            <td><span class="status s-{{ s.status }}">{{ s.status }}</span></td>
+            <td><span class="vlatency">{% if s.latency_ms %}{{ s.latency_ms }} ms{% else %}—{% endif %}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- AI Pipeline -->
+    {% if ai_agents %}
+    <div class="section">
+      <h2>AI Fallback Chain <form method="POST" action="/api/agents/resume" onsubmit="event.preventDefault();fetch('/api/agents/resume',{method:'POST'}).then(()=>location.reload())"><button type="submit" class="btn-resume">&#9889; Resume All AI</button></form></h2>
+      {% for a in ai_agents %}
+      <div class="ai-row">
+        <div><span class="tier">{{ loop.index }}.</span><span class="vname">{{ a.name }}</span>{% if a.model_hint %}<div class="vpurpose" style="margin-left:24px">{{ a.model_hint }}</div>{% endif %}</div>
+        <span class="status s-{{ a.status }}">{{ a.status }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="two-col">
+    <!-- Open dispatches -->
+    <div class="section">
+      <h2>Open Dispatches ({{ open_jobs|length }}) <a href="/dispatch">Board &rarr;</a></h2>
+      {% if open_jobs %}
+        {% for d in open_jobs %}
+        <div class="job">
+          <div class="head">
+            <div><span class="company">#{{ d.id }} {{ d.company }}</span> <span class="status s-{{ d.urgency }}">{{ d.urgency }}</span></div>
+            <span class="meta">{{ d.created_at[:10] }}</span>
+          </div>
+          <div class="meta">
+            {% if d.equipment %}{{ d.equipment }}{% endif %}
+            {% if d.fault_code %} &middot; <b>{{ d.fault_code }}</b>{% endif %}
+            {% if d.location %} &middot; {{ d.location }}{% endif %}
+          </div>
+          {% if d.description %}<div class="desc">{{ d.description[:140] }}{% if d.description|length > 140 %}…{% endif %}</div>{% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">No open dispatches.</div>
+      {% endif %}
+    </div>
+
+    <!-- Claimed dispatches -->
+    <div class="section">
+      <h2>In Progress ({{ claimed_jobs|length }}) <a href="/dispatch/inbox">Inbox &rarr;</a></h2>
+      {% if claimed_jobs %}
+        {% for d in claimed_jobs %}
+        <div class="job">
+          <div class="head">
+            <div><span class="company">#{{ d.id }} {{ d.company }}</span> <span class="status s-claimed" style="background:#1a222a;color:#7bb0d6">claimed</span></div>
+            <span class="meta">{{ d.claimed_at[:10] }}</span>
+          </div>
+          <div class="meta">Tech: <b>{{ d.claimed_by_email }}</b>{% if d.fault_code %} &middot; <b>{{ d.fault_code }}</b>{% endif %}</div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">No jobs in progress.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="two-col">
+    <!-- Background loops -->
+    <div class="section">
+      <h2>Background Loops</h2>
+      {% for t in thread_agents %}
+      <div class="ai-row">
+        <div><span class="vname">{{ t.name }}</span>{% if t.purpose %}<div class="vpurpose">{{ t.purpose }}</div>{% endif %}</div>
+        <span class="status s-{{ t.status }}">{{ t.status }}</span>
+      </div>
+      {% endfor %}
+      {% if command_center.revenue_loop_log %}
+      <div class="log-line">last: {{ command_center.revenue_loop_log[-1] if command_center.revenue_loop_log else '—' }}</div>
+      {% endif %}
+    </div>
+
+    <!-- Recent Claude Code sessions -->
+    <div class="section">
+      <h2>Recent Claude Code Sessions ({{ sessions|length }})</h2>
+      {% if sessions %}
+        {% for s in sessions[:8] %}
+        <div class="session">
+          <div class="title">{{ s.title }}</div>
+          <div class="meta">{{ s.project }} &middot; {{ s.modified_at[:19].replace('T',' ') }} UTC &middot; {{ (s.size_bytes/1024)|round(1) }} KB</div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">No Claude Code sessions found on this host.<br><span style="font-size:.7rem">Sessions appear when the dashboard runs on a machine with Claude Code installed.</span></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    Generated {{ report.generated_at }} &middot;
+    <a href="/api/dashboard">JSON</a> &middot;
+    <a href="/api/agents">/api/agents</a> &middot;
+    <a href="/api/command-center-data">/api/command-center-data</a>
+  </div>
+</div>
+</body>
+</html>
