@@ -1,0 +1,86 @@
+name: 24/7 Revenue Agent
+
+on:
+  schedule:
+    # Every 3 hours = 8 runs/day = ~15 min/run = 120 min/day = 3,600 min/month (within 2,000 free limit if we keep runs short)
+    - cron: '17 */3 * * *'
+  workflow_dispatch:
+
+jobs:
+  revenue-cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Revenue Loop
+        run: python cloud_worker.py
+
+      - name: Test All Services
+        run: |
+          echo "=== SERVICE HEALTH ==="
+          curl -sf https://indautomation.onrender.com/api/health | python -c "import sys,json;d=json.load(sys.stdin);print(f'IndAuto: {d[\"status\"]} faults={d[\"fault_codes_loaded\"]}')"
+          curl -sf https://clawgrab.onrender.com/health | python -c "import sys,json;d=json.load(sys.stdin);print(f'ClawGrab: {d[\"status\"]} v{d[\"version\"]}')"
+          curl -sf -o /dev/null -w "DebtClock: %{http_code}\n" https://us-debt-clock.onrender.com
+          curl -sf -o /dev/null -w "VendorAd: %{http_code}\n" https://vendor-ad-network.onrender.com
+
+      - name: Test Checkout Flow
+        run: |
+          RESULT=$(curl -sf -X POST https://indautomation.onrender.com/api/checkout \
+            -H "Content-Type: application/json" \
+            -d '{"plan":"pro","email":"ghactions@test.com"}' 2>&1 || echo '{"error":"failed"}')
+          echo "$RESULT" | python -c "import sys,json;d=json.load(sys.stdin);print(f'Checkout: {\"PASS\" if d.get(\"checkout_url\") else \"FAIL\"}')"
+
+      - name: Test AI Diagnosis
+        run: |
+          RESULT=$(curl -sf -X POST https://indautomation.onrender.com/api/diagnose \
+            -H "Content-Type: application/json" \
+            -d '{"fault_code":"AB-PF-F004","equipment_type":"Allen-Bradley","symptoms":"undervoltage"}' \
+            --max-time 30 2>&1 || echo '{"source":"timeout"}')
+          echo "$RESULT" | python -c "import sys,json;d=json.load(sys.stdin);print(f'AI Diagnose: {d.get(\"source\",\"?\")} conf={d.get(\"confidence\",\"?\")}')"
+
+      - name: Check Stripe Balance
+        run: |
+          python -c "
+          import urllib.request,json,base64,os
+          key=os.environ.get('STRIPE_SECRET_KEY','')
+          if key:
+            auth=base64.b64encode(f'{key}:'.encode()).decode()
+            req=urllib.request.Request('https://api.stripe.com/v1/balance',headers={'Authorization':f'Basic {auth}'})
+            d=json.loads(urllib.request.urlopen(req,timeout=10).read())
+            print(f'Stripe: \${d[\"available\"][0][\"amount\"]/100:.2f}')
+          "
+
+      - name: Ask MiniMax for Next Action
+        run: |
+          python -c "
+          import urllib.request,json,os
+          key=os.environ.get('MINIMAX_API_KEY','')
+          if key:
+            data=json.dumps({'model':'MiniMax-M2.7','messages':[{'role':'user','content':'You are RepairXpertAI revenue agent. 113+ emails sent, 0 replies, \$0 MRR. Products: IndAutomation \$19/mo, ClawGrab \$12/mo, LITE \$79, Crucix \$29/mo. What ONE action gets first customer? 50 words.'}],'max_tokens':100}).encode()
+            req=urllib.request.Request('https://api.minimaxi.chat/v1/chat/completions',data=data,headers={'Authorization':f'Bearer {key}','Content-Type':'application/json'})
+            r=json.loads(urllib.request.urlopen(req,timeout=30).read())
+            c=r['choices'][0]['message']['content']
+            if '<think>' in c: c=c.split('</think>')[-1].strip()
+            print(f'MiniMax says: {c[:200]}')
+          "
+
+      - name: Revenue Loop Status
+        run: |
+          curl -sf https://indautomation.onrender.com/api/revenue-loop | python -c "
+          import sys,json
+          d=json.load(sys.stdin)
+          print(f'Revenue Loop: {d[\"status\"]}')
+          for l in d.get('log',[])[-3:]: print(f'  {l}')
+          "

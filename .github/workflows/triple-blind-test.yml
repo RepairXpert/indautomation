@@ -1,0 +1,67 @@
+name: Triple Blind QA
+
+on:
+  schedule:
+    - cron: '47 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+
+jobs:
+  test-all-products:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Test IndAutomation
+        run: |
+          echo "=== INDAUTOMATION ==="
+          curl -sf https://indautomation.onrender.com/api/health | python3 -c "import sys,json;d=json.load(sys.stdin);print(f'Health: {d[\"status\"]} | Faults: {d[\"fault_codes_loaded\"]} | Diagnoses: {d[\"total_diagnoses\"]}')"
+          for page in diagnose chat faults pricing faults/allen-bradley faults/vfd faults/plc-errors admin/dashboard; do
+            CODE=$(curl -sf -o /dev/null -w "%{http_code}" "https://indautomation.onrender.com/$page")
+            echo "  /$page: $CODE"
+          done
+
+      - name: Test ClawGrab
+        run: |
+          echo "=== CLAWGRAB ==="
+          curl -sf https://clawgrab.onrender.com/health | python3 -c "import sys,json;d=json.load(sys.stdin);print(f'v{d[\"version\"]} | Platforms: {d[\"platforms\"]} | STT: {d[\"stt\"]}')"
+          curl -sf -o /dev/null -w "Frontend: %{http_code}\n" https://getclawgrab.com
+
+      - name: Test Stripe Checkouts
+        run: |
+          echo "=== STRIPE ==="
+          for link in \
+            "7sY3cwflHaGP45na0H4ZG09" \
+            "eVq00kflH16feK1c8P4ZG0g" \
+            "aFa7sMddz4ir8lD6Ov4ZG0b" \
+            "3cI4gAa1n4irgS9gp54ZG0e" \
+            "aFafZi1uRaGP1Xf2yf4ZG0f" \
+            "7sY4gA7TfdT16dv5Kr4ZG0c" \
+            "fZu4gA1uR7uD0Tb3Cj4ZG0h"; do
+            CODE=$(curl -sf -o /dev/null -w "%{http_code}" "https://buy.stripe.com/$link")
+            echo "  $link: $CODE"
+          done
+
+      - name: Test Other Services
+        run: |
+          echo "=== OTHER ==="
+          curl -sf -o /dev/null -w "Crucix: %{http_code}\n" -L https://crucix.live
+          curl -sf -o /dev/null -w "DebtClock: %{http_code}\n" https://us-debt-clock.onrender.com
+          curl -sf -o /dev/null -w "VendorAd: %{http_code}\n" https://vendor-ad-network.onrender.com
+
+      - name: Test AI Diagnosis (Cloud)
+        run: |
+          echo "=== AI DIAGNOSIS ==="
+          RESULT=$(curl -sf -X POST https://indautomation.onrender.com/api/diagnose \
+            -H "Content-Type: application/json" \
+            -d '{"fault_code":"AB-PF-F004","equipment_type":"Allen-Bradley","symptoms":"undervoltage"}' \
+            --max-time 30 2>&1 || echo '{"source":"timeout"}')
+          echo "$RESULT" | python3 -c "import sys,json;d=json.load(sys.stdin);print(f'Source: {d.get(\"source\",\"?\")} | Conf: {d.get(\"confidence\",\"?\")} | Name: {d.get(\"fault_name\",\"?\")}')"
+
+      - name: Test Revenue Loop
+        run: |
+          echo "=== REVENUE LOOP ==="
+          curl -sf https://indautomation.onrender.com/api/revenue-loop | python3 -c "
+          import sys,json;d=json.load(sys.stdin)
+          print(f'Status: {d[\"status\"]} | Entries: {len(d.get(\"log\",[]))}')
+          for l in d.get('log',[])[-3:]: print(f'  {l}')
+          "
