@@ -1240,6 +1240,7 @@ async def vin_lookup(request: Request, vin: str = Form("")):
     """Decode a VIN using the free NHTSA vPIC API."""
     result = None
     error = None
+    vin = (vin or "").strip().upper()
     if vin and len(vin) >= 11:
         import urllib.request
         import urllib.error
@@ -1250,9 +1251,9 @@ async def vin_lookup(request: Request, vin: str = Form("")):
                 data = json.loads(resp.read().decode())
                 if data.get("Results"):
                     raw = data["Results"][0]
-                    result = {k: v for k, v in raw.items() if v and v.strip()}
-        except (urllib.error.URLError, json.JSONDecodeError, KeyError) as e:
-            error = str(e)
+                    result = {k: v for k, v in raw.items() if v and str(v).strip()}
+        except (urllib.error.URLError, json.JSONDecodeError, KeyError):
+            error = "VIN lookup service is temporarily unavailable. Try again in a moment."
     elif vin:
         error = "VIN must be at least 11 characters"
     return templates.TemplateResponse("vin.html", {
@@ -1268,6 +1269,7 @@ async def api_vin_decode(vin: str):
     """JSON VIN decode endpoint for programmatic access."""
     import urllib.request
     import urllib.error
+    vin = (vin or "").strip().upper()
     if len(vin) < 11:
         return JSONResponse({"error": "VIN must be at least 11 characters"}, status_code=400)
     url = f"https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{vin}?format=json"
@@ -1277,10 +1279,13 @@ async def api_vin_decode(vin: str):
             data = json.loads(resp.read().decode())
             if data.get("Results"):
                 raw = data["Results"][0]
-                return JSONResponse({k: v for k, v in raw.items() if v and v.strip()})
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=502)
-    return JSONResponse({"error": "No results"}, status_code=404)
+                return JSONResponse({k: v for k, v in raw.items() if v and str(v).strip()})
+    except Exception:
+        return JSONResponse(
+            {"error": "VIN lookup service unavailable", "vin": vin},
+            status_code=502,
+        )
+    return JSONResponse({"error": "No results", "vin": vin}, status_code=404)
 
 
 @app.get("/sitemap.xml")
@@ -2503,89 +2508,6 @@ async def api_dispatch_list(
         claimed_by_email=claimed_by_email.strip().lower(),
     )
     return JSONResponse({"count": len(rows), "dispatches": rows})
-
-
-@app.post("/api/lead")
-async def capture_lead(request: Request):
-    """Lead capture: create Stripe customer + send welcome email.
-
-    Body (JSON): {"email": "...", "name": "...", "plan": "pro"|"enterprise"|"free"}
-    Returns: {"ok": true, "stripe_customer_id": "...", "email_sent": true}
-    """
-    try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse(status_code=400, content={"ok": False, "error": "Invalid JSON"})
-
-    email = (body.get("email") or "").strip().lower()
-    name = (body.get("name") or "").strip()
-    plan = (body.get("plan") or "free").strip()
-
-    if not email or "@" not in email:
-        return JSONResponse(status_code=400, content={"ok": False, "error": "Valid email required"})
-
-    now = datetime.now(timezone.utc).isoformat()
-    stripe_customer_id = None
-    email_sent = False
-
-    # 1. Create Stripe customer
-    if _stripe_available:
-        try:
-            customer = stripe.Customer.create(
-                email=email,
-                name=name or None,
-                metadata={"plan": plan, "source": "api_lead"},
-            )
-            stripe_customer_id = customer.id
-        except Exception as e:
-            _log_stripe_event("lead_stripe_error", {"email": email, "error": str(e)})
-
-    # 2. Log lead to SQLite
-    try:
-        db = get_db()
-        db.execute(
-            "INSERT INTO checkout_leads (created_at, email, plan, stripe_session_id, status) VALUES (?,?,?,?,?)",
-            (now, email, plan, stripe_customer_id or "", "lead_captured"),
-        )
-        db.commit()
-        db.close()
-    except Exception as e:
-        _log_stripe_event("lead_db_error", {"email": email, "error": str(e)})
-
-    # 3. Send welcome email via Resend
-    if RESEND_API_KEY:
-        plan_label = {"pro": "Pro ($19/mo)", "enterprise": "Enterprise ($99/mo)"}.get(plan, "Free")
-        greeting = f"Hi {name}," if name else "Hi there,"
-        html_body = f"""<div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;color:#e6edf3;background:#161b22;padding:2rem;border-radius:8px">
-<h2 style="color:#f78166;margin-bottom:1rem">Welcome to RepairXpert Industrial Automation</h2>
-<p>{greeting}</p>
-<p>You're now on our radar for the <strong>{plan_label}</strong> plan. We help field technicians diagnose faults faster with AI — 313+ fault codes, parts recommendations, and direct chat with our diagnostic engine.</p>
-<p style="margin:1.5rem 0"><a href="https://indautomation.onrender.com/pricing" style="display:inline-block;background:#f78166;color:#fff;padding:0.75rem 2rem;border-radius:6px;text-decoration:none;font-weight:600">View Plans &amp; Pricing</a></p>
-<p style="color:#8b949e;font-size:0.85rem">Questions? Reply to this email or visit indautomation.onrender.com. Cancel anytime — no contracts.</p>
-<hr style="border:1px solid #30363d;margin:1.5rem 0">
-<p style="color:#8b949e;font-size:0.78rem">RepairXpert Industrial Automation — AI-powered fault diagnosis for field technicians</p>
-</div>"""
-        try:
-            import urllib.request as _urlreq
-            payload = json.dumps({
-                "from": "RepairXpert <hello@repairxpertai.com>",
-                "to": [email],
-                "reply_to": "ericwestmail@gmail.com",
-                "subject": "Welcome to RepairXpert Industrial Automation",
-                "html": html_body,
-            }).encode()
-            req = _urlreq.Request(
-                "https://api.resend.com/emails",
-                data=payload,
-                headers={"Content-Type": "application/json", "Authorization": f"Bearer {RESEND_API_KEY}"},
-            )
-            with _urlreq.urlopen(req, timeout=10):
-                email_sent = True
-        except Exception as e:
-            _log_stripe_event("lead_email_failed", {"email": email, "error": str(e)})
-
-    _log_stripe_event("lead_captured", {"email": email, "plan": plan})
-    return JSONResponse(content={"ok": True, "stripe_customer_id": stripe_customer_id, "email_sent": email_sent})
 
 
 # ── Command Center ─────────────────────────────────────────────────────────────
