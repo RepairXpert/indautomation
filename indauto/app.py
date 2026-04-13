@@ -27,9 +27,16 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8"))
 
-# ── Background cloud worker (runs 24/7 on Render, no local PC needed) ────────
+# ── 24/7 Revenue Loop + Cloud Worker (runs on Render, no local PC) ───────────
 import threading
 import time as _time
+
+try:
+    from revenue_loop import start_revenue_loop, get_log as get_revenue_log
+    _revenue_thread = start_revenue_loop()
+except Exception:
+    _revenue_thread = None
+    def get_revenue_log(): return ["revenue_loop.py not found"]
 
 def _cloud_worker_loop():
     """Runs every 30 min inside the FastAPI process. Keeps services warm,
@@ -1307,6 +1314,13 @@ INDEXNOW_KEY = "fe1a967cb18a4679a754c625d57b7a6d"
 async def indexnow_key_file():
     from starlette.responses import Response
     return Response(content=INDEXNOW_KEY, media_type="text/plain")
+
+
+@app.get("/api/revenue-loop")
+async def revenue_loop_status():
+    """View 24/7 revenue loop status and recent log."""
+    return {"status": "running" if _revenue_thread and _revenue_thread.is_alive() else "stopped",
+            "log": get_revenue_log()}
 
 
 @app.get("/api/health")
