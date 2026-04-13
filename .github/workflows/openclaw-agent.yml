@@ -141,15 +141,14 @@ jobs:
           - External MRR is \$0. ZERO real customers. All Stripe subs are Eric test accounts. First real customer is the ONLY goal.
           - DO NOT email SaaSHub (Stan said no spam).
 
-          MEMORY UPDATE (write this at the END):
+          At the END of your response, write EXACTLY this format with REAL data (not placeholders):
           --- MEMORY UPDATE ---
-          [Completed tasks from the queue]
-          [New opportunities with URLs]
-          [Threads found for replies]
-          [Directories checked — listed or not]
-          [Competitors discovered]
-          [What to try next cycle]
+          TASK DONE: (which numbered task you executed from the queue)
+          FOUND: (specific URLs you discovered)
+          RESULT: (what happened when you tried)
+          NEXT: (which task number to do next cycle)
           --- END MEMORY ---
+          If you have nothing real to report, write NOTHING between the markers. Do NOT echo template text.
           " 2>&1 | tee /tmp/openclaw_output.txt || echo "OpenClaw cycle completed"
 
       # === SAVE MEMORY — commit back to repo for next cycle ===
