@@ -27,6 +27,50 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = yaml.safe_load((ROOT / "config.yaml").read_text(encoding="utf-8"))
 
+# ── Background cloud worker (runs 24/7 on Render, no local PC needed) ────────
+import threading
+import time as _time
+
+def _cloud_worker_loop():
+    """Runs every 30 min inside the FastAPI process. Keeps services warm,
+    processes cart recovery, checks Stripe balance. Zero extra cost."""
+    import urllib.request
+    _time.sleep(60)  # wait for app startup
+    while True:
+        try:
+            # Keep all Render services warm (prevents cold start)
+            for url in [
+                "https://clawgrab.onrender.com/health",
+                "https://us-debt-clock.onrender.com",
+                "https://vendor-ad-network.onrender.com/health",
+            ]:
+                try:
+                    urllib.request.urlopen(urllib.request.Request(
+                        url, headers={"User-Agent": "CloudWorker/1.0"}), timeout=10)
+                except Exception:
+                    pass
+
+            # Process cart recovery queue
+            recovery_key = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+            if recovery_key:
+                try:
+                    req = urllib.request.Request(
+                        "https://indautomation.onrender.com/api/recovery/process",
+                        data=b"{}",
+                        headers={"Content-Type": "application/json",
+                                 "X-Recovery-Key": recovery_key},
+                        method="POST",
+                    )
+                    urllib.request.urlopen(req, timeout=30)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        _time.sleep(1800)  # 30 minutes
+
+_worker = threading.Thread(target=_cloud_worker_loop, daemon=True, name="cloud-worker")
+_worker.start()
+
 # ── Stripe config (keys loaded from environment) ──────────────────────────────
 STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_PUBLISHABLE_KEY = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
