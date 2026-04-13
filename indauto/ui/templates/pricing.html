@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>Pricing | RepairXpertAI Industrial Fault Diagnosis</title>
-<meta name="description" content="AI-powered industrial fault diagnosis starting free. Pro plan $19/mo for unlimited diagnoses. Enterprise $49/mo with API access and multi-user support.">
+<meta name="description" content="AI-powered industrial fault diagnosis starting free. Pro plan $19/mo for unlimited diagnoses. Enterprise $99/mo with API access and multi-user support.">
 <meta property="og:title" content="RepairXpertAI Pricing — Industrial Fault Diagnosis Plans">
-<meta property="og:description" content="Start free with 3 daily diagnoses. Upgrade to Pro ($19/mo) or Enterprise ($49/mo) for unlimited AI-powered fault diagnosis.">
+<meta property="og:description" content="Start free with 3 daily diagnoses. Upgrade to Pro ($19/mo) or Enterprise ($99/mo) for unlimited AI-powered fault diagnosis.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://repairxpertai.com/pricing">
 <link rel="canonical" href="https://repairxpertai.com/pricing">
@@ -95,20 +95,20 @@
       <span class="pricing-tier-badge pricing-enterprise">ENTERPRISE</span>
     </div>
     <div class="pricing-price">
-      <span class="pricing-amount">$49</span>
+      <span class="pricing-amount">$99</span>
       <span class="pricing-period">/month</span>
     </div>
-    <p class="pricing-desc">For maintenance teams and integrators</p>
+    <p class="pricing-desc">For maintenance teams and system integrators</p>
     <ul class="pricing-features">
       <li class="included">Everything in Pro</li>
       <li class="included">REST API access</li>
       <li class="included">Bulk diagnostics (batch upload)</li>
       <li class="included">Custom equipment profiles</li>
       <li class="included">Diagnosis history export</li>
-      <li class="included">Dedicated support channel</li>
-      <li class="included">Multi-user team access</li>
+      <li class="included">Team seats (multi-user access)</li>
+      <li class="included">Priority support</li>
     </ul>
-    <button class="btn" onclick="checkout('enterprise')">Subscribe — $49/mo</button>
+    <button class="btn" onclick="checkout('enterprise')">Subscribe — $99/mo</button>
     <p class="pricing-guarantee">7-day money-back guarantee. No questions asked.</p>
   </div>
 
@@ -132,7 +132,7 @@
           <th>Feature</th>
           <th>Free</th>
           <th style="color:var(--accent)">Pro $19/mo</th>
-          <th style="color:var(--blue)">Enterprise $49/mo</th>
+          <th style="color:var(--blue)">Enterprise $99/mo</th>
         </tr>
       </thead>
       <tbody>
@@ -213,8 +213,8 @@
       {
         "@type": "Product",
         "name": "RepairXpertAI Enterprise",
-        "description": "REST API, bulk diagnostics, custom equipment profiles, multi-user team access",
-        "offers": {"@type": "Offer", "price": "49.99", "priceCurrency": "USD", "priceValidUntil": "2027-12-31", "availability": "https://schema.org/InStock"}
+        "description": "REST API, bulk diagnostics, custom equipment profiles, multi-user team access, priority support",
+        "offers": {"@type": "Offer", "price": "99.99", "priceCurrency": "USD", "priceValidUntil": "2027-12-31", "availability": "https://schema.org/InStock"}
       }
     ]
   }
@@ -260,7 +260,7 @@ let selectedPlan = '';
 
 function checkout(plan) {
   selectedPlan = plan;
-  const title = plan === 'enterprise' ? 'Enterprise — $49/mo' : 'Pro — $19/mo';
+  const title = plan === 'enterprise' ? 'Enterprise — $99/mo' : 'Pro — $19/mo';
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('emailModal').style.display = 'flex';
   document.getElementById('checkoutEmail').focus();
