@@ -43,3 +43,13 @@
 6. web_search "MCP server directory submit 2026" — find NEW directories not in memory.
 7. web_search "ClawGrab" OR "RepairXpert" OR "indautomation" — find any mentions anywhere.
 8. web_search "YouTube transcription tool comparison 2026" — find pages ClawGrab should be on.
+
+## FRESH RESEARCH Apr 14 (from Claude double-blind)
+- Edmund AI raised EUR 2.5M Apr 9 — PLC troubleshooting competitor. Enterprise-only. Validates our market.
+- Firecrawl published "Best YouTube Transcript Extractors" listicle — ClawGrab NOT on it. Contact for inclusion.
+- Transcribr.io is main ClawGrab competitor — Chrome extension, YouTube-only. We're web+25 platforms.
+- Oxmaint + Mike Holt forums have LIVE PLC fault threads — IndAutomation could answer.
+- PLCtalk has 2 active PowerFlex VFD threads — LITE's exact target user.
+- Bitcoin.com has wallet recovery directory — CryptoVault NOT listed.
+- OSINT-BIBLE GitHub repo (500+ tools) — Crucix should be added.
+- Two unknown ClawGrab checkout attempts Apr 10 — both CANCELED. Potential leads dropped at payment.
