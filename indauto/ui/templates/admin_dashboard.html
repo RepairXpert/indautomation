@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | RepairXpertAI</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#c9d1d9;--bright:#e6edf3;--blue:#58a6ff;--green:#3fb950;--orange:#d29922;--red:#f85149;--purple:#bc8cff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);padding:1.5rem}
+h1{color:var(--bright);font-size:1.5rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+h1 span{background:var(--green);color:#000;font-size:.7rem;padding:2px 8px;border-radius:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.2rem}
+.card .label{font-size:.75rem;color:var(--text);text-transform:uppercase;letter-spacing:.05em}
+.card .value{font-size:1.8rem;font-weight:700;color:var(--bright);margin:.3rem 0}
+.card .sub{font-size:.8rem;color:var(--text)}
+.card.green .value{color:var(--green)}
+.card.blue .value{color:var(--blue)}
+.card.orange .value{color:var(--orange)}
+.card.purple .value{color:var(--purple)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--border);font-size:.85rem}
+th{background:#1c2128;color:var(--bright);font-weight:600}
+.up{color:var(--green)}
+.down{color:var(--red)}
+.section{margin-bottom:1.5rem}
+.section h2{font-size:1rem;color:var(--bright);margin-bottom:.6rem}
+.refresh{background:var(--blue);color:#fff;border:none;padding:.4rem 1rem;border-radius:6px;cursor:pointer;font-size:.8rem;float:right}
+</style>
+</head>
+<body>
+<h1>RepairXpertAI Dashboard <span>LIVE</span> <button class="refresh" onclick="location.reload()">Refresh</button></h1>
+
+<div class="grid">
+<div class="card green"><div class="label">Total Diagnoses</div><div class="value">{{ stats.total_diagnoses }}</div><div class="sub">All time</div></div>
+<div class="card blue"><div class="label">Fault Codes</div><div class="value">{{ stats.fault_codes }}</div><div class="sub">In database</div></div>
+<div class="card orange"><div class="label">Stripe Balance</div><div class="value">${{ "%.2f"|format(stats.stripe_balance/100) }}</div><div class="sub">Available</div></div>
+<div class="card purple"><div class="label">AI Engine</div><div class="value">{{ stats.ai_engine }}</div><div class="sub">{{ stats.ai_provider }}</div></div>
+</div>
+
+<div class="section">
+<h2>Service Health</h2>
+<table>
+<tr><th>Service</th><th>Status</th><th>URL</th></tr>
+{% for svc in services %}
+<tr><td>{{ svc.name }}</td><td class="{{ 'up' if svc.status == 'up' else 'down' }}">{{ svc.status }}</td><td>{{ svc.url }}</td></tr>
+{% endfor %}
+</table>
+</div>
+
+<div class="section">
+<h2>Top Fault Codes</h2>
+<table>
+<tr><th>#</th><th>Code</th><th>Name</th><th>Count</th></tr>
+{% for f in top_faults %}
+<tr><td>{{ loop.index }}</td><td>{{ f.code }}</td><td>{{ f.name }}</td><td>{{ f.count }}</td></tr>
+{% endfor %}
+{% if not top_faults %}
+<tr><td colspan="4" style="text-align:center;color:var(--text)">No diagnoses yet</td></tr>
+{% endif %}
+</table>
+</div>
+
+<div class="section">
+<h2>Recent Diagnoses</h2>
+<table>
+<tr><th>Time</th><th>Fault Code</th><th>Equipment</th><th>Source</th><th>Confidence</th></tr>
+{% for d in recent %}
+<tr><td>{{ d.time }}</td><td>{{ d.code }}</td><td>{{ d.equipment }}</td><td>{{ d.source }}</td><td>{{ "%.0f"|format(d.confidence*100) }}%</td></tr>
+{% endfor %}
+{% if not recent %}
+<tr><td colspan="5" style="text-align:center;color:var(--text)">No diagnoses yet</td></tr>
+{% endif %}
+</table>
+</div>
+
+<div style="margin-top:2rem;font-size:.75rem;color:var(--text);text-align:center">
+RepairXpertAI Admin Dashboard — Auto-refreshes on reload — Cloud AI: MiniMax M2.7 → Groq → LM Studio
+</div>
+</body>
+</html>

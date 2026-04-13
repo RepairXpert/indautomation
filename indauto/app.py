@@ -1353,6 +1353,81 @@ async def health():
     }
 
 
+# ── Admin Dashboard ──────────────────────────────────────────────────────────
+
+@app.get("/admin/dashboard", response_class=HTMLResponse)
+async def admin_dashboard(request: Request):
+    """Real-time admin dashboard with diagnoses, revenue, health."""
+    import urllib.request as _ur
+
+    # Stats from DB
+    total_diagnoses = 0
+    top_faults = []
+    recent = []
+    try:
+        db = get_db()
+        row = db.execute("SELECT COUNT(*) as cnt FROM diagnoses").fetchone()
+        total_diagnoses = row["cnt"] if row else 0
+
+        # Top fault codes
+        rows = db.execute(
+            "SELECT fault_code, fault_name, COUNT(*) as cnt FROM diagnoses "
+            "GROUP BY fault_code ORDER BY cnt DESC LIMIT 10"
+        ).fetchall()
+        top_faults = [{"code": r["fault_code"], "name": r["fault_name"] or "Unknown", "count": r["cnt"]} for r in rows]
+
+        # Recent diagnoses
+        rows = db.execute(
+            "SELECT created_at, fault_code, equipment_type, source, confidence "
+            "FROM diagnoses ORDER BY created_at DESC LIMIT 20"
+        ).fetchall()
+        recent = [{"time": r["created_at"][:19] if r["created_at"] else "?",
+                    "code": r["fault_code"], "equipment": r["equipment_type"] or "?",
+                    "source": r["source"] or "?", "confidence": r["confidence"] or 0}
+                   for r in rows]
+        db.close()
+    except Exception:
+        pass
+
+    # Stripe balance
+    stripe_balance = 0
+    if STRIPE_SECRET_KEY:
+        try:
+            req = _ur.Request("https://api.stripe.com/v1/balance",
+                              headers={"Authorization": f"Bearer {STRIPE_SECRET_KEY}"})
+            with _ur.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read())
+                stripe_balance = data["available"][0]["amount"]
+        except Exception:
+            pass
+
+    # AI engine status
+    ai_engine = "Cloud"
+    ai_provider = "MiniMax M2.7 → Groq → LM Studio"
+
+    # Service health
+    services = []
+    for name, url in [("IndAutomation", "https://indautomation.onrender.com/api/health"),
+                       ("ClawGrab", "https://clawgrab.onrender.com/health"),
+                       ("Crucix", "https://crucix.live"),
+                       ("Debt Clock", "https://us-debt-clock.onrender.com")]:
+        try:
+            req = _ur.Request(url, headers={"User-Agent": "Dashboard/1.0"})
+            with _ur.urlopen(req, timeout=5) as resp:
+                services.append({"name": name, "status": "up", "url": url})
+        except Exception:
+            services.append({"name": name, "status": "down", "url": url})
+
+    return templates.TemplateResponse("admin_dashboard.html", {
+        "request": request,
+        "stats": {"total_diagnoses": total_diagnoses, "fault_codes": len(load_fault_db()),
+                  "stripe_balance": stripe_balance, "ai_engine": ai_engine, "ai_provider": ai_provider},
+        "services": services,
+        "top_faults": top_faults,
+        "recent": recent,
+    })
+
+
 # ── Also keep JSON API for programmatic access ──
 
 
