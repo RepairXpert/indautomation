@@ -2066,6 +2066,169 @@ async def connect_submit(
     return templates.TemplateResponse("connect_success.html", {"request": request, "role": role, "name": name})
 
 
+# ── Dispatch board (connect field techs to open repair jobs) ─────────────────
+DISPATCH_DB_PATH = ROOT / "data" / "dispatches.jsonl"
+DISPATCH_URGENCIES = ("low", "normal", "urgent", "critical")
+
+
+def _load_dispatches(limit: int = 50, status: str = "open"):
+    """Return dispatch entries, newest first."""
+    if not DISPATCH_DB_PATH.exists():
+        return []
+    rows = []
+    try:
+        for ln in DISPATCH_DB_PATH.read_text(encoding="utf-8").splitlines():
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                row = json.loads(ln)
+            except Exception:
+                continue
+            if status and row.get("status") != status:
+                continue
+            rows.append(row)
+    except Exception:
+        return []
+    rows.sort(key=lambda r: r.get("ts", ""), reverse=True)
+    return rows[:limit]
+
+
+@app.get("/dispatch", response_class=HTMLResponse)
+async def dispatch_page(request: Request):
+    """Dispatch board — post an open repair job or claim one."""
+    dispatches = _load_dispatches(limit=50, status="open")
+    return templates.TemplateResponse(
+        "dispatch.html",
+        {
+            "request": request,
+            "dispatches": dispatches,
+            "urgencies": DISPATCH_URGENCIES,
+        },
+    )
+
+
+@app.post("/dispatch", response_class=HTMLResponse)
+async def dispatch_submit(
+    request: Request,
+    company: str = Form(...),
+    contact_email: str = Form(...),
+    equipment: str = Form(""),
+    fault_code: str = Form(""),
+    location: str = Form(""),
+    urgency: str = Form("normal"),
+    description: str = Form(""),
+):
+    contact_email = contact_email.strip().lower()
+    company = company.strip()
+    urgency = urgency.strip().lower()
+
+    if not company:
+        dispatches = _load_dispatches(limit=50, status="open")
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "dispatches": dispatches,
+                "urgencies": DISPATCH_URGENCIES,
+                "error": "Company / plant name required.",
+            },
+        )
+    if not contact_email or "@" not in contact_email:
+        dispatches = _load_dispatches(limit=50, status="open")
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "dispatches": dispatches,
+                "urgencies": DISPATCH_URGENCIES,
+                "error": "Valid contact email required.",
+            },
+        )
+    if urgency not in DISPATCH_URGENCIES:
+        urgency = "normal"
+
+    now = datetime.now(timezone.utc).isoformat()
+    entry = {
+        "ts": now,
+        "status": "open",
+        "company": company[:120],
+        "contact_email": contact_email[:160],
+        "equipment": equipment.strip()[:120],
+        "fault_code": fault_code.strip()[:40],
+        "location": location.strip()[:160],
+        "urgency": urgency,
+        "description": description.strip()[:800],
+    }
+
+    try:
+        DISPATCH_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(DISPATCH_DB_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception:
+        pass
+
+    # Notify operator so the job can be routed to a matched tech from /connect
+    if RESEND_API_KEY:
+        try:
+            import httpx
+            urgency_label = {
+                "low": "Low", "normal": "Normal",
+                "urgent": "Urgent", "critical": "CRITICAL",
+            }.get(urgency, urgency)
+            subject = f"[Dispatch] {urgency_label} — {company}"
+            body_html = (
+                f"<h2>New dispatch request</h2>"
+                f"<p><b>Company:</b> {company}<br>"
+                f"<b>Contact:</b> {contact_email}<br>"
+                f"<b>Equipment:</b> {entry['equipment'] or '—'}<br>"
+                f"<b>Fault code:</b> {entry['fault_code'] or '—'}<br>"
+                f"<b>Location:</b> {entry['location'] or '—'}<br>"
+                f"<b>Urgency:</b> {urgency_label}<br>"
+                f"<b>Description:</b> {entry['description'] or '—'}</p>"
+                f"<p>Route this job to a matched tech from /connect.</p>"
+            )
+            httpx.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": "IndAutomation <hello@repairxpertai.com>",
+                    "to": ["ericwestmail@gmail.com"],
+                    "reply_to": contact_email,
+                    "subject": subject,
+                    "html": body_html,
+                },
+                timeout=8,
+            )
+        except Exception:
+            pass
+
+    dispatches = _load_dispatches(limit=50, status="open")
+    return templates.TemplateResponse(
+        "dispatch.html",
+        {
+            "request": request,
+            "dispatches": dispatches,
+            "urgencies": DISPATCH_URGENCIES,
+            "success": f"Dispatch posted for {company}. A matched tech will be contacted at {contact_email}.",
+        },
+    )
+
+
+@app.get("/api/dispatch")
+async def api_dispatch_list(status: str = "open", limit: int = 50):
+    """JSON feed of dispatches — for field-tech mobile clients."""
+    try:
+        limit = max(1, min(int(limit), 200))
+    except Exception:
+        limit = 50
+    rows = _load_dispatches(limit=limit, status=status or "open")
+    return JSONResponse({"count": len(rows), "dispatches": rows})
+
+
 @app.post("/api/lead")
 async def capture_lead(request: Request):
     """Lead capture: create Stripe customer + send welcome email.
