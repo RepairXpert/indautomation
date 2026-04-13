@@ -29,10 +29,28 @@
 .agent-meta{font-size:.78rem;color:var(--muted,#888);margin-top:2px;line-height:1.5}
 .agent-meta code{font-family:monospace;color:var(--accent,#7c6cf8);font-size:.72rem}
 .status{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.s-running,.s-connected,.s-configured,.s-available{background:#0f2a1a;color:#2ecc71}
-.s-stopped,.s-disabled,.s-missing,.s-unavailable{background:#1a1a1a;color:#888}
+.s-running,.s-connected,.s-configured,.s-available,.s-passing{background:#0f2a1a;color:#2ecc71}
+.s-stopped,.s-disabled,.s-missing,.s-unavailable,.s-down{background:#1a1a1a;color:#888}
 .s-error{background:#2a1015;color:#e74c3c}
-.s-unknown{background:#1a222a;color:#7bb0d6}
+.s-unknown,.s-local{background:#1a222a;color:#7bb0d6}
+.s-timeout{background:#2a221a;color:#e8a65a}
+.fleet-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.fleet-table th{text-align:left;padding:8px 10px;color:var(--muted,#888);font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border,#1e1e2e);font-weight:700}
+.fleet-table td{padding:10px;border-bottom:1px solid var(--border,#1e1e2e);vertical-align:top}
+.fleet-table tr:last-child td{border-bottom:none}
+.fleet-table .num{color:var(--muted,#888);font-family:monospace;width:24px}
+.fleet-table .vname{font-weight:700;color:var(--text,#e8e8ed)}
+.fleet-table .vname a{color:var(--text,#e8e8ed);text-decoration:none}
+.fleet-table .vname a:hover{color:var(--accent,#7c6cf8)}
+.fleet-table .vpurpose{color:var(--muted,#888);font-size:.74rem;margin-top:2px;line-height:1.4}
+.fleet-table .vprice{color:var(--accent,#7c6cf8);font-family:monospace;font-size:.72rem;white-space:nowrap}
+.fleet-table .vlatency{font-family:monospace;font-size:.72rem;color:var(--muted,#888)}
+.fleet-rollup{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:1rem;padding:14px;background:var(--card-bg,#12121a);border:1px solid var(--accent,#7c6cf8);border-radius:10px}
+.fleet-rollup .pill{padding:6px 14px;background:var(--bg,#0a0a12);border-radius:18px;font-size:.78rem;color:var(--muted,#888)}
+.fleet-rollup .pill b{color:var(--text,#e8e8ed);font-size:1rem;font-weight:800}
+.fleet-rollup .pill.passing b{color:#2ecc71}
+.fleet-rollup .pill.down b{color:#e74c3c}
+.fleet-rollup .pill.local b{color:#7bb0d6}
 .section-h{font-size:.78rem;color:var(--muted,#888);text-transform:uppercase;letter-spacing:.5px;margin:1.4rem 0 .6rem 0;font-weight:700}
 #resumeMsg{margin:0 0 1rem 0;padding:12px 16px;border-radius:8px;font-size:.85rem;display:none}
 #resumeMsg.ok{background:#0f2a1a;border:1px solid #27ae60;color:#2ecc71;display:block}
@@ -76,11 +94,78 @@
 
   <div id="resumeMsg"></div>
 
+  {% set venture_agents = report.agents | selectattr('kind', 'equalto', 'cloud_venture') | list %}
+  {% set local_agents = report.agents | selectattr('kind', 'equalto', 'local_service') | list %}
   {% set ai_agents = report.agents | selectattr('kind', 'equalto', 'ai_model') | list %}
   {% set thread_agents = report.agents | selectattr('kind', 'equalto', 'background_thread') | list %}
   {% set service_agents = report.agents | selectattr('kind', 'equalto', 'external_service') | list %}
   {% set router_agents = report.agents | selectattr('kind', 'equalto', 'router') | list %}
   {% set mcp_agents = report.agents | selectattr('kind', 'equalto', 'mcp_server') | list %}
+
+  {% if venture_agents %}
+  <p class="section-h">Cloud Fleet ({{ venture_agents|length }})</p>
+  <div class="fleet-rollup">
+    <span class="pill">Total <b>{{ report.fleet.total }}</b></span>
+    <span class="pill passing">Passing <b>{{ report.fleet.passing }}</b></span>
+    <span class="pill local">Local-only <b>{{ report.fleet.local_only }}</b></span>
+    <span class="pill down">Down <b>{{ report.fleet.down }}</b></span>
+  </div>
+  <div class="agent-card" style="padding:0;overflow-x:auto">
+    <table class="fleet-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Venture</th>
+          <th>Status</th>
+          <th>Price</th>
+          <th>Latency</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in venture_agents %}
+        <tr>
+          <td class="num">{{ loop.index }}</td>
+          <td>
+            <div class="vname">
+              {% if v.url %}<a href="{{ v.url }}" target="_blank" rel="noopener">{{ v.name }}</a>{% else %}{{ v.name }}{% endif %}
+            </div>
+            {% if v.purpose %}<div class="vpurpose">{{ v.purpose }}</div>{% endif %}
+          </td>
+          <td><span class="status s-{{ v.status }}">{{ v.status }}</span>{% if v.http %}<div class="vlatency">HTTP {{ v.http }}</div>{% endif %}</td>
+          <td><span class="vprice">{{ v.price or '—' }}</span></td>
+          <td><span class="vlatency">{% if v.latency_ms %}{{ v.latency_ms }} ms{% else %}—{% endif %}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if local_agents %}
+  <p class="section-h">Local Services ({{ local_agents|length }})</p>
+  <div class="agent-card" style="padding:0;overflow-x:auto">
+    <table class="fleet-table">
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Port</th>
+          <th>Status</th>
+          <th>Latency</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in local_agents %}
+        <tr>
+          <td><div class="vname">{{ s.name }}</div><div class="vpurpose"><code>{{ s.source }}</code></div></td>
+          <td><span class="vlatency">:{{ s.port }}</span></td>
+          <td><span class="status s-{{ s.status }}">{{ s.status }}</span>{% if s.http %}<div class="vlatency">HTTP {{ s.http }}</div>{% endif %}</td>
+          <td><span class="vlatency">{% if s.latency_ms %}{{ s.latency_ms }} ms{% else %}—{% endif %}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
 
   {% if ai_agents %}
   <p class="section-h">AI Models &amp; Fallback Chain</p>

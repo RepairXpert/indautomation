@@ -2520,6 +2520,79 @@ async def api_dispatch_list(
     return JSONResponse({"count": len(rows), "dispatches": rows})
 
 
+# ── Fleet registry ───────────────────────────────────────────────────────────
+# Single source of truth for the user's 14 cloud ventures + 4 local dev
+# services. Mirrors the VENTURES array in command_center.html (line ~240) and
+# the health_urls dict that was previously inlined in command_center_data().
+# Edit here when adding a new venture; both /api/command-center-data and
+# /api/agents will pick it up.
+VENTURES_REGISTRY = [
+    {"id": "indautomation",  "name": "IndAutomation",
+     "price": "$19/$99/mo",
+     "url": "https://indautomation.onrender.com",
+     "health_url": "https://indautomation.onrender.com/api/health",
+     "purpose": "Stripe check, PLC thread hunting, Glama badge monitoring"},
+    {"id": "clawgrab",       "name": "ClawGrab",
+     "price": "$12/mo",
+     "url": "https://getclawgrab.com",
+     "health_url": "https://clawgrab.onrender.com/health",
+     "purpose": "Transcript directory hunting, Reddit threads, tweet gen"},
+    {"id": "lite",           "name": "LITE Package",
+     "price": "$79", "url": "https://buy.stripe.com/aFa7sMddz4ir",
+     "health_url": None,
+     "purpose": "Offline diagnostics toolkit, one-time Stripe purchase"},
+    {"id": "crucix",         "name": "Crucix",
+     "price": "$29/$99/mo",
+     "url": "https://crucix.live",
+     "health_url": "https://crucix.live",
+     "purpose": "OSINT directories, security forums, threat intel"},
+    {"id": "cryptovault",    "name": "CryptoVault Recovery",
+     "price": "$97/$297", "url": None, "health_url": None,
+     "purpose": "Recovery threads, Bitcoin.com directory, Reddit"},
+    {"id": "soltrade",       "name": "Soltrade",
+     "price": "N/A", "url": None, "health_url": None,
+     "purpose": "Solana trading agent, on-chain signal"},
+    {"id": "cryptotrading",  "name": "CryptoTrading Agent",
+     "price": "N/A", "url": None, "health_url": None,
+     "purpose": "BTC price tracker, F&G index, signal generation"},
+    {"id": "content",        "name": "Content Pipeline",
+     "price": "N/A", "url": None, "health_url": None,
+     "purpose": "Article generation + cross-posting"},
+    {"id": "vendorad",       "name": "Vendor Ad Network",
+     "price": "$500-2K/mo",
+     "url": "https://vendor-ad-network.onrender.com",
+     "health_url": "https://vendor-ad-network.onrender.com/health",
+     "purpose": "Vendor display network, $500-2K/mo per slot"},
+    {"id": "debtclock",      "name": "US Debt Clock",
+     "price": "N/A",
+     "url": "https://us-debt-clock.onrender.com",
+     "health_url": "https://us-debt-clock.onrender.com",
+     "purpose": "Embed opportunities, finance forums, PGPF listing"},
+    {"id": "dealsniper",     "name": "DealSniper",
+     "price": "N/A", "url": None, "health_url": None,
+     "purpose": "Discount deal hunter"},
+    {"id": "clawgrab_mcp",   "name": "ClawGrab MCP",
+     "price": "free", "url": None, "health_url": None,
+     "purpose": "MCP server for ClawGrab tools"},
+    {"id": "invoiceflow",    "name": "InvoiceFlow",
+     "price": "$19-59/mo", "url": None, "health_url": None,
+     "purpose": "Invoice generator + Stripe link"},
+    {"id": "procurement",    "name": "ProcurementEngine",
+     "price": "N/A", "url": None, "health_url": None,
+     "purpose": "Parts price comparison + supplier health (mounted at /api/procurement)"},
+]
+
+# Local dev services from the user's machine (the screenshot scorecard).
+# These are reachable only when the FastAPI process runs on the same host
+# the user develops on. On Render they will all show as `down`.
+LOCAL_SERVICES_REGISTRY = [
+    {"name": "UNO v2",     "port": 8200,  "health_path": "/health"},
+    {"name": "ClawGrab",   "port": 10000, "health_path": "/health"},
+    {"name": "Crucix",     "port": 3117,  "health_path": "/health"},
+    {"name": "OpenRecall", "port": 8082,  "health_path": "/health"},
+]
+
+
 # ── Parts / Connectors / Tools search ────────────────────────────────────────
 from indauto.parts.search import search_parts as _search_parts
 from indauto.parts.catalog import (
@@ -2746,17 +2819,155 @@ def _agents_report():
             "purpose": "exposes diagnosis/parts as MCP tools to AI assistants",
         })
 
-    # Roll-up counts by status
+    # 10. Cloud ventures (the user's fleet) — concurrent health pings
+    venture_results = _ping_ventures(VENTURES_REGISTRY, total_budget_sec=3.0)
+    for v, ping in venture_results:
+        agents.append({
+            "name": v["name"],
+            "kind": "cloud_venture",
+            "source": v.get("health_url") or v.get("url") or "(local-only)",
+            "status": ping["status"],
+            "purpose": v.get("purpose", ""),
+            "price": v.get("price", ""),
+            "url": v.get("url"),
+            "http": ping.get("http"),
+            "latency_ms": ping.get("latency_ms"),
+        })
+
+    # 11. Local dev services (the user's machine — UNO v2, ClawGrab, Crucix, OpenRecall)
+    local_results = _ping_local_services(LOCAL_SERVICES_REGISTRY, timeout_sec=1.0)
+    for svc, ping in local_results:
+        agents.append({
+            "name": svc["name"],
+            "kind": "local_service",
+            "source": f"http://127.0.0.1:{svc['port']}{svc.get('health_path', '/health')}",
+            "status": ping["status"],
+            "port": svc["port"],
+            "http": ping.get("http"),
+            "latency_ms": ping.get("latency_ms"),
+        })
+
+    # Roll-up counts by status and by kind
     by_status: dict = {}
+    by_kind: dict = {}
     for a in agents:
         by_status[a["status"]] = by_status.get(a["status"], 0) + 1
+        by_kind[a["kind"]] = by_kind.get(a["kind"], 0) + 1
+
+    # Fleet roll-up — mirrors the screenshot scorecard
+    fleet_total = sum(1 for a in agents if a["kind"] == "cloud_venture")
+    fleet_passing = sum(1 for a in agents
+                        if a["kind"] == "cloud_venture" and a["status"] == "passing")
+    fleet_local_only = sum(1 for a in agents
+                           if a["kind"] == "cloud_venture" and a["status"] == "local")
+    fleet_down = sum(1 for a in agents
+                     if a["kind"] == "cloud_venture" and a["status"] in ("down", "timeout"))
 
     return {
         "generated_at": now,
         "count": len(agents),
         "by_status": by_status,
+        "by_kind": by_kind,
+        "fleet": {
+            "total": fleet_total,
+            "passing": fleet_passing,
+            "local_only": fleet_local_only,
+            "down": fleet_down,
+        },
         "agents": agents,
     }
+
+
+def _ping_one_url(url: str, timeout: float) -> dict:
+    """Best-effort GET that classifies the result. Never raises."""
+    import urllib.request as _ur
+    import urllib.error as _ue
+    import time as _t
+    started = _t.monotonic()
+    try:
+        req = _ur.Request(url, headers={"User-Agent": "RepairXpertAgents/1.0"})
+        with _ur.urlopen(req, timeout=timeout) as resp:
+            elapsed_ms = int((_t.monotonic() - started) * 1000)
+            return {
+                "status": "passing" if resp.status < 400 else "down",
+                "http": resp.status,
+                "latency_ms": elapsed_ms,
+            }
+    except _ue.HTTPError as e:
+        elapsed_ms = int((_t.monotonic() - started) * 1000)
+        # 4xx/5xx on the health endpoint still means the host is reachable —
+        # mark as 'down' but record the code so the operator can see why.
+        return {"status": "down", "http": e.code, "latency_ms": elapsed_ms}
+    except Exception:
+        elapsed_ms = int((_t.monotonic() - started) * 1000)
+        # Distinguish timeout from connection refused for the operator UI.
+        return {
+            "status": "timeout" if elapsed_ms >= int(timeout * 1000) - 50 else "down",
+            "latency_ms": elapsed_ms,
+        }
+
+
+def _ping_ventures(ventures: list, total_budget_sec: float = 3.0) -> list:
+    """Ping every venture's health_url concurrently. Returns
+    [(venture_dict, ping_dict), ...] in the original order, capped at the
+    total time budget. Ventures with no health_url are marked 'local'."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    results: dict = {}
+    pingable = [v for v in ventures if v.get("health_url")]
+    for v in ventures:
+        if not v.get("health_url"):
+            results[v["id"]] = {"status": "local"}
+
+    if pingable:
+        per_request_timeout = min(2.0, total_budget_sec)
+        with ThreadPoolExecutor(max_workers=min(8, len(pingable))) as pool:
+            future_to_v = {
+                pool.submit(_ping_one_url, v["health_url"], per_request_timeout): v
+                for v in pingable
+            }
+            try:
+                for fut in as_completed(future_to_v, timeout=total_budget_sec):
+                    v = future_to_v[fut]
+                    try:
+                        results[v["id"]] = fut.result()
+                    except Exception:
+                        results[v["id"]] = {"status": "down"}
+            except Exception:
+                # total budget exceeded — anything still pending is timeout
+                for fut, v in future_to_v.items():
+                    if v["id"] not in results:
+                        results[v["id"]] = {"status": "timeout"}
+
+    # Preserve original ordering
+    return [(v, results.get(v["id"], {"status": "down"})) for v in ventures]
+
+
+def _ping_local_services(services: list, timeout_sec: float = 1.0) -> list:
+    """Ping each local service on 127.0.0.1:<port><health_path>."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    results: dict = {}
+    if not services:
+        return []
+    with ThreadPoolExecutor(max_workers=min(8, len(services))) as pool:
+        future_to_s = {}
+        for s in services:
+            url = f"http://127.0.0.1:{s['port']}{s.get('health_path', '/health')}"
+            future_to_s[pool.submit(_ping_one_url, url, timeout_sec)] = s
+        try:
+            for fut in as_completed(future_to_s, timeout=timeout_sec * 2):
+                s = future_to_s[fut]
+                try:
+                    results[s["name"]] = fut.result()
+                except Exception:
+                    results[s["name"]] = {"status": "down"}
+        except Exception:
+            for fut, s in future_to_s.items():
+                if s["name"] not in results:
+                    results[s["name"]] = {"status": "timeout"}
+
+    return [(s, results.get(s["name"], {"status": "down"})) for s in services]
 
 
 @app.get("/api/agents")
@@ -2837,19 +3048,32 @@ async def api_agents_resume():
             actions.append({"agent": label, "action": "wake_ping",
                             "ok": False, "error": str(e)[:120]})
 
-    # 4. Warm Render services so cold starts don't bite next request
-    for url in (
-        "https://indautomation.onrender.com/api/health",
-        "https://clawgrab.onrender.com/health",
-    ):
-        try:
-            req = _ur.Request(url, headers={"User-Agent": "RepairXpert/1.0"})
-            with _ur.urlopen(req, timeout=4) as resp:
-                actions.append({"agent": url, "action": "warm",
-                                "ok": resp.status == 200, "http": resp.status})
-        except Exception as e:
-            actions.append({"agent": url, "action": "warm",
-                            "ok": False, "error": str(e)[:120]})
+    # 4. Warm every venture in the fleet registry (concurrent, time-budgeted)
+    venture_results = _ping_ventures(VENTURES_REGISTRY, total_budget_sec=4.0)
+    for v, ping in venture_results:
+        if ping["status"] == "local":
+            actions.append({"agent": v["name"], "action": "warm",
+                            "ok": True, "note": "local-only, skipped"})
+        else:
+            ok = ping["status"] == "passing"
+            actions.append({
+                "agent": v["name"],
+                "action": "warm",
+                "ok": ok,
+                "http": ping.get("http"),
+                "latency_ms": ping.get("latency_ms"),
+            })
+
+    # 5. Ping local dev services so the operator can see which are up
+    local_results = _ping_local_services(LOCAL_SERVICES_REGISTRY, timeout_sec=1.0)
+    for svc, ping in local_results:
+        actions.append({
+            "agent": f"{svc['name']} (local :{svc['port']})",
+            "action": "wake_ping",
+            "ok": ping["status"] == "passing",
+            "http": ping.get("http"),
+            "latency_ms": ping.get("latency_ms"),
+        })
 
     return JSONResponse({
         "ok": True,
@@ -2892,33 +3116,22 @@ async def command_center_data(request: Request):
         "alerts": [],
     }
 
-    # --- Service health checks ---
-    health_urls = {
-        "indautomation": "https://indautomation.onrender.com/api/health",
-        "clawgrab": "https://clawgrab.onrender.com/health",
-        "vendorad": "https://vendor-ad-network.onrender.com/health",
-        "debtclock": "https://us-debt-clock.onrender.com",
-    }
-    for svc, url in health_urls.items():
+    # --- Service health checks (driven by VENTURES_REGISTRY) ---
+    # Reuses the same registry that /api/agents reads, so command-center
+    # and /agents stay in sync. Local-only ventures (no health_url) stay
+    # marked "local"; reachable ones are pinged with a 6s timeout.
+    for venture in VENTURES_REGISTRY:
+        vid = venture["id"]
+        url = venture.get("health_url")
+        if not url:
+            result["services"][vid] = "local"
+            continue
         try:
             req = _ccur.Request(url, headers={"User-Agent": "CommandCenter/1.0"})
             with _ccur.urlopen(req, timeout=6) as resp:
-                result["services"][svc] = "up" if resp.status < 400 else "down"
+                result["services"][vid] = "up" if resp.status < 400 else "down"
         except Exception:
-            result["services"][svc] = "down"
-
-    # Local-only services
-    for local_svc in ["lite", "cryptovault", "soltrade", "cryptotrading",
-                       "content", "dealsniper", "clawgrab_mcp", "invoiceflow", "procurement"]:
-        result["services"][local_svc] = "local"
-
-    # Crucix
-    try:
-        req = _ccur.Request("https://crucix.live", headers={"User-Agent": "CommandCenter/1.0"})
-        with _ccur.urlopen(req, timeout=6) as resp:
-            result["services"]["crucix"] = "up" if resp.status < 400 else "down"
-    except Exception:
-        result["services"]["crucix"] = "down"
+            result["services"][vid] = "down"
 
     # --- IndAutomation details from local DB ---
     try:
@@ -2954,11 +3167,9 @@ async def command_center_data(request: Request):
     result["ai_engines_active"] = engines
     result["brain_cycles_24h"] = len([l for l in result["revenue_loop_log"] if "analyze" in l.lower() or "brain" in l.lower()])
 
-    # --- MRR (all $0 currently) ---
-    for v in ["indautomation", "clawgrab", "lite", "crucix", "cryptovault",
-              "soltrade", "cryptotrading", "content", "vendorad", "debtclock",
-              "dealsniper", "clawgrab_mcp", "invoiceflow", "procurement"]:
-        result["mrr"][v] = "$0"
+    # --- MRR (all $0 currently) — driven by VENTURES_REGISTRY ---
+    for venture in VENTURES_REGISTRY:
+        result["mrr"][venture["id"]] = "$0"
 
     # --- Stripe balance ---
     stripe_bal = "--"
