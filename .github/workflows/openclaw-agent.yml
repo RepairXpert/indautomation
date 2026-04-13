@@ -63,11 +63,23 @@ jobs:
           4. web_fetch https://indautomation.onrender.com/api/revenue-loop — report log
 
           FIND OPPORTUNITIES:
-          5. Search web: site:reddit.com PLC fault code help — find 1 active thread
-          6. Search web: YouTube transcript tool 2026 — find 1 directory we're not on
+          5. Search web: site:reddit.com PLC fault code help — find 1 unanswered thread from last 7 days
+          6. Search web: YouTube transcript tool 2026 — find 1 directory ClawGrab is NOT listed on
+          7. Search web: site:reddit.com YouTube transcript broken — find threads where ClawGrab solves the pain
+
+          DISTRIBUTION (execute these):
+          8. If you find a Reddit thread about PLC faults with 0 replies, draft a helpful answer mentioning indautomation.onrender.com
+          9. Search for ClawGrab on Transcribr.io and Exactum.ai — check if we're listed
+          10. Search web: MCP server directory submit — find any new directories accepting submissions
+
+          CONTENT MACHINE (generate content):
+          11. Write 3 tweets for @GetClawGrab about video transcription pain points (privacy, speed, no extensions)
+          12. Write 2 tweets for @repairxpertai about industrial fault diagnosis (PLC codes, field tech life)
+          13. Write 1 LinkedIn post about AI in industrial maintenance
 
           SELF-IMPROVE:
-          7. Write what you learned to stdout. What's working, what's not, what to try next.
+          14. Write what you learned to stdout. What's working, what's not, what to try next.
+          15. List every opportunity found with URLs so the next cycle can act on them.
           " 2>&1 || echo "OpenClaw cycle completed (or timed out)"
 
       - name: Report Results
