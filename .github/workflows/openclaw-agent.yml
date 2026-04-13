@@ -1,0 +1,78 @@
+name: OpenClaw 24/7 Agent
+
+on:
+  schedule:
+    - cron: '37 */2 * * *'  # Every 2 hours
+  workflow_dispatch:
+
+jobs:
+  openclaw-cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install OpenClaw
+        run: npm install -g openclaw@latest
+
+      - name: Configure OpenClaw
+        run: |
+          mkdir -p ~/.openclaw/agents/main/agent
+          
+          # Auth profiles
+          cat > ~/.openclaw/agents/main/agent/auth-profiles.json << 'EOF'
+          {
+            "deepseek": {"provider":"deepseek","profileId":"deepseek","token":"${{ secrets.DEEPSEEK_API_KEY }}"},
+            "minimax": {"provider":"minimax","profileId":"minimax","token":"${{ secrets.MINIMAX_API_KEY }}"}
+          }
+          EOF
+          
+          # Config
+          cat > ~/.openclaw/openclaw.json << 'EOF'
+          {
+            "agents":{"defaults":{"model":"minimax/MiniMax-M2.7","workspace":"~/.openclaw/workspace"}},
+            "gateway":{"port":18789,"mode":"local","bind":"loopback","auth":{"mode":"token","token":"ghactions"}}
+          }
+          EOF
+          
+          # Workspace directives
+          mkdir -p ~/.openclaw/workspace
+          cp comms/FULL_CONTEXT.md ~/.openclaw/workspace/ 2>/dev/null || true
+
+      - name: Run OpenClaw Agent Cycle
+        run: |
+          MINIMAX_API_KEY="${{ secrets.MINIMAX_API_KEY }}" \
+          openclaw agent --local --agent main --timeout 120 --message "
+          You are RepairXpertAI's 24/7 cloud agent running on GitHub Actions.
+
+          TEST ALL SERVICES:
+          1. web_fetch https://indautomation.onrender.com/api/health — report status
+          2. web_fetch https://clawgrab.onrender.com/health — report status
+          3. web_fetch https://us-debt-clock.onrender.com — report status
+          4. web_fetch https://indautomation.onrender.com/api/revenue-loop — report log
+
+          FIND OPPORTUNITIES:
+          5. Search web: site:reddit.com PLC fault code help — find 1 active thread
+          6. Search web: YouTube transcript tool 2026 — find 1 directory we're not on
+
+          SELF-IMPROVE:
+          7. Write what you learned to stdout. What's working, what's not, what to try next.
+          " 2>&1 || echo "OpenClaw cycle completed (or timed out)"
+
+      - name: Report Results
+        if: always()
+        run: |
+          echo "=== CYCLE COMPLETE ==="
+          echo "Time: $(date -u)"
+          echo "OpenClaw ran on GitHub Actions cloud — no PC needed"
