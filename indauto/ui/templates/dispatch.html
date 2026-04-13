@@ -39,7 +39,17 @@ textarea{resize:vertical;min-height:80px}
 .pill.normal{background:#1a222a;color:#7bb0d6}
 .pill.urgent{background:#2a221a;color:#e8a65a}
 .pill.critical{background:#2a1015;color:#e74c3c}
+.pill.status-claimed{background:#1a222a;color:#7bb0d6;margin-left:0}
+.pill.status-closed{background:#1a1a1a;color:#888;margin-left:0}
 .empty{text-align:center;padding:24px 0;color:var(--muted,#888);font-size:.88rem}
+.job-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.job-actions form{display:flex;gap:6px;flex:1;min-width:240px}
+.job-actions input[type=email],.job-actions input[type=text]{flex:1;padding:8px 10px;font-size:.82rem}
+.btn-sm{padding:8px 14px;background:var(--accent,#7c6cf8);color:#fff;font-size:.78rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;white-space:nowrap}
+.btn-sm.close{background:#2a2a3a;color:#e8e8ed}
+.btn-sm:hover{opacity:.88}
+.inbox-link{display:block;text-align:center;font-size:.82rem;color:var(--accent,#7c6cf8);text-decoration:none;margin-top:.5rem}
+.job-id{font-size:.7rem;color:var(--muted,#888);font-weight:600;margin-right:4px}
 @media (max-width:520px){.form-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -106,16 +116,17 @@ textarea{resize:vertical;min-height:80px}
   </div>
 
   <div class="card">
-    <h2>Open Jobs ({{ dispatches|length }})</h2>
-    {% if dispatches %}
-      {% for d in dispatches %}
+    <h2>Open Jobs ({{ open_jobs|length }})</h2>
+    {% if open_jobs %}
+      {% for d in open_jobs %}
       <div class="job">
         <div class="job-head">
           <div>
+            <span class="job-id">#{{ d.id }}</span>
             <span class="job-company">{{ d.company }}</span>
             <span class="pill {{ d.urgency }}">{{ d.urgency }}</span>
           </div>
-          <span class="job-meta">{{ d.ts[:10] }}</span>
+          <span class="job-meta">{{ d.created_at[:10] }}</span>
         </div>
         <div class="job-meta">
           {% if d.equipment %}{{ d.equipment }}{% endif %}
@@ -123,12 +134,50 @@ textarea{resize:vertical;min-height:80px}
           {% if d.location %} &middot; {{ d.location }}{% endif %}
         </div>
         {% if d.description %}<div class="job-desc">{{ d.description }}</div>{% endif %}
+        <div class="job-actions">
+          <form method="POST" action="/dispatch/{{ d.id }}/claim">
+            <input type="email" name="tech_email" placeholder="your@email.com" required>
+            <button type="submit" class="btn-sm">Claim</button>
+          </form>
+        </div>
       </div>
       {% endfor %}
     {% else %}
       <div class="empty">No open dispatches. Post one above to get matched with a tech.</div>
     {% endif %}
+    <a href="/dispatch/inbox" class="inbox-link">&rarr; Tech inbox (my claimed jobs)</a>
   </div>
+
+  {% if claimed_jobs %}
+  <div class="card">
+    <h2>In Progress ({{ claimed_jobs|length }})</h2>
+    {% for d in claimed_jobs %}
+    <div class="job">
+      <div class="job-head">
+        <div>
+          <span class="job-id">#{{ d.id }}</span>
+          <span class="job-company">{{ d.company }}</span>
+          <span class="pill status-claimed">Claimed</span>
+          <span class="pill {{ d.urgency }}">{{ d.urgency }}</span>
+        </div>
+        <span class="job-meta">{{ d.claimed_at[:10] }}</span>
+      </div>
+      <div class="job-meta">
+        Tech: <b>{{ d.claimed_by_email }}</b>
+        {% if d.equipment %} &middot; {{ d.equipment }}{% endif %}
+        {% if d.fault_code %} &middot; <b>{{ d.fault_code }}</b>{% endif %}
+      </div>
+      {% if d.description %}<div class="job-desc">{{ d.description }}</div>{% endif %}
+      <div class="job-actions">
+        <form method="POST" action="/dispatch/{{ d.id }}/close">
+          <input type="text" name="resolution" placeholder="Resolution notes (optional)">
+          <button type="submit" class="btn-sm close">Close Job</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 </div>
 <script>fetch('/api/analytics/hit?p='+encodeURIComponent(location.pathname)+'&r='+encodeURIComponent(document.referrer),{method:'GET'})</script>
 </body>

@@ -197,6 +197,24 @@ def get_db():
         created_at TEXT NOT NULL,
         unsubscribed INTEGER DEFAULT 0
     )""")
+    db.execute("""CREATE TABLE IF NOT EXISTS dispatches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        company TEXT NOT NULL,
+        contact_email TEXT NOT NULL,
+        equipment TEXT,
+        fault_code TEXT,
+        location TEXT,
+        urgency TEXT NOT NULL DEFAULT 'normal',
+        description TEXT,
+        claimed_by_email TEXT,
+        claimed_at TEXT,
+        closed_at TEXT,
+        resolution TEXT
+    )""")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_dispatches_status ON dispatches(status)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_dispatches_claimed ON dispatches(claimed_by_email)")
     db.commit()
     return db
 
@@ -2067,42 +2085,139 @@ async def connect_submit(
 
 
 # ── Dispatch board (connect field techs to open repair jobs) ─────────────────
-DISPATCH_DB_PATH = ROOT / "data" / "dispatches.jsonl"
+DISPATCH_DB_PATH = ROOT / "data" / "dispatches.jsonl"  # legacy, auto-imported
 DISPATCH_URGENCIES = ("low", "normal", "urgent", "critical")
+DISPATCH_STATUSES = ("open", "claimed", "closed")
 
 
-def _load_dispatches(limit: int = 50, status: str = "open"):
-    """Return dispatch entries, newest first."""
+def _dispatch_row_to_dict(row):
+    return {
+        "id": row["id"],
+        "created_at": row["created_at"],
+        "ts": row["created_at"],  # backward-compat alias for templates/api
+        "status": row["status"],
+        "company": row["company"],
+        "contact_email": row["contact_email"],
+        "equipment": row["equipment"] or "",
+        "fault_code": row["fault_code"] or "",
+        "location": row["location"] or "",
+        "urgency": row["urgency"],
+        "description": row["description"] or "",
+        "claimed_by_email": row["claimed_by_email"] or "",
+        "claimed_at": row["claimed_at"] or "",
+        "closed_at": row["closed_at"] or "",
+        "resolution": row["resolution"] or "",
+    }
+
+
+def _import_legacy_dispatches_jsonl(db):
+    """One-time migration: copy data/dispatches.jsonl rows into the SQLite
+    table if the table is empty and the file exists. Idempotent."""
     if not DISPATCH_DB_PATH.exists():
-        return []
-    rows = []
+        return
+    existing = db.execute("SELECT COUNT(*) FROM dispatches").fetchone()[0]
+    if existing:
+        return
     try:
         for ln in DISPATCH_DB_PATH.read_text(encoding="utf-8").splitlines():
             ln = ln.strip()
             if not ln:
                 continue
             try:
-                row = json.loads(ln)
+                r = json.loads(ln)
             except Exception:
                 continue
-            if status and row.get("status") != status:
-                continue
-            rows.append(row)
+            db.execute(
+                "INSERT INTO dispatches (created_at, status, company, contact_email, "
+                "equipment, fault_code, location, urgency, description) "
+                "VALUES (?,?,?,?,?,?,?,?,?)",
+                (
+                    r.get("ts") or datetime.now(timezone.utc).isoformat(),
+                    r.get("status") or "open",
+                    (r.get("company") or "")[:120],
+                    (r.get("contact_email") or "")[:160],
+                    (r.get("equipment") or "")[:120],
+                    (r.get("fault_code") or "")[:40],
+                    (r.get("location") or "")[:160],
+                    r.get("urgency") if r.get("urgency") in DISPATCH_URGENCIES else "normal",
+                    (r.get("description") or "")[:800],
+                ),
+            )
+        db.commit()
+    except Exception:
+        pass
+
+
+def _load_dispatches(limit: int = 50, status: str = "open", claimed_by_email: str = ""):
+    """Return dispatch entries, newest first."""
+    try:
+        db = get_db()
+        _import_legacy_dispatches_jsonl(db)
+        sql = "SELECT * FROM dispatches WHERE 1=1"
+        params: list = []
+        if status:
+            sql += " AND status = ?"
+            params.append(status)
+        if claimed_by_email:
+            sql += " AND claimed_by_email = ?"
+            params.append(claimed_by_email)
+        sql += " ORDER BY datetime(created_at) DESC LIMIT ?"
+        params.append(max(1, min(int(limit), 200)))
+        rows = db.execute(sql, params).fetchall()
+        db.close()
+        return [_dispatch_row_to_dict(r) for r in rows]
     except Exception:
         return []
-    rows.sort(key=lambda r: r.get("ts", ""), reverse=True)
-    return rows[:limit]
+
+
+def _get_dispatch(dispatch_id: int):
+    try:
+        db = get_db()
+        row = db.execute("SELECT * FROM dispatches WHERE id=?", (dispatch_id,)).fetchone()
+        db.close()
+        return _dispatch_row_to_dict(row) if row else None
+    except Exception:
+        return None
+
+
+def _send_dispatch_email(subject: str, html: str, to_email: str, reply_to: str = ""):
+    """Best-effort Resend notification. No-op if RESEND_API_KEY unset."""
+    if not RESEND_API_KEY:
+        return
+    try:
+        import httpx
+        payload = {
+            "from": "IndAutomation <hello@repairxpertai.com>",
+            "to": [to_email],
+            "subject": subject,
+            "html": html,
+        }
+        if reply_to:
+            payload["reply_to"] = reply_to
+        httpx.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {RESEND_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=8,
+        )
+    except Exception:
+        pass
 
 
 @app.get("/dispatch", response_class=HTMLResponse)
 async def dispatch_page(request: Request):
     """Dispatch board — post an open repair job or claim one."""
-    dispatches = _load_dispatches(limit=50, status="open")
+    open_jobs = _load_dispatches(limit=50, status="open")
+    claimed_jobs = _load_dispatches(limit=20, status="claimed")
     return templates.TemplateResponse(
         "dispatch.html",
         {
             "request": request,
-            "dispatches": dispatches,
+            "open_jobs": open_jobs,
+            "claimed_jobs": claimed_jobs,
             "urgencies": DISPATCH_URGENCIES,
         },
     )
@@ -2123,109 +2238,270 @@ async def dispatch_submit(
     company = company.strip()
     urgency = urgency.strip().lower()
 
+    def _render_error(msg: str):
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": msg,
+            },
+        )
+
     if not company:
-        dispatches = _load_dispatches(limit=50, status="open")
-        return templates.TemplateResponse(
-            "dispatch.html",
-            {
-                "request": request,
-                "dispatches": dispatches,
-                "urgencies": DISPATCH_URGENCIES,
-                "error": "Company / plant name required.",
-            },
-        )
+        return _render_error("Company / plant name required.")
     if not contact_email or "@" not in contact_email:
-        dispatches = _load_dispatches(limit=50, status="open")
-        return templates.TemplateResponse(
-            "dispatch.html",
-            {
-                "request": request,
-                "dispatches": dispatches,
-                "urgencies": DISPATCH_URGENCIES,
-                "error": "Valid contact email required.",
-            },
-        )
+        return _render_error("Valid contact email required.")
     if urgency not in DISPATCH_URGENCIES:
         urgency = "normal"
 
     now = datetime.now(timezone.utc).isoformat()
-    entry = {
-        "ts": now,
-        "status": "open",
-        "company": company[:120],
-        "contact_email": contact_email[:160],
-        "equipment": equipment.strip()[:120],
-        "fault_code": fault_code.strip()[:40],
-        "location": location.strip()[:160],
-        "urgency": urgency,
-        "description": description.strip()[:800],
-    }
-
     try:
-        DISPATCH_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(DISPATCH_DB_PATH, "a", encoding="utf-8") as f:
-            f.write(json.dumps(entry) + "\n")
+        db = get_db()
+        cur = db.execute(
+            "INSERT INTO dispatches (created_at, status, company, contact_email, "
+            "equipment, fault_code, location, urgency, description) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            (
+                now, "open",
+                company[:120],
+                contact_email[:160],
+                equipment.strip()[:120],
+                fault_code.strip()[:40],
+                location.strip()[:160],
+                urgency,
+                description.strip()[:800],
+            ),
+        )
+        new_id = cur.lastrowid
+        db.commit()
+        db.close()
     except Exception:
-        pass
+        return _render_error("Could not save dispatch. Try again.")
 
-    # Notify operator so the job can be routed to a matched tech from /connect
-    if RESEND_API_KEY:
-        try:
-            import httpx
-            urgency_label = {
-                "low": "Low", "normal": "Normal",
-                "urgent": "Urgent", "critical": "CRITICAL",
-            }.get(urgency, urgency)
-            subject = f"[Dispatch] {urgency_label} — {company}"
-            body_html = (
-                f"<h2>New dispatch request</h2>"
-                f"<p><b>Company:</b> {company}<br>"
-                f"<b>Contact:</b> {contact_email}<br>"
-                f"<b>Equipment:</b> {entry['equipment'] or '—'}<br>"
-                f"<b>Fault code:</b> {entry['fault_code'] or '—'}<br>"
-                f"<b>Location:</b> {entry['location'] or '—'}<br>"
-                f"<b>Urgency:</b> {urgency_label}<br>"
-                f"<b>Description:</b> {entry['description'] or '—'}</p>"
-                f"<p>Route this job to a matched tech from /connect.</p>"
-            )
-            httpx.post(
-                "https://api.resend.com/emails",
-                headers={
-                    "Authorization": f"Bearer {RESEND_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "from": "IndAutomation <hello@repairxpertai.com>",
-                    "to": ["ericwestmail@gmail.com"],
-                    "reply_to": contact_email,
-                    "subject": subject,
-                    "html": body_html,
-                },
-                timeout=8,
-            )
-        except Exception:
-            pass
+    urgency_label = {
+        "low": "Low", "normal": "Normal",
+        "urgent": "Urgent", "critical": "CRITICAL",
+    }.get(urgency, urgency)
+    _send_dispatch_email(
+        subject=f"[Dispatch #{new_id}] {urgency_label} — {company}",
+        to_email="ericwestmail@gmail.com",
+        reply_to=contact_email,
+        html=(
+            f"<h2>New dispatch request #{new_id}</h2>"
+            f"<p><b>Company:</b> {company}<br>"
+            f"<b>Contact:</b> {contact_email}<br>"
+            f"<b>Equipment:</b> {equipment or '—'}<br>"
+            f"<b>Fault code:</b> {fault_code or '—'}<br>"
+            f"<b>Location:</b> {location or '—'}<br>"
+            f"<b>Urgency:</b> {urgency_label}<br>"
+            f"<b>Description:</b> {description or '—'}</p>"
+            f"<p>Route this job to a matched tech from /connect.</p>"
+        ),
+    )
 
-    dispatches = _load_dispatches(limit=50, status="open")
     return templates.TemplateResponse(
         "dispatch.html",
         {
             "request": request,
-            "dispatches": dispatches,
+            "open_jobs": _load_dispatches(limit=50, status="open"),
+            "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
             "urgencies": DISPATCH_URGENCIES,
-            "success": f"Dispatch posted for {company}. A matched tech will be contacted at {contact_email}.",
+            "success": f"Dispatch #{new_id} posted for {company}. Techs can claim it from the inbox.",
+        },
+    )
+
+
+@app.post("/dispatch/{dispatch_id}/claim", response_class=HTMLResponse)
+async def dispatch_claim(
+    request: Request,
+    dispatch_id: int,
+    tech_email: str = Form(...),
+):
+    tech_email = tech_email.strip().lower()
+    if not tech_email or "@" not in tech_email:
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": "Valid tech email required to claim a job.",
+            },
+        )
+
+    existing = _get_dispatch(dispatch_id)
+    if not existing:
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": f"Dispatch #{dispatch_id} not found.",
+            },
+        )
+    if existing["status"] != "open":
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": f"Dispatch #{dispatch_id} is already {existing['status']}.",
+            },
+        )
+
+    now = datetime.now(timezone.utc).isoformat()
+    try:
+        db = get_db()
+        # Guard against race: only transition open -> claimed
+        cur = db.execute(
+            "UPDATE dispatches SET status='claimed', claimed_by_email=?, claimed_at=? "
+            "WHERE id=? AND status='open'",
+            (tech_email[:160], now, dispatch_id),
+        )
+        db.commit()
+        changed = cur.rowcount
+        db.close()
+    except Exception:
+        changed = 0
+
+    if not changed:
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": f"Dispatch #{dispatch_id} was just claimed by another tech.",
+            },
+        )
+
+    # Notify the plant manager that a tech picked up the job
+    _send_dispatch_email(
+        subject=f"[Dispatch #{dispatch_id}] Claimed by {tech_email}",
+        to_email=existing["contact_email"],
+        reply_to=tech_email,
+        html=(
+            f"<h2>A field tech has claimed dispatch #{dispatch_id}</h2>"
+            f"<p><b>Tech:</b> {tech_email}<br>"
+            f"<b>Equipment:</b> {existing['equipment'] or '—'}<br>"
+            f"<b>Fault:</b> {existing['fault_code'] or '—'}</p>"
+            f"<p>Reply to this email to coordinate directly with the tech.</p>"
+        ),
+    )
+
+    return templates.TemplateResponse(
+        "dispatch.html",
+        {
+            "request": request,
+            "open_jobs": _load_dispatches(limit=50, status="open"),
+            "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+            "urgencies": DISPATCH_URGENCIES,
+            "success": f"Dispatch #{dispatch_id} claimed by {tech_email}. Plant contact notified.",
+        },
+    )
+
+
+@app.post("/dispatch/{dispatch_id}/close", response_class=HTMLResponse)
+async def dispatch_close(
+    request: Request,
+    dispatch_id: int,
+    resolution: str = Form(""),
+):
+    existing = _get_dispatch(dispatch_id)
+    if not existing:
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": f"Dispatch #{dispatch_id} not found.",
+            },
+        )
+    if existing["status"] == "closed":
+        return templates.TemplateResponse(
+            "dispatch.html",
+            {
+                "request": request,
+                "open_jobs": _load_dispatches(limit=50, status="open"),
+                "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+                "urgencies": DISPATCH_URGENCIES,
+                "error": f"Dispatch #{dispatch_id} is already closed.",
+            },
+        )
+
+    now = datetime.now(timezone.utc).isoformat()
+    try:
+        db = get_db()
+        db.execute(
+            "UPDATE dispatches SET status='closed', closed_at=?, resolution=? WHERE id=?",
+            (now, resolution.strip()[:800], dispatch_id),
+        )
+        db.commit()
+        db.close()
+    except Exception:
+        pass
+
+    return templates.TemplateResponse(
+        "dispatch.html",
+        {
+            "request": request,
+            "open_jobs": _load_dispatches(limit=50, status="open"),
+            "claimed_jobs": _load_dispatches(limit=20, status="claimed"),
+            "urgencies": DISPATCH_URGENCIES,
+            "success": f"Dispatch #{dispatch_id} closed.",
+        },
+    )
+
+
+@app.get("/dispatch/inbox", response_class=HTMLResponse)
+async def dispatch_inbox(request: Request, email: str = ""):
+    """Tech inbox — jobs claimed by a specific tech email, plus open jobs
+    they can still claim."""
+    email = email.strip().lower()
+    my_jobs: list = []
+    if email and "@" in email:
+        my_jobs = _load_dispatches(limit=50, status="claimed", claimed_by_email=email)
+        my_closed = _load_dispatches(limit=20, status="closed", claimed_by_email=email)
+    else:
+        my_closed = []
+    open_jobs = _load_dispatches(limit=50, status="open")
+    return templates.TemplateResponse(
+        "dispatch_inbox.html",
+        {
+            "request": request,
+            "email": email,
+            "my_jobs": my_jobs,
+            "my_closed": my_closed,
+            "open_jobs": open_jobs,
         },
     )
 
 
 @app.get("/api/dispatch")
-async def api_dispatch_list(status: str = "open", limit: int = 50):
+async def api_dispatch_list(
+    status: str = "open",
+    limit: int = 50,
+    claimed_by_email: str = "",
+):
     """JSON feed of dispatches — for field-tech mobile clients."""
-    try:
-        limit = max(1, min(int(limit), 200))
-    except Exception:
-        limit = 50
-    rows = _load_dispatches(limit=limit, status=status or "open")
+    if status and status not in DISPATCH_STATUSES:
+        status = "open"
+    rows = _load_dispatches(
+        limit=limit,
+        status=status or "open",
+        claimed_by_email=claimed_by_email.strip().lower(),
+    )
     return JSONResponse({"count": len(rows), "dispatches": rows})
 
 
